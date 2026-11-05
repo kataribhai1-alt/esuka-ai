@@ -5,70 +5,176 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ESUKA AI</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0b0d14;color:#fff;font-family:Arial,sans-serif}
+body{
+ margin:0;background:#0b0d14;color:#fff;
+ font-family:Arial,sans-serif
+}
 .app{height:100dvh;display:flex}
-.sidebar{width:250px;background:#111521;padding:20px;border-right:1px solid #252a3a}
+.sidebar{
+ width:250px;background:#111521;padding:20px;
+ border-right:1px solid #252a3a
+}
 .logo{font-size:25px;font-weight:bold;color:#9aabff}
-.new{width:100%;padding:13px;margin-top:30px;border:1px solid #414967;border-radius:12px;background:#20283a;color:white}
+.new{
+ width:100%;padding:13px;margin-top:30px;
+ border:1px solid #414967;border-radius:12px;
+ background:#20283a;color:white
+}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 header{padding:18px 22px;border-bottom:1px solid #252a3a}
-.chat{flex:1;overflow:auto;padding:25px;display:flex;flex-direction:column;gap:18px}
+.chat{
+ flex:1;overflow:auto;padding:25px;
+ display:flex;flex-direction:column;gap:18px
+}
 .welcome{margin:auto;text-align:center}
 .welcome h1{font-size:34px}
 .welcome p{color:#9ca5bb}
-.msg{padding:14px 17px;border-radius:16px;max-width:85%;line-height:1.5;white-space:pre-wrap}
+.msg{
+ padding:14px 17px;border-radius:16px;
+ max-width:85%;line-height:1.5;
+ white-space:pre-wrap;overflow-wrap:anywhere
+}
 .user{background:#35456f;align-self:flex-end}
 .bot{background:#191f2e;align-self:flex-start}
-.bottom{padding:15px;display:flex;gap:10px;border-top:1px solid #252a3a}
-input{flex:1;min-width:0;background:#171d2b;color:white;border:1px solid #343d53;border-radius:14px;padding:15px;outline:none}
+.bottom{
+ padding:15px;display:flex;gap:10px;
+ border-top:1px solid #252a3a
+}
+input{
+ flex:1;min-width:0;background:#171d2b;color:white;
+ border:1px solid #343d53;border-radius:14px;
+ padding:15px;outline:none
+}
 button{cursor:pointer}
-.send{background:#758bff;color:#fff;border:0;border-radius:13px;padding:0 20px}
-@media(max-width:600px){.sidebar{display:none}.chat{padding:16px}.welcome h1{font-size:28px}}
+.send{
+ background:#758bff;color:#fff;border:0;
+ border-radius:13px;padding:0 20px
+}
+button:disabled{opacity:.5;cursor:not-allowed}
+.typing{color:#aab5d4;font-size:13px}
+@media(max-width:600px){
+ .sidebar{display:none}
+ .chat{padding:16px}
+ .welcome h1{font-size:28px}
+}
 </style>
 </head>
+
 <body>
 <div class="app">
+
 <aside class="sidebar">
-<div class="logo">✦ ESUKA AI</div>
-<button class="new" onclick="newChat()">+ New Chat</button>
-<p style="color:#8490aa;margin-top:30px">Your Personal AI</p>
+ <div class="logo">✦ ESUKA AI</div>
+ <button class="new" onclick="newChat()">+ New Chat</button>
+ <p style="color:#8490aa;margin-top:30px">Your Personal AI</p>
 </aside>
+
 <main class="main">
-<header>ESUKA AI <span style="color:#8995b1"> · Assistant</span></header>
-<div class="chat" id="chat">
-<div class="welcome" id="welcome">
-<h1>Welcome to ESUKA AI ✦</h1>
-<p>How can I help you today?</p>
-</div>
-</div>
-<div class="bottom">
-<input id="message" placeholder="Message ESUKA AI..." onkeydown="if(event.key==='Enter')send()">
-<button class="send" onclick="send()">Send</button>
-</div>
+ <header>ESUKA AI <span style="color:#8995b1"> · Assistant</span></header>
+
+ <div class="chat" id="chat">
+  <div class="welcome" id="welcome">
+   <h1>Welcome to ESUKA AI ✦</h1>
+   <p>How can I help you today?</p>
+  </div>
+ </div>
+
+ <div class="bottom">
+  <input id="message" placeholder="Message ESUKA AI..."
+   onkeydown="if(event.key==='Enter')send()">
+  <button class="send" id="sendBtn" onclick="send()">Send</button>
+ </div>
 </main>
 </div>
+
 <script>
-function send(){
-const input=document.getElementById('message');
-const value=input.value.trim();
-if(!value)return;
-document.getElementById('welcome')?.remove();
-const chat=document.getElementById('chat');
-const user=document.createElement('div');
-user.className='msg user';
-user.textContent=value;
-chat.appendChild(user);
-const reply=document.createElement('div');
-reply.className='msg bot';
-reply.textContent='ESUKA AI interface ready! Real AI connection will be added in the next step.';
-chat.appendChild(reply);
-input.value='';
-chat.scrollTop=chat.scrollHeight;
+const API_URL = "https://esuka-ai.kataribhai1.workers.dev/";
+
+let history = [];
+let busy = false;
+
+function addMessage(text, type) {
+ const chat = document.getElementById("chat");
+ const el = document.createElement("div");
+ el.className = "msg " + type;
+ el.textContent = text;
+ chat.appendChild(el);
+ chat.scrollTop = chat.scrollHeight;
+ return el;
 }
-function newChat(){
-document.getElementById('chat').innerHTML='<div class="welcome" id="welcome"><h1>Welcome to ESUKA AI ✦</h1><p>How can I help you today?</p></div>';
+
+async function send() {
+ const input = document.getElementById("message");
+ const button = document.getElementById("sendBtn");
+ const value = input.value.trim();
+
+ if (!value || busy) return;
+
+ document.getElementById("welcome")?.remove();
+
+ busy = true;
+ button.disabled = true;
+ input.disabled = true;
+
+ addMessage(value, "user");
+ input.value = "";
+
+ const loading = addMessage("ESUKA AI is thinking...", "bot typing");
+
+ try {
+  const response = await fetch(API_URL, {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json"
+   },
+   body: JSON.stringify({
+    message: value,
+    history: history
+   })
+  });
+
+  const data = await response.json();
+  loading.remove();
+
+  if (!response.ok || !data.reply) {
+   throw new Error(data.error || "AI request failed");
+  }
+
+  addMessage(data.reply, "bot");
+
+  history.push(
+   { role: "user", text: value },
+   { role: "model", text: data.reply }
+  );
+
+  history = history.slice(-10);
+
+ } catch (error) {
+  loading.remove();
+  addMessage(
+   "Sorry! Connection problem. Please try again.\n" + error.message,
+   "bot"
+  );
+ }
+
+ busy = false;
+ button.disabled = false;
+ input.disabled = false;
+ input.focus();
+}
+
+function newChat() {
+ if (busy) return;
+ history = [];
+ document.getElementById("chat").innerHTML = `
+  <div class="welcome" id="welcome">
+   <h1>Welcome to ESUKA AI ✦</h1>
+   <p>How can I help you today?</p>
+  </div>`;
+ document.getElementById("message").value = "";
 }
 </script>
 </body>
