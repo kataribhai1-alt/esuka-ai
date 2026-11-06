@@ -1,57 +1,55 @@
+
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
-  "https://esuka-ai.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
   "https://kataribhai1-alt.github.io"
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, an intelligent and helpful AI assistant.
+You are ESUKA AI, a smart and helpful AI assistant.
 
 IDENTITY:
 Your name is ESUKA AI.
 You were created by Katari.
-If asked who created you, say:
+If someone asks who created you, say:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 Never claim to be ChatGPT or another AI.
 
 LANGUAGE:
 - Speak natural Indian Hinglish.
-- If the user writes Roman Hindi, reply in Roman Hindi.
-- Use simple everyday Indian language.
-- Avoid formal Hindi and difficult words.
+- When users write Roman Hindi, reply in Roman Hindi.
 - Do not automatically use Devanagari.
-- If the user writes English, reply in English.
-- Understand casual spelling and typing mistakes.
-- Be friendly, natural and conversational.
-- Do not repeat answers unnecessarily.
+- Use simple everyday Indian language.
+- If users write English, reply in English.
+- Understand casual spelling and typos.
+- Sound natural, friendly and intelligent.
+- Avoid robotic and repetitive responses.
 
-ABILITIES:
-- Answer general knowledge questions.
-- Explain topics step by step.
-- Help with coding and website development.
-- Help with writing and creative ideas.
-- Help with learning and problem solving.
-- Give clear and useful explanations.
-- Be honest about uncertainty.
-- Never pretend to have completed an action you did not perform.
+CAPABILITIES:
+- General knowledge and explanations.
+- Coding and website development.
+- App development and debugging.
+- Writing and creative ideas.
+- Learning and step-by-step guidance.
+- Image prompt assistance.
+- Be honest about limitations.
+- Never claim to have completed an action you did not perform.
+
+Keep answers useful, clear and conversational.
 `;
 
 function getCorsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin);
 
-  const headers = {
+  return {
+    ...(allowed ? {
+      "Access-Control-Allow-Origin": origin
+    } : {}),
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };
-
-  if (allowed) {
-    headers["Access-Control-Allow-Origin"] = origin;
-  }
-
-  return headers;
 }
 
 function json(data, status, cors) {
@@ -59,7 +57,8 @@ function json(data, status, cors) {
     status,
     headers: {
       ...cors,
-      "Content-Type": "application/json; charset=utf-8"
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
     }
   });
 }
@@ -89,7 +88,7 @@ async function generateChat(message, history, env) {
     }
   ];
 
-  // Gemini primary
+  // GEMINI PRIMARY
   if (env.GEMINI_API_KEY) {
     try {
       const response = await fetch(
@@ -129,11 +128,11 @@ async function generateChat(message, history, env) {
       throw new Error("Empty Gemini response");
 
     } catch (error) {
-      // Continue to Groq fallback
+      // Continue to Groq backup
     }
   }
 
-  // Groq fallback
+  // GROQ BACKUP
   if (env.GROQ_API_KEY) {
     try {
       const messages = [
@@ -142,7 +141,7 @@ async function generateChat(message, history, env) {
           content: SYSTEM_PROMPT
         },
         ...safeHistory.map(item => ({
-          role: item.role === "model" ? "assistant" : "user",
+          role: item.role === "model" ? "assistant" : item.role,
           content: item.parts[0].text
         })),
         {
@@ -205,7 +204,7 @@ async function generateImage(prompt, env) {
     throw new Error("Image generation failed");
   }
 
-  return "data:image/jpeg;base64," + result.image;
+  return "data:image/png;base64," + result.image;
 }
 
 export default {
@@ -213,9 +212,9 @@ export default {
     const origin = request.headers.get("Origin") || "";
     const cors = getCorsHeaders(origin);
 
-    // CORS preflight
+    // CORS PREFLIGHT
     if (request.method === "OPTIONS") {
-      if (!cors["Access-Control-Allow-Origin"]) {
+      if (!ALLOWED_ORIGINS.includes(origin)) {
         return new Response(null, { status: 403 });
       }
 
@@ -225,7 +224,7 @@ export default {
       });
     }
 
-    // Website and health check
+    // WEBSITE + HEALTH CHECK
     if (request.method === "GET") {
       const url = new URL(request.url);
 
@@ -238,14 +237,13 @@ export default {
         }, 200, cors);
       }
 
-      // Serve index.html and other website assets
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
       }
 
       return json({
         success: false,
-        error: "Website assets binding is missing"
+        error: "Website assets not configured"
       }, 500, cors);
     }
 
@@ -256,7 +254,8 @@ export default {
       }, 405, cors);
     }
 
-    if (!cors["Access-Control-Allow-Origin"]) {
+    // API CORS CHECK
+    if (!ALLOWED_ORIGINS.includes(origin)) {
       return json({
         success: false,
         error: "Origin not allowed"
@@ -266,7 +265,7 @@ export default {
     try {
       const body = await request.json();
 
-      // Image generation
+      // IMAGE GENERATION
       if (body.mode === "image") {
         const prompt = String(
           body.prompt || body.message || ""
@@ -296,7 +295,7 @@ export default {
         }, 200, cors);
       }
 
-      // Normal AI chat
+      // NORMAL CHAT
       const message = String(body.message || "").trim();
 
       if (!message) {
@@ -317,11 +316,7 @@ export default {
         ? body.history
         : [];
 
-      const reply = await generateChat(
-        message,
-        history,
-        env
-      );
+      const reply = await generateChat(message, history, env);
 
       return json({
         success: true,
