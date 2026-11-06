@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080912">
 <title>ESUKA AI</title>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#080912;color:#fff;height:100dvh;overflow:hidden}
@@ -19,7 +20,7 @@ body{font-family:Arial,sans-serif;background:#080912;color:#fff;height:100dvh;ov
 .history-item.active,.history-item:hover{background:#202137}
 .sidebar-bottom{font-size:12px;color:#77798e;padding-top:15px}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
-.topbar{height:65px;border-bottom:1px solid #25263a;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.topbar{height:65px;border-bottom:1px solid #25263a;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
 .topname{font-weight:bold;font-size:15px}
 .status{font-size:11px;color:#55d6a0;margin-top:5px}
 .menu{display:none;background:none;color:white;border:0;font-size:23px}
@@ -35,7 +36,7 @@ body{font-family:Arial,sans-serif;background:#080912;color:#fff;height:100dvh;ov
 .message{display:flex;gap:12px;margin:22px 0;align-items:flex-start}
 .avatar{width:34px;height:34px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;background:#25213f;font-size:14px}
 .user .avatar{background:#173b53}
-.message-wrap{max-width:85%}
+.message-wrap{max-width:85%;min-width:0}
 .content{background:#141625;border:1px solid #282a40;padding:14px 16px;border-radius:4px 15px 15px 15px;line-height:1.65;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
 .user{justify-content:flex-end}
 .user .message-wrap{order:1}
@@ -45,13 +46,15 @@ body{font-family:Arial,sans-serif;background:#080912;color:#fff;height:100dvh;ov
 .small-btn{border:1px solid #33354b;background:#171929;color:#aaaec3;border-radius:8px;padding:7px 12px;font-size:11px;cursor:pointer}
 .small-btn:hover{background:#292b45;color:white}
 .typing{color:#8d90a8;font-size:13px;padding:12px}
-.composer-wrap{padding:12px 18px 20px}
+.generated-image{display:block;width:100%;max-width:450px;height:auto;margin-top:12px;border-radius:12px}
+.composer-wrap{padding:12px 18px 20px;flex-shrink:0}
 .composer{max-width:850px;margin:auto;background:#141625;border:1px solid #34364e;border-radius:18px;padding:10px;display:flex;align-items:flex-end;gap:9px;box-shadow:0 10px 40px #0005}
 textarea{flex:1;resize:none;max-height:130px;min-height:40px;background:transparent;border:0;outline:0;color:white;padding:12px;font-size:14px;font-family:inherit}
 textarea::placeholder{color:#77798e}
 .icon-btn{width:40px;height:40px;border:0;border-radius:12px;background:#25263a;color:#d8d9e8;cursor:pointer;font-size:17px;flex-shrink:0}
 .mic.listening{background:#e34c70;animation:pulse 1s infinite}
 .send{background:linear-gradient(135deg,#8759f4,#3588ed);color:white;font-size:18px}
+.icon-btn:disabled{opacity:.5;cursor:wait}
 @keyframes pulse{50%{box-shadow:0 0 0 8px #e34c7033}}
 .note{text-align:center;color:#666981;font-size:10px;margin-top:10px}
 @media(max-width:650px){
@@ -67,8 +70,10 @@ textarea::placeholder{color:#77798e}
 }
 </style>
 </head>
+
 <body>
 <div class="app">
+
 <aside class="sidebar" id="sidebar">
   <div class="logo">ESUKA AI</div>
   <div class="tagline">YOUR PERSONAL AI ASSISTANT</div>
@@ -79,6 +84,7 @@ textarea::placeholder{color:#77798e}
 </aside>
 
 <main class="main">
+
 <header class="topbar">
   <div style="display:flex;align-items:center;gap:13px">
     <button class="menu" onclick="toggleSidebar()">☰</button>
@@ -91,6 +97,7 @@ textarea::placeholder{color:#77798e}
 </header>
 
 <section class="chat" id="chat">
+
   <div class="welcome" id="welcome">
     <div class="orb">✦</div>
     <h1>Hey! I'm <span class="gradient">ESUKA AI</span></h1>
@@ -99,8 +106,10 @@ textarea::placeholder{color:#77798e}
       <button class="suggestion" onclick="useSuggestion('Tell me something interesting')">✦ Tell me something</button>
       <button class="suggestion" onclick="useSuggestion('Help me learn coding')">⌘ Learn coding</button>
       <button class="suggestion" onclick="useSuggestion('Give me a creative idea')">✧ Creative ideas</button>
+      <button class="suggestion" onclick="useSuggestion('Generate an image of a futuristic city at sunset')">🎨 Generate image</button>
     </div>
   </div>
+
   <div class="messages" id="messages"></div>
 </section>
 
@@ -109,292 +118,515 @@ textarea::placeholder{color:#77798e}
     <button class="icon-btn mic" id="micBtn" onclick="toggleMic()" title="Voice input">🎙</button>
     <textarea id="input" rows="1" placeholder="Message ESUKA AI..."></textarea>
     <button class="icon-btn" onclick="stopSpeech()" title="Stop voice">■</button>
-    <button class="icon-btn send" onclick="sendMessage()">➤</button>
+    <button class="icon-btn send" id="sendBtn" onclick="sendMessage()">➤</button>
   </div>
   <div class="note">AI voice will play only when you press Listen.</div>
 </div>
+
 </main>
 </div>
 
 <script>
 const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
-const input=document.getElementById("input");
-const messages=document.getElementById("messages");
-const chat=document.getElementById("chat");
-const welcome=document.getElementById("welcome");
-const micBtn=document.getElementById("micBtn");
 
-let chats=JSON.parse(localStorage.getItem("esuka_ai_chats_v3")||"[]");
-let currentChat=null;
-let conversation=[];
-let recognition=null;
-let listening=false;
-let voices=[];
+const input = document.getElementById("input");
+const messages = document.getElementById("messages");
+const chat = document.getElementById("chat");
+const welcome = document.getElementById("welcome");
+const micBtn = document.getElementById("micBtn");
+const sendBtn = document.getElementById("sendBtn");
 
-function loadVoices(){
- if("speechSynthesis" in window)voices=speechSynthesis.getVoices();
-}
-if("speechSynthesis" in window){
- loadVoices();
- speechSynthesis.onvoiceschanged=loadVoices;
+let chats = [];
+
+try {
+  chats = JSON.parse(localStorage.getItem("esuka_ai_chats_v3") || "[]");
+  if (!Array.isArray(chats)) chats = [];
+} catch {
+  chats = [];
 }
 
-function saveChats(){
- localStorage.setItem("esuka_ai_chats_v3",JSON.stringify(chats));
-}
-function newChat(){
- stopSpeech();
- currentChat=null;
- conversation=[];
- messages.innerHTML="";
- welcome.style.display="block";
- input.value="";
- renderHistory();
- document.getElementById("sidebar").classList.remove("open");
-}
-function renderHistory(){
- const list=document.getElementById("historyList");
- list.innerHTML="";
- chats.forEach(c=>{
-  const item=document.createElement("div");
-  item.className="history-item"+(c.id===currentChat?" active":"");
-  item.textContent="◈ "+c.title;
-  item.onclick=()=>openChat(c.id);
-  list.appendChild(item);
- });
-}
-function openChat(id){
- const selected=chats.find(c=>c.id===id);
- if(!selected)return;
- stopSpeech();
- currentChat=id;
- conversation=[...selected.messages];
- messages.innerHTML="";
- welcome.style.display="none";
- conversation.forEach(m=>addMessage(m.role,m.content));
- renderHistory();
- document.getElementById("sidebar").classList.remove("open");
-}
-function toggleSidebar(){
- document.getElementById("sidebar").classList.toggle("open");
-}
-function useSuggestion(text){
- input.value=text;
- sendMessage();
+let currentChat = null;
+let conversation = [];
+let recognition = null;
+let listening = false;
+let voices = [];
+let sending = false;
+
+function loadVoices() {
+  if ("speechSynthesis" in window) {
+    voices = speechSynthesis.getVoices();
+  }
 }
 
-function addMessage(role,text){
- welcome.style.display="none";
- const row=document.createElement("div");
- row.className="message "+(role==="user"?"user":"assistant");
-
- const avatar=document.createElement("div");
- avatar.className="avatar";
- avatar.textContent=role==="user"?"👤":"✦";
-
- const wrap=document.createElement("div");
- wrap.className="message-wrap";
- const bubble=document.createElement("div");
- bubble.className="content";
- bubble.textContent=text;
- wrap.appendChild(bubble);
-
- if(role==="assistant"){
-  const actions=document.createElement("div");
-  actions.className="msg-actions";
-
-  const listen=document.createElement("button");
-  listen.className="small-btn listen-btn";
-  listen.textContent="🔊 Listen";
-
-  listen.onclick=()=>{
-   if(speechSynthesis.speaking){
-    stopSpeech();
-    return;
-   }
-   document.querySelectorAll(".listen-btn").forEach(b=>{
-    b.textContent="🔊 Listen";
-   });
-   listen.textContent="⏹ Stop";
-   speakText(text,listen);
-  };
-
-  actions.appendChild(listen);
-  wrap.appendChild(actions);
- }
- row.appendChild(avatar);
- row.appendChild(wrap);
- messages.appendChild(row);
- chat.scrollTop=chat.scrollHeight;
+if ("speechSynthesis" in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-function showTyping(){
- const t=document.createElement("div");
- t.id="typing";
- t.className="typing";
- t.textContent="ESUKA AI is thinking...";
- messages.appendChild(t);
- chat.scrollTop=chat.scrollHeight;
+function saveChats() {
+  try {
+    localStorage.setItem(
+      "esuka_ai_chats_v3",
+      JSON.stringify(chats)
+    );
+  } catch (error) {
+    console.error("Chat storage error:", error);
+  }
 }
-function removeTyping(){
- document.getElementById("typing")?.remove();
+
+function newChat() {
+  stopSpeech();
+  currentChat = null;
+  conversation = [];
+  messages.innerHTML = "";
+  welcome.style.display = "block";
+  input.value = "";
+  renderHistory();
+  document.getElementById("sidebar").classList.remove("open");
 }
 
-async function sendMessage(){
- const text=input.value.trim();
- if(!text)return;
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
 
- stopSpeech();
- input.value="";
- input.style.height="auto";
+  chats.forEach(c => {
+    const item = document.createElement("div");
+    item.className =
+      "history-item" + (c.id === currentChat ? " active" : "");
+    item.textContent = "◈ " + c.title;
+    item.onclick = () => openChat(c.id);
+    list.appendChild(item);
+  });
+}
 
- if(!currentChat){
-  currentChat=Date.now().toString();
-  chats.unshift({id:currentChat,title:text.slice(0,32),messages:[]});
- }
+function openChat(id) {
+  const selected = chats.find(c => c.id === id);
+  if (!selected) return;
 
- conversation.push({role:"user",content:text});
- addMessage("user",text);
- saveConversation();
- showTyping();
+  stopSpeech();
+  currentChat = id;
+  conversation = [...selected.messages];
+  messages.innerHTML = "";
+  welcome.style.display = "none";
 
- try{
-  const response=await fetch(API_URL,{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    message:text,
-    history:conversation.slice(0,-1).slice(-12)
-   })
+  conversation.forEach(m => {
+    addMessage(m.role, m.content);
   });
 
-  const data=await response.json();
+  renderHistory();
+  document.getElementById("sidebar").classList.remove("open");
+}
+
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+}
+
+function useSuggestion(text) {
+  input.value = text;
+  sendMessage();
+}
+
+// Detect image-generation requests
+function isImageRequest(text) {
+  const value = text.toLowerCase().trim();
+
+  const patterns = [
+    /\b(generate|create|draw|design|make)\b.{0,100}\b(image|picture|photo|wallpaper|illustration|artwork)\b/i,
+    /\b(image|picture|photo|wallpaper|illustration)\b.{0,80}\b(generate|create|draw|make)\b/i,
+    /\b(image|photo|picture)\b.{0,50}\b(banao|banado|bana do|bana|generate|create)\b/i,
+    /\b(banao|banado|bana do|bana)\b.{0,60}\b(image|photo|picture|tasveer)\b/i,
+    /\b(tasveer|photo|image)\b.{0,60}\b(bana|banao|banado|create)\b/i,
+    /\b(ek image|ek photo|ek tasveer|image bana|photo bana)\b/i
+  ];
+
+  return patterns.some(pattern => pattern.test(value));
+}
+
+function addMessage(role, text) {
+  welcome.style.display = "none";
+
+  const row = document.createElement("div");
+  row.className =
+    "message " + (role === "user" ? "user" : "assistant");
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.textContent = role === "user" ? "👤" : "✦";
+
+  const wrap = document.createElement("div");
+  wrap.className = "message-wrap";
+
+  const bubble = document.createElement("div");
+  bubble.className = "content";
+  bubble.textContent = text;
+
+  wrap.appendChild(bubble);
+
+  if (role === "assistant") {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const listen = document.createElement("button");
+    listen.className = "small-btn listen-btn";
+    listen.textContent = "🔊 Listen";
+
+    listen.onclick = () => {
+      if (speechSynthesis.speaking) {
+        stopSpeech();
+        return;
+      }
+
+      document.querySelectorAll(".listen-btn").forEach(b => {
+        b.textContent = "🔊 Listen";
+      });
+
+      listen.textContent = "⏹ Stop";
+      speakText(text, listen);
+    };
+
+    actions.appendChild(listen);
+    wrap.appendChild(actions);
+  }
+
+  row.appendChild(avatar);
+  row.appendChild(wrap);
+  messages.appendChild(row);
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// Display generated image in chat
+function addImageMessage(imageData) {
+  if (
+    typeof imageData !== "string" ||
+    !imageData.startsWith("data:image/")
+  ) {
+    throw new Error("Invalid image data received.");
+  }
+
+  welcome.style.display = "none";
+
+  const row = document.createElement("div");
+  row.className = "message assistant";
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.textContent = "✦";
+
+  const wrap = document.createElement("div");
+  wrap.className = "message-wrap";
+
+  const bubble = document.createElement("div");
+  bubble.className = "content";
+
+  const title = document.createElement("p");
+  title.textContent = "Your image is ready!";
+
+  const img = document.createElement("img");
+  img.className = "generated-image";
+  img.alt = "Image generated by ESUKA AI";
+  img.src = imageData;
+
+  bubble.appendChild(title);
+  bubble.appendChild(img);
+  wrap.appendChild(bubble);
+
+  row.appendChild(avatar);
+  row.appendChild(wrap);
+
+  messages.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping(message) {
   removeTyping();
 
-  if(!response.ok)throw new Error(data.error||"Server error: "+response.status);
+  const t = document.createElement("div");
+  t.id = "typing";
+  t.className = "typing";
+  t.textContent = message || "ESUKA AI is thinking...";
 
-  const reply=data.reply||data.response||data.text;
-  if(!reply)throw new Error("AI response was empty.");
+  messages.appendChild(t);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-  conversation.push({role:"assistant",content:reply});
-  addMessage("assistant",reply);
+function removeTyping() {
+  document.getElementById("typing")?.remove();
+}
+
+function saveConversation() {
+  const index = chats.findIndex(c => c.id === currentChat);
+
+  if (index >= 0) {
+    chats[index].messages = [...conversation];
+
+    chats[index].title =
+      conversation.find(m => m.role === "user")
+        ?.content.slice(0, 32) || "New Chat";
+
+    const item = chats.splice(index, 1)[0];
+    chats.unshift(item);
+  }
+
+  saveChats();
+  renderHistory();
+}
+
+// Main chat and image generation
+async function sendMessage() {
+  if (sending) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  sending = true;
+  sendBtn.disabled = true;
+
+  stopSpeech();
+  input.value = "";
+  input.style.height = "auto";
+
+  const imageMode = isImageRequest(text);
+
+  if (!currentChat) {
+    currentChat = Date.now().toString();
+
+    chats.unshift({
+      id: currentChat,
+      title: text.slice(0, 32),
+      messages: []
+    });
+  }
+
+  conversation.push({
+    role: "user",
+    content: text
+  });
+
+  addMessage("user", text);
   saveConversation();
 
- }catch(error){
-  removeTyping();
-  addMessage("assistant","Connection problem: "+error.message);
- }
-}
+  showTyping(
+    imageMode
+      ? "ESUKA AI is creating your image..."
+      : "ESUKA AI is thinking..."
+  );
 
-function saveConversation(){
- const index=chats.findIndex(c=>c.id===currentChat);
- if(index>=0){
-  chats[index].messages=[...conversation];
-  chats[index].title=conversation.find(m=>m.role==="user")?.content.slice(0,32)||"New Chat";
-  const item=chats.splice(index,1)[0];
-  chats.unshift(item);
- }
- saveChats();
- renderHistory();
-}
+  try {
+    const requestBody = imageMode
+      ? {
+          mode: "image",
+          message: text,
+          prompt: text
+        }
+      : {
+          mode: "chat",
+          message: text,
+          history: conversation.slice(0, -1).slice(-6)
+        };
 
-function speakText(text,button){
- if(!("speechSynthesis" in window)){
-  alert("Voice output is not supported in this browser.");
-  return;
- }
- speechSynthesis.cancel();
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
 
- const cleanText=text.replace(/[*#`_]/g,"");
- const utterance=new SpeechSynthesisUtterance(cleanText);
- const isHindi=/[\u0900-\u097F]/.test(cleanText)||
-  /\b(kya|hai|haan|nahi|kaise|mera|tum|aap|mujhe)\b/i.test(cleanText);
+    let data;
 
- utterance.lang=isHindi?"hi-IN":"en-US";
- utterance.rate=1;
- utterance.pitch=1.08;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Server returned an invalid response.");
+    }
 
- const preferred=isHindi
-  ?["heera","neerja","swara","female","hindi"]
-  :["samantha","zira","female","aria","jenny"];
+    if (!response.ok || data.success === false) {
+      throw new Error(
+        data.error || "Server error: " + response.status
+      );
+    }
 
- const matching=voices.find(v=>
-  preferred.some(p=>v.name.toLowerCase().includes(p))&&
-  (isHindi?v.lang.toLowerCase().startsWith("hi"):v.lang.toLowerCase().startsWith("en"))
- );
- const fallback=voices.find(v=>
-  v.lang.toLowerCase().startsWith(isHindi?"hi":"en")
- );
+    if (imageMode) {
+      if (!data.image) {
+        throw new Error("Server did not return an image.");
+      }
 
- if(matching)utterance.voice=matching;
- else if(fallback)utterance.voice=fallback;
+      addImageMessage(data.image);
 
- utterance.onend=()=>{
-  if(button)button.textContent="🔊 Listen";
- };
- utterance.onerror=()=>{
-  if(button)button.textContent="🔊 Listen";
- };
- speechSynthesis.speak(utterance);
-}
+      conversation.push({
+        role: "assistant",
+        content: "[Image generated]"
+      });
 
-function stopSpeech(){
- if("speechSynthesis" in window)speechSynthesis.cancel();
- document.querySelectorAll(".listen-btn").forEach(b=>{
-  b.textContent="🔊 Listen";
- });
-}
+      saveConversation();
+      return;
+    }
 
-function toggleMic(){
- const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SpeechRecognition){
-  alert("Voice input is not supported in this browser. Try a compatible browser.");
-  return;
- }
- if(listening){
-  recognition.stop();
-  return;
- }
- recognition=new SpeechRecognition();
- recognition.lang="hi-IN";
- recognition.interimResults=true;
- recognition.continuous=false;
+    const reply =
+      data.reply || data.response || data.text;
 
- recognition.onstart=()=>{
-  listening=true;
-  micBtn.classList.add("listening");
-  micBtn.textContent="●";
- };
- recognition.onresult=event=>{
-  let result="";
-  for(let i=event.resultIndex;i<event.results.length;i++){
-   result+=event.results[i][0].transcript;
+    if (!reply || typeof reply !== "string") {
+      throw new Error("AI response was empty.");
+    }
+
+    conversation.push({
+      role: "assistant",
+      content: reply
+    });
+
+    addMessage("assistant", reply);
+    saveConversation();
+
+  } catch (error) {
+    console.error("ESUKA AI request error:", error);
+
+    addMessage(
+      "assistant",
+      (imageMode ? "Image generation failed: " : "Connection problem: ") +
+      error.message
+    );
+
+  } finally {
+    removeTyping();
+    sending = false;
+    sendBtn.disabled = false;
+    input.focus();
   }
-  input.value=result;
- };
- recognition.onerror=event=>{
-  console.log("Speech error:",event.error);
- };
- recognition.onend=()=>{
-  listening=false;
-  micBtn.classList.remove("listening");
-  micBtn.textContent="🎙";
- };
- recognition.start();
 }
 
-input.addEventListener("input",()=>{
- input.style.height="auto";
- input.style.height=Math.min(input.scrollHeight,130)+"px";
+// Voice output
+function speakText(text, button) {
+  if (!("speechSynthesis" in window)) {
+    alert("Voice output is not supported in this browser.");
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const cleanText = text.replace(/[*#`_]/g, "");
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+
+  const isHindi =
+    /[\u0900-\u097F]/.test(cleanText) ||
+    /\b(kya|hai|haan|nahi|kaise|mera|tum|aap|mujhe)\b/i.test(cleanText);
+
+  utterance.lang = isHindi ? "hi-IN" : "en-US";
+  utterance.rate = 1;
+  utterance.pitch = 1.08;
+
+  const preferred = isHindi
+    ? ["heera", "neerja", "swara", "female", "hindi"]
+    : ["samantha", "zira", "female", "aria", "jenny"];
+
+  const matching = voices.find(v =>
+    preferred.some(p => v.name.toLowerCase().includes(p)) &&
+    (
+      isHindi
+        ? v.lang.toLowerCase().startsWith("hi")
+        : v.lang.toLowerCase().startsWith("en")
+    )
+  );
+
+  const fallback = voices.find(v =>
+    v.lang.toLowerCase().startsWith(isHindi ? "hi" : "en")
+  );
+
+  if (matching) utterance.voice = matching;
+  else if (fallback) utterance.voice = fallback;
+
+  utterance.onend = () => {
+    if (button) button.textContent = "🔊 Listen";
+  };
+
+  utterance.onerror = () => {
+    if (button) button.textContent = "🔊 Listen";
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+function stopSpeech() {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+  }
+
+  document.querySelectorAll(".listen-btn").forEach(b => {
+    b.textContent = "🔊 Listen";
+  });
+}
+
+// Voice input
+function toggleMic() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Voice input is not supported in this browser.");
+    return;
+  }
+
+  if (listening) {
+    recognition.stop();
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "hi-IN";
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    listening = true;
+    micBtn.classList.add("listening");
+    micBtn.textContent = "●";
+  };
+
+  recognition.onresult = event => {
+    let result = "";
+
+    for (
+      let i = event.resultIndex;
+      i < event.results.length;
+      i++
+    ) {
+      result += event.results[i][0].transcript;
+    }
+
+    input.value = result;
+  };
+
+  recognition.onerror = event => {
+    console.log("Speech error:", event.error);
+  };
+
+  recognition.onend = () => {
+    listening = false;
+    micBtn.classList.remove("listening");
+    micBtn.textContent = "🎙";
+  };
+
+  recognition.start();
+}
+
+// Textarea resizing
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height =
+    Math.min(input.scrollHeight, 130) + "px";
 });
-input.addEventListener("keydown",e=>{
- if(e.key==="Enter"&&!e.shiftKey){
-  e.preventDefault();
-  sendMessage();
- }
+
+// Enter to send
+input.addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
 });
 
 renderHistory();
 </script>
+
 </body>
 </html>
