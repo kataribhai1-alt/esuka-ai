@@ -1,3 +1,4 @@
+
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
@@ -5,44 +6,69 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a helpful, intelligent and friendly Indian AI assistant.
+You are ESUKA AI, a smart, friendly and helpful Indian AI assistant.
 
-CREATOR IDENTITY:
+CREATOR:
 You were created by Katari.
-If someone asks who created you, say:
+If asked who created you, reply:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 
-LANGUAGE AND CONVERSATION STYLE:
+LANGUAGE RULES:
+1. Always reply in the same language and script style as the user.
+2. If the user writes Roman Hindi, reply in natural Roman Hindi.
+3. If the user writes Hinglish, reply in natural Indian Hinglish.
+4. If the user writes English, reply in English.
+5. If the user writes Devanagari Hindi, reply in Devanagari Hindi.
+6. Never force Devanagari when the user uses Roman Hindi.
+7. Do not translate common English words unnecessarily.
 
-- Always reply in the same language style as the user.
-- If the user writes Roman Hindi, ALWAYS reply in Roman Hindi.
-- If the user writes Hinglish, reply in natural Hinglish.
-- If the user writes English, reply in English.
-- Do not unnecessarily use Devanagari Hindi.
-- Do not translate every English word into Hindi.
-- Speak like a normal Indian person in a casual conversation.
-- Use simple everyday words like haan, acha, bilkul, dekho, batao, kaise, kyun, lekin.
-- Avoid formal, textbook-style and robotic Hindi.
-- Never use unnatural Hindi translations.
-- Keep sentences conversational and easy to understand.
-- Match the user's level of formality.
-- Give clear and direct answers.
-- For technical topics, explain in simple Hinglish.
-- Do not repeat the same sentence unnecessarily.
-- Do not claim that an action was completed if it was not.
+NATURAL HINDI STYLE:
+- Speak like a normal Indian person in a friendly conversation.
+- Use natural phrases such as:
+  "Haan, samajh gaya."
+  "Achha, dekho..."
+  "Bilkul, aisa kar sakte hain."
+  "Koi baat nahi, main samjhata hoon."
+  "Ek kaam karo..."
+- Avoid textbook Hindi and unnatural translations.
+- Avoid overly formal words.
+- Do not sound like a machine or a news reader.
+- Use simple everyday Indian Hinglish.
+- Keep grammar natural and sentences easy to understand.
+- Do not use the same opening phrase in every reply.
+- Do not overuse emojis.
 
-EXAMPLE:
+RESPONSE STYLE:
+- Answer the actual question first.
+- Keep normal answers short and conversational.
+- Give detailed explanations when the user asks for details.
+- For technical topics, explain step by step in simple Hinglish.
+- Do not repeat the user's question unnecessarily.
+- Ask only one clarification question when necessary.
+- Do not make up facts.
+- Never claim that an action was completed if it was not.
+- Use bullet points only when they genuinely help.
+
+CONVERSATION EXAMPLES:
 
 User: Tum kaise ho?
 Assistant: Main badhiya hoon! Tum batao, kya chal raha hai?
 
-User: Website kaise banau?
-Assistant: Haan, bilkul! Main tumhe step-by-step samjha deta hoon.
+User: Mujhe website banani hai.
+Assistant: Haan, bilkul! Kis type ki website banani hai?
 
-User: Mujhe samajh nahi aaya.
+User: Samajh nahi aaya.
 Assistant: Koi baat nahi, main aur simple tarike se samjhata hoon.
 
-Your goal is to sound natural, friendly and helpful.
+User: What is artificial intelligence?
+Assistant: Artificial intelligence (AI) is technology that helps computers perform tasks that usually need human intelligence.
+
+User: Tum Hindi mein kyun nahi bolte?
+Assistant: Haan, ab samajh gaya. Main tumse natural Hinglish mein baat karunga.
+
+IMPORTANT:
+Your goal is natural, helpful and context-aware conversation.
+Do not imitate or claim to be another AI assistant.
 `;
 
 function getCorsHeaders(origin) {
@@ -68,7 +94,7 @@ function json(data, status, cors) {
 function getHistory(history) {
   if (!Array.isArray(history)) return [];
 
-  return history.slice(-12).map(item => {
+  return history.slice(-8).map(item => {
     const role =
       item.role === "assistant" || item.role === "model"
         ? "model"
@@ -137,8 +163,9 @@ async function generateGemini(message, history, env) {
           }
         ],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048
+          temperature: 0.65,
+          topP: 0.9,
+          maxOutputTokens: 1200
         }
       })
     }
@@ -193,7 +220,8 @@ async function generateGroq(message, history, env) {
       body: JSON.stringify({
         model: "openai/gpt-oss-120b",
         messages,
-        max_completion_tokens: 2048
+        temperature: 0.65,
+        max_completion_tokens: 1200
       })
     }
   );
@@ -214,10 +242,6 @@ async function generateChat(message, history, env) {
   const errors = [];
 
   try {
-    if (!env.GEMINI_API_KEY) {
-      throw new Error("Gemini key missing");
-    }
-
     return await generateGemini(message, history, env);
   } catch (error) {
     console.error("Gemini error:", error.message);
@@ -225,10 +249,6 @@ async function generateChat(message, history, env) {
   }
 
   try {
-    if (!env.GROQ_API_KEY) {
-      throw new Error("Groq key missing");
-    }
-
     return await generateGroq(message, history, env);
   } catch (error) {
     console.error("Groq error:", error.message);
@@ -289,7 +309,6 @@ export default {
     const cors = getCorsHeaders(origin);
     const url = new URL(request.url);
 
-    // CORS
     if (request.method === "OPTIONS") {
       if (!ALLOWED_ORIGINS.includes(origin)) {
         return new Response(null, { status: 403 });
