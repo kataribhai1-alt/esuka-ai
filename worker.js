@@ -1,54 +1,57 @@
-
 const ALLOWED_ORIGINS = [
+  "https://esuka-ai-web.kataribhai1.workers.dev",
+  "https://esuka-ai.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
   "https://kataribhai1-alt.github.io"
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a helpful and intelligent AI assistant.
-
-CREATOR:
-You were created by Katari.
-If someone asks who created you, say:
-"Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
-
-LANGUAGE AND PERSONALITY:
-- Speak in natural Indian Hinglish.
-- If the user writes Roman Hindi, reply in natural Roman Hindi.
-- Do not use formal or difficult Hindi.
-- Do not automatically write Hindi in Devanagari.
-- If the user writes English, reply in English.
-- Talk like a friendly, intelligent Indian assistant.
-- Keep answers clear, useful and natural.
-- Understand casual spelling, short messages and typos.
-- Do not repeat the same sentence unnecessarily.
-- Ask a question only when necessary.
-
-CAPABILITIES:
-- Explain topics and answer general questions.
-- Help with coding, websites and app development.
-- Help with writing, ideas and learning.
-- Explain things step by step.
-- Be honest when you do not know something.
-- Never claim you performed an action you did not perform.
+You are ESUKA AI, an intelligent and helpful AI assistant.
 
 IDENTITY:
 Your name is ESUKA AI.
+You were created by Katari.
+If asked who created you, say:
+"Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 Never claim to be ChatGPT or another AI.
+
+LANGUAGE:
+- Speak natural Indian Hinglish.
+- If the user writes Roman Hindi, reply in Roman Hindi.
+- Use simple everyday Indian language.
+- Avoid formal Hindi and difficult words.
+- Do not automatically use Devanagari.
+- If the user writes English, reply in English.
+- Understand casual spelling and typing mistakes.
+- Be friendly, natural and conversational.
+- Do not repeat answers unnecessarily.
+
+ABILITIES:
+- Answer general knowledge questions.
+- Explain topics step by step.
+- Help with coding and website development.
+- Help with writing and creative ideas.
+- Help with learning and problem solving.
+- Give clear and useful explanations.
+- Be honest about uncertainty.
+- Never pretend to have completed an action you did not perform.
 `;
 
 function getCorsHeaders(origin) {
-  const isAllowed =
-    ALLOWED_ORIGINS.includes(origin) ||
-    (origin.endsWith(".esuka-ai-web.pages.dev"));
+  const allowed = ALLOWED_ORIGINS.includes(origin);
 
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "",
+  const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };
+
+  if (allowed) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
 }
 
 function json(data, status, cors) {
@@ -62,7 +65,7 @@ function json(data, status, cors) {
 }
 
 async function generateChat(message, history, env) {
-  const safeHistory = history
+  const safeHistory = (Array.isArray(history) ? history : [])
     .filter(item =>
       item &&
       ["user", "assistant", "model"].includes(item.role) &&
@@ -111,10 +114,11 @@ async function generateChat(message, history, env) {
       );
 
       if (!response.ok) {
-        throw new Error("Gemini request failed");
+        throw new Error("Gemini failed");
       }
 
       const data = await response.json();
+
       const reply = data.candidates?.[0]?.content?.parts
         ?.map(part => part.text || "")
         .join("")
@@ -123,21 +127,28 @@ async function generateChat(message, history, env) {
       if (reply) return reply;
 
       throw new Error("Empty Gemini response");
+
     } catch (error) {
-      // Try Groq backup below
+      // Continue to Groq fallback
     }
   }
 
-  // Groq backup
+  // Groq fallback
   if (env.GROQ_API_KEY) {
     try {
-      const groqMessages = [
-        { role: "system", content: SYSTEM_PROMPT },
+      const messages = [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT
+        },
         ...safeHistory.map(item => ({
-          role: item.role === "model" ? "assistant" : item.role,
+          role: item.role === "model" ? "assistant" : "user",
           content: item.parts[0].text
         })),
-        { role: "user", content: message }
+        {
+          role: "user",
+          content: message
+        }
       ];
 
       const response = await fetch(
@@ -150,7 +161,7 @@ async function generateChat(message, history, env) {
           },
           body: JSON.stringify({
             model: "llama-3.3-70b-versatile",
-            messages: groqMessages,
+            messages,
             temperature: 0.8,
             max_tokens: 2048
           })
@@ -158,17 +169,19 @@ async function generateChat(message, history, env) {
       );
 
       if (!response.ok) {
-        throw new Error("Groq request failed");
+        throw new Error("Groq failed");
       }
 
       const data = await response.json();
+
       const reply = data.choices?.[0]?.message?.content?.trim();
 
       if (reply) return reply;
 
       throw new Error("Empty Groq response");
+
     } catch (error) {
-      throw new Error("Both AI chat providers failed");
+      throw new Error("Both chat providers failed");
     }
   }
 
@@ -183,13 +196,13 @@ async function generateImage(prompt, env) {
   const result = await env.AI.run(
     "@cf/black-forest-labs/flux-1-schnell",
     {
-      prompt: prompt,
+      prompt,
       steps: 8
     }
   );
 
   if (!result || typeof result.image !== "string") {
-    throw new Error("Image generation returned no image");
+    throw new Error("Image generation failed");
   }
 
   return "data:image/jpeg;base64," + result.image;
@@ -200,6 +213,7 @@ export default {
     const origin = request.headers.get("Origin") || "";
     const cors = getCorsHeaders(origin);
 
+    // CORS preflight
     if (request.method === "OPTIONS") {
       if (!cors["Access-Control-Allow-Origin"]) {
         return new Response(null, { status: 403 });
@@ -211,13 +225,28 @@ export default {
       });
     }
 
+    // Website and health check
     if (request.method === "GET") {
+      const url = new URL(request.url);
+
+      if (url.pathname === "/health") {
+        return json({
+          success: true,
+          name: "ESUKA AI",
+          status: "Backend is running",
+          modes: ["chat", "image"]
+        }, 200, cors);
+      }
+
+      // Serve index.html and other website assets
+      if (env.ASSETS) {
+        return env.ASSETS.fetch(request);
+      }
+
       return json({
-        success: true,
-        name: "ESUKA AI",
-        status: "Backend is running",
-        modes: ["chat", "image"]
-      }, 200, cors);
+        success: false,
+        error: "Website assets binding is missing"
+      }, 500, cors);
     }
 
     if (request.method !== "POST") {
@@ -237,9 +266,11 @@ export default {
     try {
       const body = await request.json();
 
-      // IMAGE GENERATION MODE
+      // Image generation
       if (body.mode === "image") {
-        const prompt = String(body.prompt || body.message || "").trim();
+        const prompt = String(
+          body.prompt || body.message || ""
+        ).trim();
 
         if (!prompt) {
           return json({
@@ -251,7 +282,7 @@ export default {
         if (prompt.length > 2048) {
           return json({
             success: false,
-            error: "Image prompt must be under 2048 characters"
+            error: "Image prompt is too long"
           }, 400, cors);
         }
 
@@ -260,12 +291,12 @@ export default {
         return json({
           success: true,
           mode: "image",
-          image: image,
+          image,
           reply: "Tumhari image ready hai!"
         }, 200, cors);
       }
 
-      // NORMAL CHAT MODE
+      // Normal AI chat
       const message = String(body.message || "").trim();
 
       if (!message) {
@@ -286,12 +317,16 @@ export default {
         ? body.history
         : [];
 
-      const reply = await generateChat(message, history, env);
+      const reply = await generateChat(
+        message,
+        history,
+        env
+      );
 
       return json({
         success: true,
         mode: "chat",
-        reply: reply
+        reply
       }, 200, cors);
 
     } catch (error) {
@@ -302,4 +337,3 @@ export default {
     }
   }
 };
-
