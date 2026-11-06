@@ -1,4 +1,3 @@
-
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
@@ -6,7 +5,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a helpful AI assistant.
+You are ESUKA AI, a helpful and intelligent AI assistant.
 
 CREATOR:
 You were created by Katari.
@@ -15,12 +14,16 @@ If asked who created you, reply:
 
 LANGUAGE:
 - Reply in natural Indian conversational language.
-- If the user writes Roman Hindi, reply in Roman Hindi.
-- If the user writes English, reply in English.
+- If user writes Roman Hindi, reply in Roman Hindi.
+- If user writes English, reply in English.
 - Use natural Hinglish.
 - Avoid formal Hindi and unnecessary Devanagari.
-- Keep replies clear, friendly and useful.
+- Keep answers clear, friendly and useful.
 - Do not repeat sentences unnecessarily.
+
+BEHAVIOUR:
+- Help with general questions, coding, learning and creativity.
+- Never claim an action was completed if it was not.
 `;
 
 function getCorsHeaders(origin) {
@@ -69,9 +72,7 @@ async function parseResponse(response) {
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error(
-      "Invalid provider response. HTTP " + response.status
-    );
+    throw new Error("Invalid provider response. HTTP " + response.status);
   }
 
   if (!response.ok) {
@@ -89,14 +90,14 @@ async function parseResponse(response) {
   return data;
 }
 
-// GEMINI
+// GEMINI AI - UPDATED MODEL
 async function generateGemini(message, history, env) {
   const key = env.GEMINI_API_KEY;
 
   if (!key) throw new Error("Gemini API key missing");
 
   const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
     encodeURIComponent(key),
     {
       method: "POST",
@@ -116,7 +117,10 @@ async function generateGemini(message, history, env) {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2048
+          maxOutputTokens: 2048,
+          thinkingConfig: {
+            thinkingLevel: "LOW"
+          }
         }
       })
     }
@@ -139,7 +143,7 @@ async function generateGemini(message, history, env) {
   return reply;
 }
 
-// GROQ BACKUP
+// GROQ AI - UPDATED MODEL
 async function generateGroq(message, history, env) {
   const key = env.GROQ_API_KEY;
 
@@ -169,10 +173,9 @@ async function generateGroq(message, history, env) {
         "Authorization": "Bearer " + key
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages,
-        temperature: 0.7,
-        max_tokens: 2048
+        max_completion_tokens: 2048
       })
     }
   );
@@ -188,7 +191,7 @@ async function generateGroq(message, history, env) {
   return reply;
 }
 
-// AUTOMATIC PROVIDER FALLBACK
+// AUTOMATIC AI FALLBACK
 async function generateChat(message, history, env) {
   const errors = [];
 
@@ -198,6 +201,7 @@ async function generateChat(message, history, env) {
     }
 
     return await generateGemini(message, history, env);
+
   } catch (error) {
     console.error("Gemini error:", error.message);
     errors.push("Gemini: " + error.message);
@@ -209,6 +213,7 @@ async function generateChat(message, history, env) {
     }
 
     return await generateGroq(message, history, env);
+
   } catch (error) {
     console.error("Groq error:", error.message);
     errors.push("Groq: " + error.message);
@@ -279,6 +284,7 @@ export default {
       });
     }
 
+    // HEALTH CHECK
     if (
       request.method === "GET" &&
       url.pathname === "/health"
@@ -287,13 +293,17 @@ export default {
         success: true,
         name: "ESUKA AI",
         status: "Backend is running",
-        modes: ["chat", "image"],
+        models: {
+          gemini: "gemini-3.8-flash",
+          groq: "openai/gpt-oss-120b"
+        },
         geminiConfigured: Boolean(env.GEMINI_API_KEY),
         groqConfigured: Boolean(env.GROQ_API_KEY),
         imageConfigured: Boolean(env.AI)
       }, 200, cors);
     }
 
+    // FRONTEND
     if (request.method === "GET") {
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
@@ -322,6 +332,7 @@ export default {
     try {
       const body = await request.json();
 
+      // IMAGE MODE
       if (body.mode === "image") {
         const image = await generateImage(
           body.prompt || body.message,
@@ -330,10 +341,11 @@ export default {
 
         return json({
           success: true,
-          image: image
+          image
         }, 200, cors);
       }
 
+      // CHAT MODE
       const message = String(body.message || "").trim();
 
       if (!message) {
@@ -351,7 +363,7 @@ export default {
 
       return json({
         success: true,
-        reply: reply
+        reply
       }, 200, cors);
 
     } catch (error) {
