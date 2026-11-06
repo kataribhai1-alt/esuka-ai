@@ -1,4 +1,3 @@
-
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
@@ -6,185 +5,204 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a smart and helpful AI assistant.
+You are ESUKA AI, a helpful and intelligent AI assistant.
 
-IDENTITY:
-Your name is ESUKA AI.
+CREATOR:
 You were created by Katari.
 If someone asks who created you, say:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
-Never claim to be ChatGPT or another AI.
 
 LANGUAGE:
-- Speak natural Indian Hinglish.
-- When users write Roman Hindi, reply in Roman Hindi.
-- Do not automatically use Devanagari.
-- Use simple everyday Indian language.
-- If users write English, reply in English.
-- Understand casual spelling and typos.
-- Sound natural, friendly and intelligent.
-- Avoid robotic and repetitive responses.
+- Reply in natural Indian conversational language.
+- If user writes Roman Hindi, reply in Roman Hindi.
+- If user writes English, reply in English.
+- Use casual Hinglish naturally.
+- Do not force formal Hindi or Devanagari.
+- Keep answers clear and friendly.
+- Do not repeat sentences unnecessarily.
 
-CAPABILITIES:
-- General knowledge and explanations.
-- Coding and website development.
-- App development and debugging.
-- Writing and creative ideas.
-- Learning and step-by-step guidance.
-- Image prompt assistance.
-- Be honest about limitations.
-- Never claim to have completed an action you did not perform.
-
-Keep answers useful, clear and conversational.
+BEHAVIOUR:
+- Help with general questions, coding, learning and creativity.
+- Never pretend to have performed an action you have not performed.
 `;
 
 function getCorsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin);
 
   return {
-    ...(allowed ? {
-      "Access-Control-Allow-Origin": origin
-    } : {}),
+    "Access-Control-Allow-Origin": allowed ? origin : "",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };
 }
 
-function json(data, status, cors) {
+function json(data, status = 200, cors = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...cors,
       "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store"
+      ...cors
     }
   });
 }
 
-async function generateChat(message, history, env) {
-  const safeHistory = (Array.isArray(history) ? history : [])
-    .filter(item =>
-      item &&
-      ["user", "assistant", "model"].includes(item.role) &&
-      typeof (item.content || item.text) === "string"
-    )
-    .slice(-12)
-    .map(item => ({
-      role: item.role === "assistant" || item.role === "model"
-        ? "model"
-        : "user",
-      parts: [{
-        text: String(item.content || item.text).slice(0, 4000)
-      }]
-    }));
+function getHistoryText(history) {
+  if (!Array.isArray(history)) return [];
+
+  return history.slice(-12).map(item => {
+    const role = item.role === "assistant" ? "model" : "user";
+    const content =
+      item.content || item.text || item.message || "";
+
+    return {
+      role,
+      parts: [{ text: String(content) }]
+    };
+  }).filter(item => item.parts[0].text.trim());
+}
+
+async function generateGemini(message, history, env) {
+  const key = env.GEMINI_API_KEY;
+
+  if (!key) {
+    throw new Error("GEMINI_API_KEY is missing");
+  }
 
   const contents = [
-    ...safeHistory,
+    ...getHistoryText(history),
     {
       role: "user",
       parts: [{ text: message }]
     }
   ];
 
-  // GEMINI PRIMARY
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
+    encodeURIComponent(key),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048
+        }
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error("Gemini API error:", response.status);
+    throw new Error("Gemini provider failed (" + response.status + ")");
+  }
+
+  const reply = data.candidates?.[0]?.content?.parts
+    ?.map(part => part.text || "")
+    .join("")
+    .trim();
+
+  if (!reply) {
+    throw new Error("Gemini returned an empty response");
+  }
+
+  return reply;
+}
+
+async function generateGroq(message, history, env) {
+  const key = env.GROQ_API_KEY;
+
+  if (!key) {
+    throw new Error("GROQ_API_KEY is missing");
+  }
+
+  const messages = [
+    {
+      role: "system",
+      content: SYSTEM_PROMPT
+    },
+    ...getHistoryText(history).map(item => ({
+      role: item.role === "model" ? "assistant" : "user",
+      content: item.parts.map(p => p.text).join("\n")
+    })),
+    {
+      role: "user",
+      content: message
+    }
+  ];
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + key
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages,
+        temperature: 0.7,
+        max_tokens: 2048
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error("Groq API error:", response.status);
+    throw new Error("Groq provider failed (" + response.status + ")");
+  }
+
+  const reply = data.choices?.[0]?.message?.content?.trim();
+
+  if (!reply) {
+    throw new Error("Groq returned an empty response");
+  }
+
+  return reply;
+}
+
+async function generateChat(message, history, env) {
   if (env.GEMINI_API_KEY) {
     try {
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-        encodeURIComponent(env.GEMINI_API_KEY),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: SYSTEM_PROMPT }]
-            },
-            contents,
-            generationConfig: {
-              temperature: 0.8,
-              maxOutputTokens: 2048
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Gemini failed");
-      }
-
-      const data = await response.json();
-
-      const reply = data.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("")
-        .trim();
-
-      if (reply) return reply;
-
-      throw new Error("Empty Gemini response");
-
+      return await generateGemini(message, history, env);
     } catch (error) {
-      // Continue to Groq backup
+      console.error("Gemini failed:", error.message);
     }
   }
 
-  // GROQ BACKUP
   if (env.GROQ_API_KEY) {
     try {
-      const messages = [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT
-        },
-        ...safeHistory.map(item => ({
-          role: item.role === "model" ? "assistant" : item.role,
-          content: item.parts[0].text
-        })),
-        {
-          role: "user",
-          content: message
-        }
-      ];
-
-      const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + env.GROQ_API_KEY,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages,
-            temperature: 0.8,
-            max_tokens: 2048
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Groq failed");
-      }
-
-      const data = await response.json();
-
-      const reply = data.choices?.[0]?.message?.content?.trim();
-
-      if (reply) return reply;
-
-      throw new Error("Empty Groq response");
-
+      return await generateGroq(message, history, env);
     } catch (error) {
-      throw new Error("Both chat providers failed");
+      console.error("Groq failed:", error.message);
     }
   }
 
-  throw new Error("AI API keys are not configured");
+  throw new Error("Both AI providers failed or API keys are missing");
+}
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 8192;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(i, i + chunkSize)
+    );
+  }
+
+  return btoa(binary);
 }
 
 async function generateImage(prompt, env) {
@@ -192,19 +210,29 @@ async function generateImage(prompt, env) {
     throw new Error("Cloudflare AI binding is missing");
   }
 
+  if (!prompt || !prompt.trim()) {
+    throw new Error("Image prompt is empty");
+  }
+
   const result = await env.AI.run(
     "@cf/black-forest-labs/flux-1-schnell",
     {
-      prompt,
+      prompt: prompt.trim(),
       steps: 8
     }
   );
 
-  if (!result || typeof result.image !== "string") {
-    throw new Error("Image generation failed");
+  if (result instanceof ReadableStream) {
+    const buffer = await new Response(result).arrayBuffer();
+    return "data:image/png;base64," +
+      bytesToBase64(new Uint8Array(buffer));
   }
 
-  return "data:image/png;base64," + result.image;
+  if (result?.image) {
+    return "data:image/png;base64," + result.image;
+  }
+
+  throw new Error("Image provider returned no image");
 }
 
 export default {
@@ -212,7 +240,6 @@ export default {
     const origin = request.headers.get("Origin") || "";
     const cors = getCorsHeaders(origin);
 
-    // CORS PREFLIGHT
     if (request.method === "OPTIONS") {
       if (!ALLOWED_ORIGINS.includes(origin)) {
         return new Response(null, { status: 403 });
@@ -224,27 +251,29 @@ export default {
       });
     }
 
-    // WEBSITE + HEALTH CHECK
+    const url = new URL(request.url);
+
+    if (request.method === "GET" && url.pathname === "/health") {
+      return json({
+        success: true,
+        name: "ESUKA AI",
+        status: "Backend is running",
+        modes: ["chat", "image"],
+        geminiConfigured: Boolean(env.GEMINI_API_KEY),
+        groqConfigured: Boolean(env.GROQ_API_KEY),
+        imageConfigured: Boolean(env.AI)
+      }, 200, cors);
+    }
+
     if (request.method === "GET") {
-      const url = new URL(request.url);
-
-      if (url.pathname === "/health") {
-        return json({
-          success: true,
-          name: "ESUKA AI",
-          status: "Backend is running",
-          modes: ["chat", "image"]
-        }, 200, cors);
-      }
-
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
       }
 
       return json({
         success: false,
-        error: "Website assets not configured"
-      }, 500, cors);
+        error: "Website assets are not configured"
+      }, 404, cors);
     }
 
     if (request.method !== "POST") {
@@ -254,7 +283,6 @@ export default {
       }, 405, cors);
     }
 
-    // API CORS CHECK
     if (!ALLOWED_ORIGINS.includes(origin)) {
       return json({
         success: false,
@@ -265,69 +293,44 @@ export default {
     try {
       const body = await request.json();
 
-      // IMAGE GENERATION
       if (body.mode === "image") {
-        const prompt = String(
-          body.prompt || body.message || ""
-        ).trim();
-
-        if (!prompt) {
-          return json({
-            success: false,
-            error: "Please enter an image description"
-          }, 400, cors);
-        }
-
-        if (prompt.length > 2048) {
-          return json({
-            success: false,
-            error: "Image prompt is too long"
-          }, 400, cors);
-        }
-
-        const image = await generateImage(prompt, env);
+        const image = await generateImage(
+          body.prompt || body.message,
+          env
+        );
 
         return json({
           success: true,
-          mode: "image",
-          image,
-          reply: "Tumhari image ready hai!"
+          image
         }, 200, cors);
       }
 
-      // NORMAL CHAT
       const message = String(body.message || "").trim();
 
       if (!message) {
         return json({
           success: false,
-          error: "Message is empty"
+          error: "Message is required"
         }, 400, cors);
       }
 
-      if (message.length > 10000) {
-        return json({
-          success: false,
-          error: "Message is too long"
-        }, 400, cors);
-      }
-
-      const history = Array.isArray(body.history)
-        ? body.history
-        : [];
-
-      const reply = await generateChat(message, history, env);
+      const reply = await generateChat(
+        message,
+        body.history || [],
+        env
+      );
 
       return json({
         success: true,
-        mode: "chat",
         reply
       }, 200, cors);
 
     } catch (error) {
+      console.error("ESUKA AI ERROR:", error.message);
+
       return json({
         success: false,
-        error: "ESUKA AI request failed. Please try again."
+        error: error.message || "Unknown server error"
       }, 500, cors);
     }
   }
