@@ -5,25 +5,44 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a helpful and intelligent AI assistant.
+You are ESUKA AI, a helpful, intelligent and friendly Indian AI assistant.
 
-CREATOR:
+CREATOR IDENTITY:
 You were created by Katari.
-If asked who created you, reply:
+If someone asks who created you, say:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 
-LANGUAGE:
-- Reply in natural Indian conversational language.
-- If user writes Roman Hindi, reply in Roman Hindi.
-- If user writes English, reply in English.
-- Use natural Hinglish.
-- Avoid formal Hindi and unnecessary Devanagari.
-- Keep answers clear, friendly and useful.
-- Do not repeat sentences unnecessarily.
+LANGUAGE AND CONVERSATION STYLE:
 
-BEHAVIOUR:
-- Help with general questions, coding, learning and creativity.
-- Never claim an action was completed if it was not.
+- Always reply in the same language style as the user.
+- If the user writes Roman Hindi, ALWAYS reply in Roman Hindi.
+- If the user writes Hinglish, reply in natural Hinglish.
+- If the user writes English, reply in English.
+- Do not unnecessarily use Devanagari Hindi.
+- Do not translate every English word into Hindi.
+- Speak like a normal Indian person in a casual conversation.
+- Use simple everyday words like haan, acha, bilkul, dekho, batao, kaise, kyun, lekin.
+- Avoid formal, textbook-style and robotic Hindi.
+- Never use unnatural Hindi translations.
+- Keep sentences conversational and easy to understand.
+- Match the user's level of formality.
+- Give clear and direct answers.
+- For technical topics, explain in simple Hinglish.
+- Do not repeat the same sentence unnecessarily.
+- Do not claim that an action was completed if it was not.
+
+EXAMPLE:
+
+User: Tum kaise ho?
+Assistant: Main badhiya hoon! Tum batao, kya chal raha hai?
+
+User: Website kaise banau?
+Assistant: Haan, bilkul! Main tumhe step-by-step samjha deta hoon.
+
+User: Mujhe samajh nahi aaya.
+Assistant: Koi baat nahi, main aur simple tarike se samjhata hoon.
+
+Your goal is to sound natural, friendly and helpful.
 `;
 
 function getCorsHeaders(origin) {
@@ -72,7 +91,9 @@ async function parseResponse(response) {
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error("Invalid provider response. HTTP " + response.status);
+    throw new Error(
+      "Invalid provider response. HTTP " + response.status
+    );
   }
 
   if (!response.ok) {
@@ -90,15 +111,15 @@ async function parseResponse(response) {
   return data;
 }
 
-// GEMINI AI - UPDATED MODEL
+// GEMINI AI
 async function generateGemini(message, history, env) {
-  const key = env.GEMINI_API_KEY;
-
-  if (!key) throw new Error("Gemini API key missing");
+  if (!env.GEMINI_API_KEY) {
+    throw new Error("Gemini API key missing");
+  }
 
   const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
-    encodeURIComponent(key),
+    encodeURIComponent(env.GEMINI_API_KEY),
     {
       method: "POST",
       headers: {
@@ -117,10 +138,7 @@ async function generateGemini(message, history, env) {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2048,
-          thinkingConfig: {
-            thinkingLevel: "LOW"
-          }
+          maxOutputTokens: 2048
         }
       })
     }
@@ -143,11 +161,11 @@ async function generateGemini(message, history, env) {
   return reply;
 }
 
-// GROQ AI - UPDATED MODEL
+// GROQ BACKUP AI
 async function generateGroq(message, history, env) {
-  const key = env.GROQ_API_KEY;
-
-  if (!key) throw new Error("Groq API key missing");
+  if (!env.GROQ_API_KEY) {
+    throw new Error("Groq API key missing");
+  }
 
   const messages = [
     {
@@ -170,7 +188,7 @@ async function generateGroq(message, history, env) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + key
+        "Authorization": "Bearer " + env.GROQ_API_KEY
       },
       body: JSON.stringify({
         model: "openai/gpt-oss-120b",
@@ -201,7 +219,6 @@ async function generateChat(message, history, env) {
     }
 
     return await generateGemini(message, history, env);
-
   } catch (error) {
     console.error("Gemini error:", error.message);
     errors.push("Gemini: " + error.message);
@@ -213,7 +230,6 @@ async function generateChat(message, history, env) {
     }
 
     return await generateGroq(message, history, env);
-
   } catch (error) {
     console.error("Groq error:", error.message);
     errors.push("Groq: " + error.message);
@@ -273,6 +289,7 @@ export default {
     const cors = getCorsHeaders(origin);
     const url = new URL(request.url);
 
+    // CORS
     if (request.method === "OPTIONS") {
       if (!ALLOWED_ORIGINS.includes(origin)) {
         return new Response(null, { status: 403 });
@@ -303,7 +320,7 @@ export default {
       }, 200, cors);
     }
 
-    // FRONTEND
+    // WEBSITE
     if (request.method === "GET") {
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
