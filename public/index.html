@@ -3,71 +3,431 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080912">
+<meta name="theme-color" content="#090a0f">
 <title>ESUKA AI</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#080912;color:#fff;height:100dvh;overflow:hidden}
+
+:root{
+  --bg:#090a0f;
+  --panel:#101118;
+  --border:#262832;
+  --muted:#9295a3;
+  --accent:#9877ff;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+  color:#f5f5f8;
+  height:100dvh;
+  overflow:hidden;
+}
+
+button{font-family:inherit}
+
 .app{display:flex;height:100dvh}
-.sidebar{width:260px;background:#0d0e19;border-right:1px solid #25263a;padding:20px;display:flex;flex-direction:column;transition:.3s}
-.logo{font-size:25px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;color:transparent}
-.tagline{color:#77798e;font-size:11px;margin-top:5px}
-.newchat{margin-top:30px;padding:13px;border-radius:12px;background:linear-gradient(100deg,#7652e8,#3279df);color:white;border:0;font-size:14px;cursor:pointer}
-.sideheading{font-size:11px;color:#77798e;margin:25px 0 12px}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:270px;
+  flex-shrink:0;
+  background:#0c0d13;
+  border-right:1px solid var(--border);
+  padding:21px;
+  display:flex;
+  flex-direction:column;
+  transition:left .3s;
+}
+
+.logo{
+  font-size:25px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  background:linear-gradient(100deg,#bd9aff,#62c7ff);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.tagline{
+  color:#777b89;
+  font-size:10px;
+  letter-spacing:1.4px;
+  margin-top:6px;
+}
+
+.newchat{
+  margin-top:30px;
+  padding:13px;
+  border-radius:13px;
+  background:#191a24;
+  border:1px solid #30313e;
+  color:white;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.newchat:hover{background:#252637}
+
+.sideheading{
+  font-size:10px;
+  color:#777b89;
+  letter-spacing:1.5px;
+  margin:28px 0 12px;
+}
+
 .history{overflow-y:auto;flex:1}
-.history-item{padding:12px;border-radius:9px;color:#c4c5d3;font-size:13px;cursor:pointer;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.history-item.active,.history-item:hover{background:#202137}
-.sidebar-bottom{font-size:12px;color:#77798e;padding-top:15px}
-.main{flex:1;display:flex;flex-direction:column;min-width:0}
-.topbar{height:65px;border-bottom:1px solid #25263a;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
-.topname{font-weight:bold;font-size:15px}
-.status{font-size:11px;color:#55d6a0;margin-top:5px}
-.menu{display:none;background:none;color:white;border:0;font-size:23px}
-.chat{flex:1;overflow-y:auto;padding:30px 18px;scroll-behavior:smooth}
-.welcome{text-align:center;margin:12vh auto 30px;max-width:550px}
-.orb{width:75px;height:75px;border-radius:25px;margin:0 auto 25px;background:linear-gradient(135deg,#8258ff,#20b9e8);display:grid;place-items:center;font-size:30px;box-shadow:0 0 50px #7955ff55}
-.welcome h1{font-size:32px;margin-bottom:12px}
-.gradient{background:linear-gradient(90deg,#b18aff,#48caff);-webkit-background-clip:text;color:transparent}
-.welcome p{color:#85869c;line-height:1.6;font-size:14px}
-.suggestions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:25px}
-.suggestion{background:#141625;border:1px solid #292b43;padding:12px 15px;border-radius:12px;color:#c7c8d8;font-size:12px;cursor:pointer}
-.messages{max-width:850px;margin:auto}
-.message{display:flex;gap:12px;margin:22px 0;align-items:flex-start}
-.avatar{width:34px;height:34px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;background:#25213f;font-size:14px}
-.user .avatar{background:#173b53}
-.message-wrap{max-width:85%;min-width:0}
-.content{background:#141625;border:1px solid #282a40;padding:14px 16px;border-radius:4px 15px 15px 15px;line-height:1.65;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+
+.history-item{
+  padding:12px;
+  border-radius:10px;
+  color:#c4c6d1;
+  font-size:13px;
+  cursor:pointer;
+  margin-bottom:5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.history-item.active,.history-item:hover{
+  background:#20212c;
+}
+
+.sidebar-bottom{
+  font-size:11px;
+  color:#777b89;
+  padding-top:15px;
+}
+
+/* MAIN */
+
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  height:100%;
+}
+
+.topbar{
+  height:65px;
+  border-bottom:1px solid #22232c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 23px;
+  flex-shrink:0;
+  background:#0b0c12;
+}
+
+.topname{font-weight:750;font-size:15px}
+
+.status{
+  font-size:11px;
+  color:#63d7a2;
+  margin-top:5px;
+}
+
+.menu{
+  display:none;
+  background:none;
+  color:white;
+  border:0;
+  font-size:23px;
+}
+
+/* CHAT */
+
+.chat{
+  flex:1;
+  overflow-y:auto;
+  padding:30px 18px;
+  scroll-behavior:smooth;
+  overscroll-behavior:contain;
+}
+
+.welcome{
+  text-align:center;
+  margin:12vh auto 30px;
+  max-width:550px;
+}
+
+.orb{
+  width:76px;
+  height:76px;
+  border-radius:25px;
+  margin:0 auto 25px;
+  background:linear-gradient(135deg,#9167ff,#43b9f7);
+  display:grid;
+  place-items:center;
+  font-size:31px;
+  box-shadow:0 0 65px #7955ff35;
+}
+
+.welcome h1{
+  font-size:32px;
+  margin-bottom:12px;
+  letter-spacing:-.8px;
+}
+
+.gradient{
+  background:linear-gradient(90deg,#bd9aff,#62c7ff);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.welcome p{
+  color:#9295a3;
+  line-height:1.7;
+  font-size:14px;
+}
+
+.suggestions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:27px;
+}
+
+.suggestion{
+  background:#14151d;
+  border:1px solid #292b37;
+  padding:12px 15px;
+  border-radius:13px;
+  color:#d0d2dc;
+  font-size:12px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.suggestion:hover{
+  background:#222431;
+  border-color:#7864c5;
+}
+
+/* MESSAGES */
+
+.messages{
+  max-width:850px;
+  margin:auto;
+}
+
+.message{
+  display:flex;
+  gap:13px;
+  margin:25px 0;
+  align-items:flex-start;
+}
+
+.avatar{
+  width:35px;
+  height:35px;
+  flex-shrink:0;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:#252039;
+  font-size:14px;
+}
+
+.user .avatar{background:#19364a}
+
+.message-wrap{
+  max-width:88%;
+  min-width:0;
+}
+
+.content{
+  background:#151720;
+  border:1px solid #292b36;
+  padding:14px 17px;
+  border-radius:5px 17px 17px 17px;
+  line-height:1.75;
+  font-size:14px;
+  overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+
 .user{justify-content:flex-end}
 .user .message-wrap{order:1}
 .user .avatar{order:2}
-.user .content{background:#252044;border-color:#3a3267;border-radius:15px 4px 15px 15px}
-.msg-actions{margin-top:9px;display:flex;gap:8px}
-.small-btn{border:1px solid #33354b;background:#171929;color:#aaaec3;border-radius:8px;padding:7px 12px;font-size:11px;cursor:pointer}
-.small-btn:hover{background:#292b45;color:white}
-.typing{color:#8d90a8;font-size:13px;padding:12px}
-.generated-image{display:block;width:100%;max-width:450px;height:auto;margin-top:12px;border-radius:12px}
-.composer-wrap{padding:12px 18px 20px;flex-shrink:0}
-.composer{max-width:850px;margin:auto;background:#141625;border:1px solid #34364e;border-radius:18px;padding:10px;display:flex;align-items:flex-end;gap:9px;box-shadow:0 10px 40px #0005}
-textarea{flex:1;resize:none;max-height:130px;min-height:40px;background:transparent;border:0;outline:0;color:white;padding:12px;font-size:14px;font-family:inherit}
-textarea::placeholder{color:#77798e}
-.icon-btn{width:40px;height:40px;border:0;border-radius:12px;background:#25263a;color:#d8d9e8;cursor:pointer;font-size:17px;flex-shrink:0}
-.mic.listening{background:#e34c70;animation:pulse 1s infinite}
-.send{background:linear-gradient(135deg,#8759f4,#3588ed);color:white;font-size:18px}
-.icon-btn:disabled{opacity:.5;cursor:wait}
-@keyframes pulse{50%{box-shadow:0 0 0 8px #e34c7033}}
-.note{text-align:center;color:#666981;font-size:10px;margin-top:10px}
-@media(max-width:650px){
-.sidebar{position:fixed;z-index:5;left:-270px;top:0;bottom:0}
-.sidebar.open{left:0}
-.menu{display:block}
-.topbar{padding:0 14px}
-.chat{padding:20px 12px}
-.welcome{margin-top:10vh}
-.welcome h1{font-size:27px}
-.composer-wrap{padding:10px}
-.message-wrap{max-width:90%}
+
+.user .content{
+  background:#20212d;
+  border:1px solid #343543;
+  border-radius:17px 5px 17px 17px;
 }
+
+.msg-actions{
+  margin-top:9px;
+  display:flex;
+  gap:8px;
+}
+
+.small-btn{
+  border:1px solid #30323e;
+  background:#171821;
+  color:#b8bac7;
+  border-radius:9px;
+  padding:8px 12px;
+  font-size:11px;
+  cursor:pointer;
+}
+
+.small-btn:hover{
+  background:#282a37;
+  color:white;
+}
+
+.typing{
+  color:#a4a6b3;
+  font-size:13px;
+  padding:12px;
+}
+
+.generated-image{
+  display:block;
+  width:100%;
+  max-width:450px;
+  height:auto;
+  margin-top:12px;
+  border-radius:14px;
+}
+
+/* COMPOSER */
+
+.composer-wrap{
+  padding:12px 18px 20px;
+  flex-shrink:0;
+  background:linear-gradient(transparent,#090a0f 20%);
+}
+
+.composer{
+  max-width:850px;
+  margin:auto;
+  background:#171920;
+  border:1px solid #353743;
+  border-radius:24px;
+  padding:9px 10px;
+  display:flex;
+  align-items:flex-end;
+  gap:9px;
+  box-shadow:0 12px 45px #0007;
+  transition:border-color .2s,box-shadow .2s;
+}
+
+.composer:focus-within{
+  border-color:#8069d0;
+  box-shadow:0 0 0 3px #8068dc18,0 12px 45px #0007;
+}
+
+textarea{
+  flex:1;
+  resize:none;
+  max-height:130px;
+  min-height:42px;
+  background:transparent;
+  border:0;
+  outline:0;
+  color:#f7f7fa;
+  padding:12px 9px;
+  font-size:16px;
+  font-family:inherit;
+  line-height:1.5;
+  caret-color:#a78bfa;
+}
+
+textarea::placeholder{color:#858895}
+
+.icon-btn{
+  width:41px;
+  height:41px;
+  border:0;
+  border-radius:14px;
+  background:#292c37;
+  color:#e1e2ea;
+  cursor:pointer;
+  font-size:17px;
+  flex-shrink:0;
+  transition:.2s;
+}
+
+.icon-btn:hover{background:#393c4a}
+
+.mic.listening{
+  background:#d84d70;
+  animation:pulse 1s infinite;
+}
+
+.send{
+  background:linear-gradient(135deg,#9270ff,#529fff);
+  color:white;
+  font-size:19px;
+}
+
+.send:hover{filter:brightness(1.12)}
+
+.icon-btn:disabled{
+  opacity:.5;
+  cursor:wait;
+}
+
+@keyframes pulse{
+  50%{box-shadow:0 0 0 8px #e34c7033}
+}
+
+.note{
+  text-align:center;
+  color:#737684;
+  font-size:10px;
+  margin-top:10px;
+}
+
+/* MOBILE */
+
+@media(max-width:650px){
+
+  .sidebar{
+    position:fixed;
+    z-index:5;
+    left:-280px;
+    top:0;
+    bottom:0;
+    height:100dvh;
+  }
+
+  .sidebar.open{left:0}
+
+  .menu{display:block}
+
+  .topbar{padding:0 14px}
+
+  .chat{padding:20px 12px}
+
+  .welcome{margin-top:10vh}
+
+  .welcome h1{font-size:27px}
+
+  .composer-wrap{padding:10px 10px 16px}
+
+  .composer{
+    border-radius:23px;
+    padding:8px;
+    gap:7px;
+  }
+
+  .message-wrap{max-width:90%}
+
+  .avatar{width:32px;height:32px}
+
+  textarea{font-size:16px}
+
+}
+
 </style>
 </head>
 
@@ -77,9 +437,12 @@ textarea::placeholder{color:#77798e}
 <aside class="sidebar" id="sidebar">
   <div class="logo">ESUKA AI</div>
   <div class="tagline">YOUR PERSONAL AI ASSISTANT</div>
+
   <button class="newchat" onclick="newChat()">＋ New Chat</button>
+
   <div class="sideheading">RECENT CONVERSATIONS</div>
   <div class="history" id="historyList"></div>
+
   <div class="sidebar-bottom">Created with care by Katari</div>
 </aside>
 
@@ -89,10 +452,11 @@ textarea::placeholder{color:#77798e}
   <div style="display:flex;align-items:center;gap:13px">
     <button class="menu" onclick="toggleSidebar()">☰</button>
     <div>
-      <div class="topname">ESUKA AI <span style="color:#8b75ed">✦</span></div>
+      <div class="topname">ESUKA AI <span style="color:#9877ff">✦</span></div>
       <div class="status">● Online Assistant</div>
     </div>
   </div>
+
   <button class="small-btn" onclick="stopSpeech()">⏹ Stop Voice</button>
 </header>
 
@@ -100,26 +464,39 @@ textarea::placeholder{color:#77798e}
 
   <div class="welcome" id="welcome">
     <div class="orb">✦</div>
+
     <h1>Hey! I'm <span class="gradient">ESUKA AI</span></h1>
+
     <p>Your personal AI assistant. Ask me anything, share your ideas or just start a conversation.</p>
+
     <div class="suggestions">
       <button class="suggestion" onclick="useSuggestion('Tell me something interesting')">✦ Tell me something</button>
+
       <button class="suggestion" onclick="useSuggestion('Help me learn coding')">⌘ Learn coding</button>
+
       <button class="suggestion" onclick="useSuggestion('Give me a creative idea')">✧ Creative ideas</button>
+
       <button class="suggestion" onclick="useSuggestion('Generate an image of a futuristic city at sunset')">🎨 Generate image</button>
     </div>
   </div>
 
   <div class="messages" id="messages"></div>
+
 </section>
 
 <div class="composer-wrap">
   <div class="composer">
+
     <button class="icon-btn mic" id="micBtn" onclick="toggleMic()" title="Voice input">🎙</button>
+
     <textarea id="input" rows="1" placeholder="Message ESUKA AI..."></textarea>
+
     <button class="icon-btn" onclick="stopSpeech()" title="Stop voice">■</button>
+
     <button class="icon-btn send" id="sendBtn" onclick="sendMessage()">➤</button>
+
   </div>
+
   <div class="note">AI voice will play only when you press Listen.</div>
 </div>
 
@@ -127,6 +504,7 @@ textarea::placeholder{color:#77798e}
 </div>
 
 <script>
+
 const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
 
 const input = document.getElementById("input");
@@ -165,12 +543,9 @@ if ("speechSynthesis" in window) {
 
 function saveChats() {
   try {
-    localStorage.setItem(
-      "esuka_ai_chats_v3",
-      JSON.stringify(chats)
-    );
-  } catch (error) {
-    console.error("Chat storage error:", error);
+    localStorage.setItem("esuka_ai_chats_v3", JSON.stringify(chats));
+  } catch(error) {
+    console.error("Chat storage error:",error);
   }
 }
 
@@ -191,10 +566,13 @@ function renderHistory() {
 
   chats.forEach(c => {
     const item = document.createElement("div");
+
     item.className =
       "history-item" + (c.id === currentChat ? " active" : "");
+
     item.textContent = "◈ " + c.title;
     item.onclick = () => openChat(c.id);
+
     list.appendChild(item);
   });
 }
@@ -210,7 +588,7 @@ function openChat(id) {
   welcome.style.display = "none";
 
   conversation.forEach(m => {
-    addMessage(m.role, m.content);
+    addMessage(m.role,m.content);
   });
 
   renderHistory();
@@ -226,7 +604,8 @@ function useSuggestion(text) {
   sendMessage();
 }
 
-// Detect image-generation requests
+/* IMAGE REQUEST DETECTION */
+
 function isImageRequest(text) {
   const value = text.toLowerCase().trim();
 
@@ -242,12 +621,13 @@ function isImageRequest(text) {
   return patterns.some(pattern => pattern.test(value));
 }
 
-function addMessage(role, text) {
+/* MESSAGE DISPLAY */
+
+function addMessage(role,text) {
   welcome.style.display = "none";
 
   const row = document.createElement("div");
-  row.className =
-    "message " + (role === "user" ? "user" : "assistant");
+  row.className = "message " + (role === "user" ? "user" : "assistant");
 
   const avatar = document.createElement("div");
   avatar.className = "avatar";
@@ -281,7 +661,7 @@ function addMessage(role, text) {
       });
 
       listen.textContent = "⏹ Stop";
-      speakText(text, listen);
+      speakText(text,listen);
     };
 
     actions.appendChild(listen);
@@ -295,8 +675,10 @@ function addMessage(role, text) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// Display generated image in chat
+/* IMAGE DISPLAY */
+
 function addImageMessage(imageData) {
+
   if (
     typeof imageData !== "string" ||
     !imageData.startsWith("data:image/")
@@ -329,14 +711,16 @@ function addImageMessage(imageData) {
 
   bubble.appendChild(title);
   bubble.appendChild(img);
-  wrap.appendChild(bubble);
 
+  wrap.appendChild(bubble);
   row.appendChild(avatar);
   row.appendChild(wrap);
 
   messages.appendChild(row);
   chat.scrollTop = chat.scrollHeight;
 }
+
+/* TYPING INDICATOR */
 
 function showTyping(message) {
   removeTyping();
@@ -354,17 +738,21 @@ function removeTyping() {
   document.getElementById("typing")?.remove();
 }
 
+/* SAVE CHAT */
+
 function saveConversation() {
+
   const index = chats.findIndex(c => c.id === currentChat);
 
   if (index >= 0) {
+
     chats[index].messages = [...conversation];
 
     chats[index].title =
       conversation.find(m => m.role === "user")
-        ?.content.slice(0, 32) || "New Chat";
+        ?.content.slice(0,32) || "New Chat";
 
-    const item = chats.splice(index, 1)[0];
+    const item = chats.splice(index,1)[0];
     chats.unshift(item);
   }
 
@@ -372,8 +760,10 @@ function saveConversation() {
   renderHistory();
 }
 
-// Main chat and image generation
+/* SEND MESSAGE */
+
 async function sendMessage() {
+
   if (sending) return;
 
   const text = input.value.trim();
@@ -383,27 +773,29 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   stopSpeech();
+
   input.value = "";
   input.style.height = "auto";
 
   const imageMode = isImageRequest(text);
 
   if (!currentChat) {
+
     currentChat = Date.now().toString();
 
     chats.unshift({
-      id: currentChat,
-      title: text.slice(0, 32),
-      messages: []
+      id:currentChat,
+      title:text.slice(0,32),
+      messages:[]
     });
   }
 
   conversation.push({
-    role: "user",
-    content: text
+    role:"user",
+    content:text
   });
 
-  addMessage("user", text);
+  addMessage("user",text);
   saveConversation();
 
   showTyping(
@@ -413,24 +805,25 @@ async function sendMessage() {
   );
 
   try {
+
     const requestBody = imageMode
       ? {
-          mode: "image",
-          message: text,
-          prompt: text
+          mode:"image",
+          message:text,
+          prompt:text
         }
       : {
-          mode: "chat",
-          message: text,
-          history: conversation.slice(0, -1).slice(-6)
+          mode:"chat",
+          message:text,
+          history:conversation.slice(0,-1).slice(-6)
         };
 
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
+    const response = await fetch(API_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
       },
-      body: JSON.stringify(requestBody)
+      body:JSON.stringify(requestBody)
     });
 
     let data;
@@ -442,12 +835,11 @@ async function sendMessage() {
     }
 
     if (!response.ok || data.success === false) {
-      throw new Error(
-        data.error || "Server error: " + response.status
-      );
+      throw new Error(data.error || "Server error: " + response.status);
     }
 
     if (imageMode) {
+
       if (!data.image) {
         throw new Error("Server did not return an image.");
       }
@@ -455,31 +847,31 @@ async function sendMessage() {
       addImageMessage(data.image);
 
       conversation.push({
-        role: "assistant",
-        content: "[Image generated]"
+        role:"assistant",
+        content:"[Image generated]"
       });
 
       saveConversation();
       return;
     }
 
-    const reply =
-      data.reply || data.response || data.text;
+    const reply = data.reply || data.response || data.text;
 
     if (!reply || typeof reply !== "string") {
       throw new Error("AI response was empty.");
     }
 
     conversation.push({
-      role: "assistant",
-      content: reply
+      role:"assistant",
+      content:reply
     });
 
-    addMessage("assistant", reply);
+    addMessage("assistant",reply);
     saveConversation();
 
-  } catch (error) {
-    console.error("ESUKA AI request error:", error);
+  } catch(error) {
+
+    console.error("ESUKA AI request error:",error);
 
     addMessage(
       "assistant",
@@ -488,15 +880,19 @@ async function sendMessage() {
     );
 
   } finally {
+
     removeTyping();
     sending = false;
     sendBtn.disabled = false;
     input.focus();
+
   }
 }
 
-// Voice output
-function speakText(text, button) {
+/* VOICE OUTPUT */
+
+function speakText(text,button) {
+
   if (!("speechSynthesis" in window)) {
     alert("Voice output is not supported in this browser.");
     return;
@@ -504,7 +900,7 @@ function speakText(text, button) {
 
   speechSynthesis.cancel();
 
-  const cleanText = text.replace(/[*#`_]/g, "");
+  const cleanText = text.replace(/[*#`_]/g,"");
   const utterance = new SpeechSynthesisUtterance(cleanText);
 
   const isHindi =
@@ -516,8 +912,8 @@ function speakText(text, button) {
   utterance.pitch = 1.08;
 
   const preferred = isHindi
-    ? ["heera", "neerja", "swara", "female", "hindi"]
-    : ["samantha", "zira", "female", "aria", "jenny"];
+    ? ["heera","neerja","swara","female","hindi"]
+    : ["samantha","zira","female","aria","jenny"];
 
   const matching = voices.find(v =>
     preferred.some(p => v.name.toLowerCase().includes(p)) &&
@@ -547,6 +943,7 @@ function speakText(text, button) {
 }
 
 function stopSpeech() {
+
   if ("speechSynthesis" in window) {
     speechSynthesis.cancel();
   }
@@ -556,8 +953,10 @@ function stopSpeech() {
   });
 }
 
-// Voice input
+/* VOICE INPUT */
+
 function toggleMic() {
+
   const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
@@ -573,6 +972,7 @@ function toggleMic() {
   }
 
   recognition = new SpeechRecognition();
+
   recognition.lang = "hi-IN";
   recognition.interimResults = true;
   recognition.continuous = false;
@@ -584,6 +984,7 @@ function toggleMic() {
   };
 
   recognition.onresult = event => {
+
     let result = "";
 
     for (
@@ -595,10 +996,14 @@ function toggleMic() {
     }
 
     input.value = result;
+
+    input.style.height = "auto";
+    input.style.height =
+      Math.min(input.scrollHeight,130) + "px";
   };
 
   recognition.onerror = event => {
-    console.log("Speech error:", event.error);
+    console.log("Speech error:",event.error);
   };
 
   recognition.onend = () => {
@@ -610,22 +1015,32 @@ function toggleMic() {
   recognition.start();
 }
 
-// Textarea resizing
-input.addEventListener("input", () => {
+/* INPUT RESIZE */
+
+input.addEventListener("input",() => {
+
   input.style.height = "auto";
+
   input.style.height =
-    Math.min(input.scrollHeight, 130) + "px";
+    Math.min(input.scrollHeight,130) + "px";
+
 });
 
-// Enter to send
-input.addEventListener("keydown", event => {
+/* ENTER TO SEND */
+
+input.addEventListener("keydown",event => {
+
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
+
 });
 
+/* INITIALIZE */
+
 renderHistory();
+
 </script>
 
 </body>
