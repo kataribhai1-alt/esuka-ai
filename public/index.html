@@ -1,431 +1,305 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#050b1b">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080808">
 <title>ESUKA AI</title>
 
 <style>
 :root{
-  --bg:#030817;
-  --panel:#07142b;
-  --blue:#08caff;
-  --purple:#713bff;
-  --text:#f4f7ff;
-  --muted:#91a5c8;
-  --border:rgba(91,151,255,.22);
+ --bg:#080808;
+ --panel:#111111;
+ --panel2:#1b1b1b;
+ --card:#171717;
+ --text:#f5f5f5;
+ --muted:#999999;
+ --border:#303030;
+ --input:#111111;
+ --bubble:#191919;
+ --user:#343434;
+}
+body.grey{
+ --bg:#171717;--panel:#202020;--panel2:#292929;
+ --card:#252525;--input:#202020;--bubble:#292929;
+ --user:#414141;--border:#414141;
+}
+body.light{
+ --bg:#ededed;--panel:#ffffff;--panel2:#e6e6e6;
+ --card:#f7f7f7;--text:#171717;--muted:#666666;
+ --border:#d0d0d0;--input:#ffffff;--bubble:#f4f4f4;
+ --user:#dedede;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  height:100dvh;
-  overflow:hidden;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+ background:var(--bg);color:var(--text);
+ height:100dvh;overflow:hidden;transition:.25s;
 }
-button,input{font:inherit}
-button{cursor:pointer;color:inherit}
-.app{
-  display:flex;
-  width:100%;
-  height:100dvh;
-  background:
-    radial-gradient(ellipse at 75% 15%,rgba(21,75,180,.17),transparent 40%),
-    radial-gradient(ellipse at 90% 95%,rgba(99,30,255,.15),transparent 38%),
-    #030817;
+button,input,textarea,select{font:inherit}
+button{color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
+ outline:2px solid #999;outline-offset:3px;
 }
+.app{height:100dvh;display:flex;overflow:hidden}
 
 /* SIDEBAR */
 .sidebar{
-  width:270px;
-  flex-shrink:0;
-  background:rgba(5,14,34,.92);
-  border-right:1px solid var(--border);
-  padding:24px 17px;
-  display:flex;
-  flex-direction:column;
-  z-index:10;
-  transition:transform .3s;
+ width:280px;min-width:280px;background:var(--panel);
+ border-right:1px solid var(--border);
+ display:flex;flex-direction:column;padding:18px;
+ z-index:30;transition:transform .25s;
 }
-.brand{display:flex;align-items:center;gap:13px;margin:0 0 28px 5px}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:35px;padding:3px 8px}
 .logo{
-  width:58px;height:58px;
-  display:grid;place-items:center;
-  font-size:42px;font-weight:900;
-  border-radius:17px;
-  color:white;
-  background:linear-gradient(140deg,#00cfff,#174dff 55%,#842cff);
-  box-shadow:0 0 25px #087cff88,inset 0 0 13px #ffffff55;
-  text-shadow:0 0 15px white;
-  animation:logoGlow 4s infinite alternate;
+ width:48px;height:48px;border-radius:16px;
+ border:2px solid #555;background:#242424;
+ display:grid;place-items:center;font-size:29px;font-weight:900;
+ color:white;box-shadow:inset 0 0 0 4px #111;
 }
-@keyframes logoGlow{
-  from{box-shadow:0 0 15px #087cff66}
-  to{box-shadow:0 0 35px #713bffbb,0 0 60px #087cff44}
-}
-.brand h2{font-size:21px;letter-spacing:.4px}
-.brand p{font-size:12px;color:var(--muted);margin-top:3px}
+.brand-name{font-size:20px;font-weight:800}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .side-btn{
-  border:1px solid transparent;
-  background:transparent;
-  padding:13px 14px;
-  border-radius:15px;
-  display:flex;align-items:center;gap:12px;
-  text-align:left;width:100%;
-  margin-bottom:9px;
-  color:#dce8ff;
-  transition:.25s;
+ width:100%;display:flex;align-items:center;gap:14px;
+ padding:14px;border:1px solid transparent;
+ background:transparent;border-radius:15px;
+ color:var(--text);font-size:14px;font-weight:550;
+ text-align:left;transition:.2s;margin-bottom:7px;
 }
-.side-btn:hover,.side-btn.active{
-  background:linear-gradient(110deg,#0756c8aa,#5522b888);
-  border-color:#268dff77;
-  box-shadow:0 0 20px #087cff22;
+.side-btn:hover,.side-btn.active{background:#303030;border-color:#414141}
+.side-btn svg{width:21px;height:21px;flex-shrink:0}
+.side-heading{
+ color:var(--muted);font-size:11px;font-weight:700;
+ letter-spacing:1px;margin:27px 0 12px 8px;
 }
-.side-icon{font-size:20px;width:25px;text-align:center}
-.search{
-  width:100%;padding:12px 14px;
-  background:#07142b;border:1px solid var(--border);
-  border-radius:13px;color:white;outline:none;
-  margin:9px 0 20px;
-}
-.search:focus{border-color:var(--blue)}
-.side-label{
-  font-size:12px;color:#8299c0;
-  margin:5px 8px 12px;
-}
-.history-list{overflow:auto;flex:1}
+.history-list{overflow-y:auto;flex:1}
 .history-item{
-  font-size:13px;color:#c5d4ef;
-  padding:11px 9px;border-radius:10px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  cursor:pointer;
+ display:flex;align-items:center;gap:10px;
+ padding:12px 10px;border-radius:11px;
+ color:var(--muted);font-size:13px;cursor:pointer;
+ overflow:hidden;
 }
-.history-item:hover{background:#13264a}
-.bottom-side{border-top:1px solid var(--border);padding-top:14px}
-.profile{display:flex;align-items:center;gap:10px;padding:12px 5px}
-.avatar{
-  width:39px;height:39px;border-radius:50%;
-  display:grid;place-items:center;font-weight:800;
-  background:linear-gradient(135deg,#00caff,#783cff);
+.history-item:hover{background:var(--panel2);color:var(--text)}
+.history-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-bottom{border-top:1px solid var(--border);padding-top:14px;margin-top:12px}
+.profile{display:flex;align-items:center;gap:11px;padding:10px 5px}
+.profile-avatar{
+ width:39px;height:39px;border-radius:50%;
+ background:#454545;display:grid;place-items:center;
+ font-size:20px;color:white;
 }
-.profile small{display:block;color:#16dfa2;margin-top:3px}
+.profile-name{font-size:13px;font-weight:700}
+.profile-sub{font-size:11px;color:var(--muted);margin-top:3px}
 
 /* MAIN */
 .main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
 .topbar{
-  height:75px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:flex-end;
-  gap:12px;padding:0 25px;
+ height:70px;min-height:70px;border-bottom:1px solid var(--border);
+ display:flex;align-items:center;justify-content:space-between;
+ padding:0 23px;background:var(--bg);
 }
-.top-pill{
-  background:#09162e;border:1px solid var(--border);
-  padding:10px 15px;border-radius:30px;
-  font-size:13px;color:#dce9ff;
+.top-left,.top-right{display:flex;align-items:center;gap:12px}
+.top-title{font-weight:750;font-size:16px}
+.status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#aaa}
+.icon-btn{
+ width:43px;height:43px;border-radius:14px;
+ border:1px solid var(--border);background:var(--panel);
+ display:grid;place-items:center;transition:.2s;
 }
-.top-btn{
-  width:40px;height:40px;border-radius:50%;
-  background:#0a1730;border:1px solid var(--border);
-  font-size:18px;transition:.25s;
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:hover,.action-btn:hover,.side-btn:hover{
+ background:#333;border-color:#555;
 }
-.top-btn:hover{border-color:var(--blue);box-shadow:0 0 15px #087cff66}
-.mobile-menu{display:none;margin-right:auto}
+.icon-btn:active,.action-btn:active{transform:scale(.94)}
+.menu-btn{display:none}
 
-/* CHAT AREA */
-.chat-area{
-  flex:1;min-height:0;overflow-y:auto;
-  padding:15px 25px 25px;
-  scroll-behavior:smooth;
+/* CHAT */
+.chat-area{flex:1;overflow-y:auto;padding:25px 18px 20px;scroll-behavior:smooth}
+.chat-inner{max-width:850px;margin:0 auto;width:100%}
+.welcome{text-align:center;padding:8vh 10px 30px;animation:fadeUp .5s}
+.hero-orb{
+ width:105px;height:105px;border-radius:50%;
+ margin:0 auto 27px;display:grid;place-items:center;
+ border:8px solid #303030;background:#111;
+ box-shadow:0 0 0 5px #1c1c1c;
+ font-size:54px;font-weight:900;color:white;
 }
-.welcome{
-  min-height:100%;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:15px 0 35px;
+.welcome h1{font-size:clamp(27px,5vw,38px);font-weight:800}
+.welcome p{color:var(--muted);font-size:14px;margin-top:13px}
+.suggestions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;margin:35px auto 0;max-width:610px;
 }
-.orb-wrap{
-  width:165px;height:165px;
-  position:relative;display:grid;place-items:center;
-  margin-bottom:30px;
+.suggestion{
+ text-align:left;padding:18px;border:1px solid var(--border);
+ border-radius:17px;background:var(--card);min-height:88px;
+ transition:.2s;
 }
-.orb{
-  width:135px;height:135px;border-radius:50%;
-  display:grid;place-items:center;
-  font-size:91px;font-weight:900;
-  color:#fff;
-  background:
-    radial-gradient(circle at 30% 20%,#a8f4ff,#147bff 35%,#2514a5 70%,#080d39);
-  border:2px solid #7ee9ff;
-  box-shadow:0 0 22px #00bfff,0 0 55px #334bff99,inset 0 0 20px #ffffff77;
-  text-shadow:0 0 18px white;
-  animation:orbFloat 4s ease-in-out infinite;
-  z-index:2;
-}
-.orbit{
-  position:absolute;width:170px;height:62px;
-  border:2px solid transparent;
-  border-top-color:#00d9ff;
-  border-bottom-color:#753bff;
-  border-radius:50%;
-  transform:rotate(-27deg);
-  filter:drop-shadow(0 0 8px #00caff);
-  animation:orbitSpin 7s linear infinite;
-}
-.orbit.two{
-  width:185px;height:72px;
-  transform:rotate(48deg);
-  border-top-color:#874cff;
-  border-bottom-color:#00caff;
-  animation-direction:reverse;
-  animation-duration:10s;
-}
-@keyframes orbFloat{50%{transform:translateY(-9px) scale(1.035)}}
-@keyframes orbitSpin{to{rotate:360deg}}
-.welcome h1{font-size:clamp(27px,4vw,42px);text-align:center}
-.gradient-text{
-  background:linear-gradient(90deg,#00d9ff,#6c80ff,#c05aff);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-.welcome .subtitle{
-  color:#a9bddf;text-align:center;
-  font-size:17px;margin-top:12px;
-}
-.sparkle{color:#25caff;margin:20px 0;font-size:23px}
-.feature-grid{
-  display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));
-  gap:13px;width:min(850px,100%);margin-top:15px;
-}
-.feature{
-  padding:19px 10px;
-  border-radius:20px;
-  border:1px solid var(--border);
-  background:linear-gradient(145deg,#0d2145aa,#090e25dd);
-  text-align:center;transition:.25s;
-}
-.feature:hover{
-  transform:translateY(-5px);
-  border-color:#168cff;
-  box-shadow:0 0 25px #087cff33;
-}
-.feature .f-icon{font-size:29px;margin-bottom:10px}
-.feature b{font-size:14px;display:block}
-.feature small{display:block;color:var(--muted);margin-top:5px;font-size:12px}
+.suggestion:hover{background:var(--panel2);border-color:#666}
+.suggestion strong{font-size:13px;display:block;margin-bottom:7px}
+.suggestion small{font-size:11px;color:var(--muted);line-height:1.5}
+.s-icon{font-size:20px;margin-bottom:10px;display:block}
 
 /* MESSAGES */
-.messages{width:min(850px,100%);margin:0 auto}
-.message-row{display:flex;margin:20px 0;gap:11px;animation:messageIn .35s ease both}
-.message-row.user{justify-content:flex-end}
-.message-avatar{
-  flex-shrink:0;width:34px;height:34px;border-radius:50%;
-  display:grid;place-items:center;
-  background:linear-gradient(135deg,#00bfff,#5b36ff);
-  font-weight:800;
+.messages{display:flex;flex-direction:column;gap:23px;padding-bottom:20px}
+.message{display:flex;gap:11px;animation:fadeUp .3s;max-width:100%}
+.message.user{justify-content:flex-end}
+.msg-avatar{
+ flex-shrink:0;width:35px;height:35px;border-radius:12px;
+ display:grid;place-items:center;background:#333;
+ border:1px solid #555;font-weight:900;
 }
-.message-content{max-width:85%;min-width:0}
-.message-name{font-size:12px;color:#8ea8d3;margin:0 0 7px 3px}
-.bubble{
-  padding:14px 17px;border-radius:17px;
-  line-height:1.65;font-size:15px;
-  overflow-wrap:anywhere;white-space:pre-wrap;
+.msg-content{max-width:min(82%,680px);min-width:0}
+.msg-name{font-size:11px;color:var(--muted);margin:2px 0 7px}
+.msg-bubble{
+ background:var(--bubble);border:1px solid var(--border);
+ padding:13px 15px;border-radius:5px 17px 17px 17px;
+ font-size:var(--chat-font,14px);line-height:1.7;
+ overflow-wrap:anywhere;white-space:pre-wrap;
 }
-.ai-bubble{
-  background:linear-gradient(135deg,#0c1c39,#0a1129);
-  border:1px solid var(--border);
-  border-top-left-radius:5px;
+.user .msg-bubble{
+ background:var(--user);border-color:#555;
+ border-radius:17px 5px 17px 17px;
 }
-.user-bubble{
-  background:linear-gradient(120deg,#124bb0,#5528a9);
-  border:1px solid #548dff66;
-  border-top-right-radius:5px;
+.msg-actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.mini-btn{
+ border:1px solid var(--border);background:var(--panel);
+ color:var(--muted);padding:7px 10px;border-radius:9px;font-size:11px;
 }
-@keyframes messageIn{
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:translateY(0)}
-}
-.message-actions{display:flex;gap:12px;margin:8px 3px}
-.message-actions button{
-  background:none;border:0;color:#8ca7d1;font-size:12px;
-}
-.message-actions button:hover{color:white}
-.generated-image{
-  display:block;max-width:100%;max-height:500px;
-  border-radius:16px;margin-top:10px;
-  border:1px solid #278cff66;
-  box-shadow:0 0 25px #087cff22;
-}
+.mini-btn:hover{background:var(--panel2);color:var(--text)}
+.generated-image{width:100%;max-width:440px;border-radius:15px;margin-top:10px;border:1px solid var(--border)}
+.typing{display:flex;gap:5px;padding:17px}
+.typing i{width:7px;height:7px;background:#aaa;border-radius:50%;animation:bounce .8s infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+.thinking-text{font-size:11px;color:var(--muted);margin:8px 0 0 10px;animation:pulse 1.5s infinite}
 
-/* THINKING */
-.thinking{
-  display:flex;align-items:center;gap:13px;
-  padding:13px 16px;border:1px solid var(--border);
-  background:#09172e;border-radius:16px;width:fit-content;
-  animation:messageIn .3s;
-}
-.think-orb{
-  width:28px;height:28px;border-radius:50%;
-  background:radial-gradient(circle at 30% 25%,#a8ffff,#168bff 50%,#622cff);
-  box-shadow:0 0 16px #00aaff;
-  animation:thinkPulse 1.2s infinite;
-}
-@keyframes thinkPulse{
-  50%{transform:scale(.78);box-shadow:0 0 30px #7b40ff}
-}
-.think-text{font-size:13px;color:#c7d8f5}
-.dots span{animation:dot 1.2s infinite;opacity:.2}
-.dots span:nth-child(2){animation-delay:.2s}
-.dots span:nth-child(3){animation-delay:.4s}
-@keyframes dot{50%{opacity:1}}
-
-/* IMAGE LOADER */
-.image-loader{
-  width:min(340px,90%);padding:25px;
-  border-radius:22px;text-align:center;
-  background:linear-gradient(145deg,#0b1e42,#100d35);
-  border:1px solid #427cff66;
-  box-shadow:0 0 35px #3d4cff22;
-}
-.image-loader .loader-orb{
-  width:95px;height:95px;border-radius:50%;
-  margin:0 auto 20px;
-  border:3px solid transparent;
-  border-top-color:#00d9ff;
-  border-right-color:#813bff;
-  background:radial-gradient(circle,#194d9d,#080d2b);
-  box-shadow:0 0 25px #087cff;
-  animation:spin 1.5s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.progress-track{
-  height:5px;background:#19294b;border-radius:10px;
-  margin-top:18px;overflow:hidden;
-}
-.progress-bar{
-  height:100%;width:35%;
-  background:linear-gradient(90deg,#00d9ff,#883dff);
-  border-radius:10px;animation:progress 2s ease-in-out infinite alternate;
-}
-@keyframes progress{to{width:92%}}
-
-/* COMPOSER */
-.composer-wrap{
-  padding:10px 25px 22px;
-  width:100%;flex-shrink:0;
-}
-.composer{
-  width:min(900px,100%);margin:auto;
-  display:flex;align-items:center;gap:9px;
-  padding:10px 12px;
-  background:rgba(5,14,34,.94);
-  border:1px solid #2368cf88;
-  border-radius:28px;
-  box-shadow:0 0 22px #075bff22,inset 0 0 15px #102b5511;
-  transition:.25s;
-}
-.composer:focus-within{
-  border-color:#00bfff;
-  box-shadow:0 0 25px #087cff44;
-}
-.tool-btn{
-  width:43px;height:43px;flex-shrink:0;
-  border-radius:50%;
-  border:1px solid #4265a655;
-  background:linear-gradient(145deg,#10264e,#080f25);
-  font-size:19px;
-  transition:.2s;
-}
-.tool-btn:hover,.tool-btn.active{
-  border-color:#00caff;
-  box-shadow:0 0 18px #008cff66;
-  transform:scale(1.06);
-}
-#messageInput{
-  flex:1;min-width:0;
-  background:transparent;border:0;outline:none;
-  color:white;font-size:15px;
-  padding:12px 5px;
-}
-#messageInput::placeholder{color:#8396b8}
-.send-btn{
-  width:52px;height:52px;flex-shrink:0;
-  border-radius:50%;border:1px solid #6acbff;
-  background:linear-gradient(135deg,#00bfff,#245dff 55%,#842fff);
-  box-shadow:0 0 18px #087cff99;
-  font-size:24px;font-weight:800;
-  transition:.2s;
-}
-.send-btn:hover{transform:scale(1.08);box-shadow:0 0 30px #168dff}
-.send-btn:active{transform:scale(.94)}
-.mode-label{
-  display:none;text-align:center;color:#59d8ff;
-  font-size:12px;padding:0 0 8px;
-}
+/* INPUT */
+.composer-wrap{padding:10px 18px 17px;background:var(--bg)}
+.composer{max-width:850px;margin:auto}
+.mode-label{display:none;font-size:11px;color:var(--muted);margin:0 0 8px 7px}
 .mode-label.show{display:block}
-
-/* RIGHT VOICE PANEL */
+.input-box{
+ display:flex;align-items:flex-end;gap:8px;
+ padding:10px;border:1px solid var(--border);
+ border-radius:25px;background:var(--input);
+}
+.input-box:focus-within{border-color:#777}
+#prompt{
+ flex:1;min-width:0;max-height:130px;min-height:40px;
+ resize:none;border:0;outline:0;background:transparent;
+ color:var(--text);font-size:14px;line-height:1.5;padding:10px 5px;
+}
+#prompt::placeholder{color:var(--muted)}
+.action-btn{
+ width:43px;height:43px;flex-shrink:0;border-radius:50%;
+ border:1px solid var(--border);background:var(--panel2);
+ display:grid;place-items:center;transition:.2s;
+}
+.action-btn svg{width:21px;height:21px}
+.action-btn.active{background:#444;border-color:#777}
+.send-btn{background:#e5e5e5;color:#111;border:0}
+.send-btn svg{width:20px;height:20px}
+.send-btn:hover{background:#fff}
+.send-btn:disabled{opacity:.45}
+.composer-note{text-align:center;color:var(--muted);font-size:10px;margin-top:10px}
 .voice-panel{
-  position:absolute;right:15px;top:38%;
-  display:flex;flex-direction:column;gap:5px;
-  padding:10px 8px;
-  border-radius:24px;
-  border:1px solid #2464bb88;
-  background:rgba(8,20,48,.85);
-  box-shadow:0 0 22px #1655ff22;
-  z-index:3;
+ display:none;max-width:850px;margin:0 auto 10px;padding:13px;
+ border-radius:16px;background:var(--panel);border:1px solid var(--border);
+ text-align:center;
 }
-.voice-panel button{
-  background:transparent;border:0;
-  padding:9px 8px;border-radius:15px;
-  color:#c9dcff;font-size:12px;
-}
-.voice-panel button span{display:block;font-size:22px;margin-bottom:4px}
-.voice-panel button:hover{background:#163a78}
-.voice-panel .voice-active{color:#00d9ff;text-shadow:0 0 12px #00caff}
+.voice-panel.show{display:block}
+.voice-wave{display:flex;justify-content:center;align-items:center;gap:4px;height:35px}
+.voice-wave i{width:4px;height:12px;border-radius:5px;background:#aaa;animation:wave .7s infinite alternate}
+.voice-wave i:nth-child(2n){animation-delay:.2s}
+.voice-wave i:nth-child(3n){animation-delay:.4s}
+.voice-panel p{font-size:11px;color:var(--muted);margin-top:7px}
 
-/* WAVEFORM */
-.wave{
-  display:flex;align-items:center;justify-content:center;
-  gap:4px;height:30px;margin-top:7px;
+/* SETTINGS */
+.overlay{
+ display:none;position:fixed;inset:0;background:#000a;
+ z-index:60;align-items:center;justify-content:center;padding:15px;
+ backdrop-filter:blur(5px);
 }
-.wave i{
-  width:3px;height:7px;border-radius:5px;
-  background:linear-gradient(#00e5ff,#854bff);
+.overlay.show{display:flex;animation:fade .2s}
+.settings{
+ width:100%;max-width:570px;max-height:88dvh;overflow-y:auto;
+ background:var(--panel);border:1px solid var(--border);
+ border-radius:23px;padding:22px;animation:pop .2s;
 }
-.wave.playing i{animation:wave .7s ease-in-out infinite alternate}
-.wave i:nth-child(2n){animation-delay:.2s}
-.wave i:nth-child(3n){animation-delay:.4s}
-@keyframes wave{to{height:27px}}
-
-/* MOBILE */
-@media(max-width:800px){
-  .sidebar{
-    position:absolute;left:0;top:0;bottom:0;
-    width:275px;transform:translateX(-105%);
-    box-shadow:15px 0 40px #0009;
-  }
-  .sidebar.open{transform:translateX(0)}
-  .mobile-menu{display:block}
-  .topbar{height:62px;padding:0 13px;gap:8px}
-  .top-pill{font-size:11px;padding:9px}
-  .chat-area{padding:10px 13px 15px}
-  .welcome{padding:20px 0}
-  .orb-wrap{transform:scale(.83);margin-bottom:5px}
-  .welcome h1{font-size:28px}
-  .welcome .subtitle{font-size:14px}
-  .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  .feature{padding:15px 7px}
-  .feature b{font-size:13px}
-  .voice-panel{display:none}
-  .composer-wrap{padding:8px 10px 13px}
-  .composer{gap:5px;padding:7px}
-  .tool-btn{width:37px;height:37px;font-size:16px}
-  .send-btn{width:43px;height:43px}
-  #messageInput{font-size:14px}
-  .bubble{font-size:14px}
+.settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.settings-head h2{font-size:21px}
+.settings-head p{font-size:11px;color:var(--muted);margin-top:5px}
+.setting-group{margin-top:21px}
+.setting-title{font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:800;margin-bottom:10px}
+.setting-row{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:15px;padding:13px 12px;border:1px solid var(--border);
+ border-radius:14px;margin-bottom:8px;background:var(--card);
+}
+.setting-label{font-size:13px;font-weight:650}
+.setting-desc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+.setting-control{
+ max-width:185px;width:48%;padding:10px;
+ border-radius:10px;border:1px solid var(--border);
+ background:var(--panel2);color:var(--text);outline:0;font-size:12px;
+}
+.toggle{
+ width:45px;height:25px;border:0;border-radius:20px;
+ background:#555;position:relative;flex-shrink:0;
+}
+.toggle:after{
+ content:"";position:absolute;width:19px;height:19px;
+ top:3px;left:3px;background:white;border-radius:50%;transition:.2s;
+}
+.toggle.on{background:#aaa}
+.toggle.on:after{left:23px;background:#111}
+.setting-range{width:110px;accent-color:#999}
+.settings-footer{display:flex;gap:9px;margin-top:20px}
+.primary-btn,.secondary-btn{
+ flex:1;padding:12px;border-radius:13px;border:1px solid var(--border);
+ font-size:12px;font-weight:750;transition:.2s;
+}
+.primary-btn{background:#e4e4e4;color:#111;border:0}
+.secondary-btn{background:var(--panel2);color:var(--text)}
+.primary-btn:hover,.secondary-btn:hover{filter:brightness(1.12)}
+.mobile-backdrop{display:none}
+.toast{
+ position:fixed;bottom:95px;left:50%;transform:translateX(-50%);
+ background:var(--panel2);border:1px solid var(--border);
+ padding:11px 17px;border-radius:12px;font-size:12px;
+ z-index:100;opacity:0;pointer-events:none;transition:.25s;
+ white-space:nowrap;
+}
+.toast.show{opacity:1;bottom:110px}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+@keyframes pulse{50%{opacity:.4}}
+@keyframes wave{to{height:29px}}
+@media(max-width:760px){
+ .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);width:280px}
+ .sidebar.open{transform:translateX(0)}
+ .mobile-backdrop.show{display:block;position:fixed;inset:0;background:#0009;z-index:25}
+ .menu-btn{display:grid}
+ .topbar{padding:0 13px}
+ .top-right{gap:7px}
+ .top-right .icon-btn{width:39px;height:39px}
+ .chat-area{padding:15px 12px}
+ .welcome{padding-top:7vh}
+ .suggestions{gap:9px;margin-top:25px}
+ .suggestion{padding:13px;min-height:85px}
+ .composer-wrap{padding:9px 10px 13px}
+ .input-box{gap:5px;padding:8px}
+ .action-btn{width:39px;height:39px}
+ .settings{padding:17px}
 }
 @media(max-width:380px){
-  .top-pill{display:none}
-  .feature .f-icon{font-size:24px}
-  .tool-btn{width:33px;height:33px}
+ .suggestions{grid-template-columns:1fr}
+ .msg-content{max-width:88%}
 }
 </style>
 </head>
@@ -434,571 +308,635 @@ button{cursor:pointer;color:inherit}
 <div class="app">
 
 <aside class="sidebar" id="sidebar">
-  <div class="brand">
-    <div class="logo">E</div>
-    <div>
-      <h2>ESUKA AI</h2>
-      <p>Simple • Smart • Powerful</p>
-    </div>
+ <div class="brand">
+  <div class="logo">E</div>
+  <div><div class="brand-name">ESUKA AI</div><div class="brand-sub">Your AI Assistant</div></div>
+ </div>
+
+ <button class="side-btn active" id="newChatBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+  New Chat
+ </button>
+
+ <button class="side-btn" id="sideImageBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+  Image Mode
+ </button>
+
+ <button class="side-btn" id="sideVoiceBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg>
+  Voice Mode
+ </button>
+
+ <div style="height:1px;background:var(--border);margin:12px 0"></div>
+
+ <button class="side-btn" id="settingsBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.6-1.4-2.4 1.4-1.1a8 8 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.6 1.4 2.4-1.4 1.1a8 8 0 0 1 0 1.8z"/></svg>
+  Settings
+ </button>
+
+ <button class="side-btn" id="historyBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5m4-1v5l4 2"/></svg>
+  Chat History
+ </button>
+
+ <button class="side-btn" id="aboutBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 11v5m0-8h.01"/></svg>
+  About
+ </button>
+
+ <div class="side-heading">RECENT CHATS</div>
+ <div class="history-list" id="historyList"></div>
+
+ <div class="side-bottom">
+  <div class="profile">
+   <div class="profile-avatar">K</div>
+   <div><div class="profile-name">ESUKA AI User</div><div class="profile-sub">Personal Assistant</div></div>
   </div>
-
-  <button class="side-btn active" id="newChatBtn">
-    <span class="side-icon">▣</span> New Chat
-    <span style="margin-left:auto">✦</span>
-  </button>
-
-  <input class="search" id="searchChats" placeholder="⌕  Search chats...">
-
-  <div class="side-label">◷ &nbsp; Recent Chats</div>
-  <div class="history-list" id="historyList"></div>
-
-  <div class="bottom-side">
-    <button class="side-btn" id="premiumBtn"><span class="side-icon">♛</span> Premium Plan</button>
-    <button class="side-btn" id="settingsBtn"><span class="side-icon">⚙</span> Settings</button>
-    <button class="side-btn" id="aboutBtn"><span class="side-icon">ⓘ</span> About ESUKA AI</button>
-    <div class="profile">
-      <div class="avatar">K</div>
-      <div><b>Katari</b><small>● Online</small></div>
-    </div>
-  </div>
+ </div>
 </aside>
 
+<div class="mobile-backdrop" id="backdrop"></div>
+
 <main class="main">
-  <header class="topbar">
-    <button class="top-btn mobile-menu" id="menuBtn">☰</button>
-    <div class="top-pill">🔵 Model: ESUKA AI</div>
-    <button class="top-pill" id="upgradeBtn">♛ Upgrade</button>
-    <button class="top-btn" id="themeBtn" title="Theme">☾</button>
-    <button class="top-btn" id="fullScreenBtn" title="Fullscreen">⛶</button>
-  </header>
-
-  <section class="chat-area" id="chatArea">
-    <div class="welcome" id="welcome">
-      <div class="orb-wrap">
-        <div class="orbit"></div>
-        <div class="orbit two"></div>
-        <div class="orb">E</div>
-      </div>
-      <h1>Welcome to <span class="gradient-text">ESUKA AI</span></h1>
-      <p class="subtitle">Your intelligent companion, always here to help.</p>
-      <div class="sparkle">✦ ─── ✧ ─── ✦</div>
-
-      <div class="feature-grid">
-        <button class="feature" data-prompt="Tell me something interesting">
-          <div class="f-icon">⚡</div>
-          <b>Get Answers</b><small>Instantly</small>
-        </button>
-        <button class="feature" data-mode="image">
-          <div class="f-icon">▧</div>
-          <b>Generate Images</b><small>Unleash Creativity</small>
-        </button>
-        <button class="feature" data-prompt="Help me write some code">
-          <div class="f-icon">‹/›</div>
-          <b>Write Code</b><small>Be Productive</small>
-        </button>
-        <button class="feature" data-prompt="Give me some creative ideas">
-          <div class="f-icon">♧</div>
-          <b>Explore More</b><small>Discover Ideas</small>
-        </button>
-      </div>
-    </div>
-    <div class="messages" id="messages"></div>
-  </section>
-
-  <div class="voice-panel">
-    <button id="listenBtn"><span>♬</span>Listen</button>
-    <button id="stopBtn"><span>■</span>Stop</button>
-    <button id="panelImageBtn"><span>▧</span>Image</button>
-    <button id="panelVoiceBtn"><span>🎙</span>Voice</button>
+ <header class="topbar">
+  <div class="top-left">
+   <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+   </button>
+   <div class="top-title">ESUKA AI</div>
+   <div class="status"><span class="status-dot"></span>Online</div>
   </div>
+  <div class="top-right">
+   <button class="icon-btn" id="clearBtn" title="Clear chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg>
+   </button>
+   <button class="icon-btn" id="themeBtn" title="Change theme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+   </button>
+   <button class="icon-btn" id="topSettingsBtn" title="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 13.5a7 7 0 0 0 0-3l2-1.5-2-3.5-2.3.8a7 7 0 0 0-2.5-1.4L13.8 2h-4l-.4 2.9a7 7 0 0 0-2.5 1.4l-2.3-.8-2 3.5 2 1.5a7 7 0 0 0 0 3l-2 1.5 2 3.5 2.3-.8a7 7 0 0 0 2.5 1.4l.4 2.9h4l.4-2.9a7 7 0 0 0 2.5-1.4l2.3.8 2-3.5z"/></svg>
+   </button>
+  </div>
+ </header>
 
-  <footer class="composer-wrap">
-    <div class="mode-label" id="modeLabel">✦ Image generation mode is ON</div>
-    <div class="composer">
-      <button class="tool-btn" id="attachBtn" title="More">＋</button>
-      <input id="messageInput" type="text" placeholder="Message ESUKA AI..." autocomplete="off">
-      <button class="tool-btn" id="micBtn" title="Voice input">🎙</button>
-      <button class="tool-btn" id="imageBtn" title="Image generation">▧</button>
-      <button class="send-btn" id="sendBtn" title="Send">➤</button>
+ <section class="chat-area" id="chatArea">
+  <div class="chat-inner">
+   <div class="welcome" id="welcome">
+    <div class="hero-orb">E</div>
+    <h1>Welcome to ESUKA AI</h1>
+    <p>Ask anything... I'm here to help you!</p>
+    <div class="suggestions">
+     <button class="suggestion" data-prompt="Explain something simply">
+      <span class="s-icon">✧</span><strong>Explain something simply</strong><small>Understand any topic easily</small>
+     </button>
+     <button class="suggestion" data-prompt="Help me write some code">
+      <span class="s-icon">&lt;/&gt;</span><strong>Write code for me</strong><small>Build and understand code</small>
+     </button>
+     <button class="suggestion" data-prompt="Give me some creative ideas">
+      <span class="s-icon">♧</span><strong>Give me ideas</strong><small>Explore something new</small>
+     </button>
+     <button class="suggestion" data-prompt="Summarize this topic for me">
+      <span class="s-icon">▤</span><strong>Summarize this</strong><small>Get the key points</small>
+     </button>
     </div>
-  </footer>
+   </div>
+   <div class="messages" id="messages"></div>
+  </div>
+ </section>
+
+ <div class="composer-wrap">
+  <div class="voice-panel" id="voicePanel">
+   <div class="voice-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+   <p id="voiceStatus">Listening... Speak now</p>
+   <button class="mini-btn" id="stopVoiceBtn">Stop listening</button>
+  </div>
+  <div class="composer">
+   <div class="mode-label" id="modeLabel">▧ Image generation mode is ON</div>
+   <div class="input-box">
+    <button class="action-btn" id="attachBtn" title="Image mode" aria-label="Image mode">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    </button>
+    <textarea id="prompt" rows="1" placeholder="Type your message..." aria-label="Message"></textarea>
+    <button class="action-btn" id="micBtn" title="Voice input" aria-label="Voice input">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg>
+    </button>
+    <button class="action-btn send-btn" id="sendBtn" title="Send message" aria-label="Send">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m22 2-7 20-4-9-9-4 20-7zM22 2 11 13"/></svg>
+    </button>
+   </div>
+   <div class="composer-note">ESUKA AI can make mistakes. Check important information.</div>
+  </div>
+ </div>
 </main>
 </div>
 
+<!-- SETTINGS WINDOW -->
+<div class="overlay" id="settingsOverlay">
+ <section class="settings">
+  <div class="settings-head">
+   <div><h2>⚙ Settings</h2><p>Make ESUKA AI work your way</p></div>
+   <button class="icon-btn" id="closeSettings" aria-label="Close settings">✕</button>
+  </div>
+
+  <div class="setting-group">
+   <div class="setting-title">PERSONALIZATION</div>
+   <div class="setting-row">
+    <div><div class="setting-label">Language</div><div class="setting-desc">Preferred reply language</div></div>
+    <select class="setting-control" id="language">
+     <option value="Hinglish">Hinglish</option>
+     <option value="Hindi">Hindi</option>
+     <option value="English">English</option>
+    </select>
+   </div>
+   <div class="setting-row">
+    <div><div class="setting-label">Response Style</div><div class="setting-desc">How should ESUKA reply?</div></div>
+    <select class="setting-control" id="responseStyle">
+     <option value="Friendly">Friendly</option>
+     <option value="Professional">Professional</option>
+     <option value="Short">Short</option>
+     <option value="Detailed">Detailed</option>
+     <option value="Simple">Simple</option>
+    </select>
+   </div>
+  </div>
+
+  <div class="setting-group">
+   <div class="setting-title">VOICE SETTINGS</div>
+   <div class="setting-row">
+    <div><div class="setting-label">AI Voice</div><div class="setting-desc">Enable spoken replies</div></div>
+    <button class="toggle on" id="voiceToggle" aria-label="Toggle AI voice"></button>
+   </div>
+   <div class="setting-row">
+    <div><div class="setting-label">Voice Type</div><div class="setting-desc">Choose browser voice preference</div></div>
+    <select class="setting-control" id="voiceType">
+     <option value="female">Indian Female</option>
+     <option value="male">Indian Male</option>
+     <option value="system">System Default</option>
+    </select>
+   </div>
+   <div class="setting-row">
+    <div><div class="setting-label">Voice Speed</div><div class="setting-desc">Adjust speaking speed</div></div>
+    <input class="setting-range" id="voiceSpeed" type="range" min=".7" max="1.5" step=".1" value="1">
+    <span id="speedValue">1.0x</span>
+   </div>
+  </div>
+
+  <div class="setting-group">
+   <div class="setting-title">APPEARANCE</div>
+   <div class="setting-row">
+    <div><div class="setting-label">Theme</div><div class="setting-desc">Choose your display style</div></div>
+    <select class="setting-control" id="themeSelect">
+     <option value="black">Pure Black</option>
+     <option value="grey">Charcoal Grey</option>
+     <option value="light">Light Grey</option>
+    </select>
+   </div>
+   <div class="setting-row">
+    <div><div class="setting-label">Chat Font Size</div><div class="setting-desc">Adjust message text size</div></div>
+    <select class="setting-control" id="fontSize">
+     <option value="13">Small</option>
+     <option value="14">Medium</option>
+     <option value="16">Large</option>
+     <option value="18">Extra Large</option>
+    </select>
+   </div>
+  </div>
+
+  <div class="setting-group">
+   <div class="setting-title">CHAT MANAGEMENT</div>
+   <div class="setting-row">
+    <div><div class="setting-label">Clear Chat History</div><div class="setting-desc">Delete saved conversations</div></div>
+    <button class="secondary-btn" id="settingsClearBtn">Clear</button>
+   </div>
+   <div class="setting-row">
+    <div><div class="setting-label">Reset Settings</div><div class="setting-desc">Restore default preferences</div></div>
+    <button class="secondary-btn" id="resetSettingsBtn">Reset</button>
+   </div>
+  </div>
+
+  <div class="setting-group">
+   <div class="setting-title">ABOUT</div>
+   <div class="setting-row">
+    <div><div class="setting-label">ESUKA AI</div><div class="setting-desc">Version 1.0 · Made by Katari</div></div>
+    <span style="font-size:20px">ⓘ</span>
+   </div>
+  </div>
+  <div class="settings-footer">
+   <button class="secondary-btn" id="cancelSettings">Close</button>
+   <button class="primary-btn" id="saveSettings">Save Preferences</button>
+  </div>
+ </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-/* ESUKA AI FRONTEND CONFIG */
-const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
+const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
 
-const input = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const messages = document.getElementById("messages");
-const welcome = document.getElementById("welcome");
-const chatArea = document.getElementById("chatArea");
-const modeLabel = document.getElementById("modeLabel");
-const sidebar = document.getElementById("sidebar");
+const $=id=>document.getElementById(id);
+const defaults={
+ language:"Hinglish",
+ responseStyle:"Friendly",
+ voiceEnabled:true,
+ voiceType:"female",
+ voiceSpeed:1,
+ theme:"black",
+ fontSize:"14"
+};
 
-let imageMode = false;
-let busy = false;
-let lastReply = "";
-let currentHistory = [];
-let chats = [];
-let recognition = null;
-let currentSpeech = null;
+let settings={...defaults};
+let imageMode=false;
+let busy=false;
+let currentHistory=[];
+let savedChats=[];
+let recognition=null;
+let listening=false;
+let currentChatId=null;
 
-try{
-  chats = JSON.parse(localStorage.getItem("esuka_chats") || "[]");
-  if(!Array.isArray(chats)) chats=[];
-}catch(e){chats=[]}
-
+function loadData(){
+ try{
+  settings={...defaults,...JSON.parse(localStorage.getItem("esuka_settings")||"{}")};
+ }catch(e){settings={...defaults}}
+ try{
+  savedChats=JSON.parse(localStorage.getItem("esuka_chats")||"[]");
+  if(!Array.isArray(savedChats))savedChats=[];
+ }catch(e){savedChats=[]}
+ applySettings();
+ renderHistory();
+}
+function saveSettings(){
+ settings={
+  language:$("language").value,
+  responseStyle:$("responseStyle").value,
+  voiceEnabled:$("voiceToggle").classList.contains("on"),
+  voiceType:$("voiceType").value,
+  voiceSpeed:Number($("voiceSpeed").value),
+  theme:$("themeSelect").value,
+  fontSize:$("fontSize").value
+ };
+ localStorage.setItem("esuka_settings",JSON.stringify(settings));
+ applySettings();
+ showToast("Preferences saved");
+}
+function applySettings(){
+ document.body.classList.remove("grey","light");
+ if(settings.theme==="grey")document.body.classList.add("grey");
+ if(settings.theme==="light")document.body.classList.add("light");
+ document.documentElement.style.setProperty("--chat-font",settings.fontSize+"px");
+ $("language").value=settings.language;
+ $("responseStyle").value=settings.responseStyle;
+ $("voiceType").value=settings.voiceType;
+ $("voiceSpeed").value=settings.voiceSpeed;
+ $("speedValue").textContent=Number(settings.voiceSpeed).toFixed(1)+"x";
+ $("themeSelect").value=settings.theme;
+ $("fontSize").value=settings.fontSize;
+ $("voiceToggle").classList.toggle("on",settings.voiceEnabled);
+}
+function openSettings(){
+ $("settingsOverlay").classList.add("show");
+}
+function closeSettings(){
+ $("settingsOverlay").classList.remove("show");
+}
+function showToast(message){
+ const t=$("toast");
+ t.textContent=message;t.classList.add("show");
+ clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 function saveChats(){
-  try{localStorage.setItem("esuka_chats",JSON.stringify(chats.slice(-30)))}catch(e){}
+ localStorage.setItem("esuka_chats",JSON.stringify(savedChats.slice(0,30)));
+ renderHistory();
 }
-
-function scrollBottom(){
-  chatArea.scrollTo({top:chatArea.scrollHeight,behavior:"smooth"});
+function saveCurrentChat(){
+ if(!currentHistory.length)return;
+ const title=currentHistory[0].content.slice(0,38)||"New Chat";
+ const item={
+  id:currentChatId||String(Date.now()),
+  title,
+  history:currentHistory,
+  date:Date.now()
+ };
+ const index=savedChats.findIndex(c=>c.id===item.id);
+ if(index>=0)savedChats[index]=item;
+ else savedChats.unshift(item);
+ currentChatId=item.id;
+ saveChats();
 }
-
-function escapeHTML(str){
-  return String(str).replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[c]);
-}
-
-function showWelcome(show){
-  welcome.style.display=show?"flex":"none";
-}
-
 function renderHistory(){
-  const list=document.getElementById("historyList");
-  list.innerHTML="";
-  chats.slice().reverse().forEach((chat,index)=>{
-    const item=document.createElement("div");
-    item.className="history-item";
-    item.textContent="◉  "+(chat.title||"New Chat");
-    item.addEventListener("click",()=>loadChat(chats.length-1-index));
-    list.appendChild(item);
-  });
+ $("historyList").innerHTML="";
+ savedChats.slice(0,20).forEach(chat=>{
+  const b=document.createElement("div");
+  b.className="history-item";
+  const icon=document.createElement("span");
+  icon.textContent="◷";
+  const label=document.createElement("span");
+  label.textContent=chat.title||"Chat";
+  b.append(icon,label);
+  b.addEventListener("click",()=>openChat(chat.id));
+  $("historyList").appendChild(b);
+ });
 }
-
-function startNewChat(){
-  if(busy)return;
-  messages.innerHTML="";
-  currentHistory=[];
-  lastReply="";
-  showWelcome(true);
-  imageMode=false;
-  updateMode();
-  input.value="";
-  sidebar.classList.remove("open");
-  input.focus();
+function openChat(id){
+ const chat=savedChats.find(c=>c.id===id);
+ if(!chat)return;
+ currentChatId=chat.id;
+ currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
+ renderMessages();
+ closeSidebar();
 }
-
-function loadChat(index){
-  const chat=chats[index];
-  if(!chat)return;
-  messages.innerHTML="";
-  currentHistory=chat.history||[];
-  showWelcome(false);
-  currentHistory.forEach((m)=>{
-    addMessage(m.role==="user"?"user":"ai",m.content,false);
-  });
-  sidebar.classList.remove("open");
-  scrollBottom();
+function renderMessages(){
+ $("welcome").style.display=currentHistory.length?"none":"block";
+ $("messages").innerHTML="";
+ currentHistory.forEach(m=>addMessage(m.role,m.content,false));
+ scrollBottom();
 }
-
+function addMessage(role,content,save=true){
+ const messages=$("messages");
+ const row=document.createElement("div");
+ row.className="message "+(role==="user"?"user":"assistant");
+ const avatar=document.createElement("div");
+ avatar.className="msg-avatar";
+ avatar.textContent=role==="user"?"U":"E";
+ const contentBox=document.createElement("div");
+ contentBox.className="msg-content";
+ const name=document.createElement("div");
+ name.className="msg-name";
+ name.textContent=role==="user"?"You":"ESUKA AI";
+ const bubble=document.createElement("div");
+ bubble.className="msg-bubble";
+ bubble.textContent=content;
+ contentBox.append(name,bubble);
+ if(role!=="user"){
+  const actions=document.createElement("div");
+  actions.className="msg-actions";
+  const copy=document.createElement("button");
+  copy.className="mini-btn";copy.textContent="Copy";
+  copy.addEventListener("click",()=>copyText(content));
+  const listen=document.createElement("button");
+  listen.className="mini-btn";listen.textContent="Listen";
+  listen.addEventListener("click",()=>speakText(content));
+  const stop=document.createElement("button");
+  stop.className="mini-btn";stop.textContent="Stop";
+  stop.addEventListener("click",stopSpeaking);
+  actions.append(copy,listen,stop);
+  contentBox.appendChild(actions);
+ }
+ if(role==="user"){row.append(contentBox,avatar)}
+ else{row.append(avatar,contentBox)}
+ messages.appendChild(row);
+ if(save){
+  currentHistory.push({role,content});
+  if(role==="user")$("welcome").style.display="none";
+  saveCurrentChat();
+ }
+ scrollBottom();
+ return row;
+}
+function addImage(url){
+ const last=$("messages").lastElementChild;
+ if(!last)return;
+ const img=document.createElement("img");
+ img.className="generated-image";
+ img.alt="Image generated by ESUKA AI";
+ img.src=url;
+ last.querySelector(".msg-content").appendChild(img);
+}
+function scrollBottom(){
+ $("chatArea").scrollTop=$("chatArea").scrollHeight;
+}
+function showTyping(){
+ const row=document.createElement("div");
+ row.className="message assistant";row.id="typingRow";
+ row.innerHTML='<div class="msg-avatar">E</div><div><div class="msg-name">ESUKA AI</div><div class="msg-bubble"><div class="typing"><i></i><i></i><i></i></div><div class="thinking-text">ESUKA is thinking...</div></div></div>';
+ $("messages").appendChild(row);scrollBottom();
+}
+function removeTyping(){
+ $("typingRow")?.remove();
+}
+function newChat(){
+ stopSpeaking();
+ currentHistory=[];currentChatId=null;
+ $("messages").innerHTML="";
+ $("welcome").style.display="block";
+ imageMode=false;updateMode();
+ $("prompt").value="";
+ closeSidebar();
+}
+function clearChat(){
+ if(!confirm("Clear all saved chat history?"))return;
+ savedChats=[];currentHistory=[];currentChatId=null;
+ localStorage.removeItem("esuka_chats");
+ $("messages").innerHTML="";
+ $("welcome").style.display="block";
+ renderHistory();showToast("Chat history cleared");
+}
 function updateMode(){
-  imageMode=!imageMode?false:true;
-  modeLabel.classList.toggle("show",imageMode);
-  document.getElementById("imageBtn").classList.toggle("active",imageMode);
+ $("modeLabel").classList.toggle("show",imageMode);
+ $("attachBtn").classList.toggle("active",imageMode);
+ $("sideImageBtn").classList.toggle("active",imageMode);
 }
-
-function addMessage(role,text,animate=true){
-  showWelcome(false);
-  const row=document.createElement("div");
-  row.className="message-row "+(role==="user"?"user":"ai");
-
-  if(role==="ai"){
-    const avatar=document.createElement("div");
-    avatar.className="message-avatar";
-    avatar.textContent="E";
-    row.appendChild(avatar);
-  }
-
-  const content=document.createElement("div");
-  content.className="message-content";
-
-  const name=document.createElement("div");
-  name.className="message-name";
-  name.textContent=role==="user"?"You":"ESUKA AI";
-
-  const bubble=document.createElement("div");
-  bubble.className="bubble "+(role==="user"?"user-bubble":"ai-bubble");
-  bubble.textContent=text;
-
-  content.appendChild(name);
-  content.appendChild(bubble);
-
-  if(role==="ai"){
-    const actions=document.createElement("div");
-    actions.className="message-actions";
-    const copy=document.createElement("button");
-    copy.textContent="Copy";
-    copy.onclick=()=>copyText(text);
-    const speak=document.createElement("button");
-    speak.textContent="🔊 Listen";
-    speak.onclick=()=>speakText(text);
-    actions.append(copy,speak);
-    content.appendChild(actions);
-  }
-
-  row.appendChild(content);
-  messages.appendChild(row);
-  if(animate)scrollBottom();
-  return {row,bubble,content};
+function toggleImageMode(){
+ imageMode=!imageMode;updateMode();
+ showToast(imageMode?"Image mode ON":"Image mode OFF");
 }
-
-function copyText(text){
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(()=>showToast("Copied"));
-  }else{
-    const t=document.createElement("textarea");
-    t.value=text;document.body.appendChild(t);
-    t.select();document.execCommand("copy");t.remove();
-    showToast("Copied");
-  }
+function closeSidebar(){
+ $("sidebar").classList.remove("open");
+ $("backdrop").classList.remove("show");
 }
-
-function showToast(text){
-  let toast=document.getElementById("esukaToast");
-  if(!toast){
-    toast=document.createElement("div");
-    toast.id="esukaToast";
-    toast.style.cssText="position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#123365;border:1px solid #328cff;padding:11px 19px;border-radius:20px;z-index:99;font-size:13px";
-    document.body.appendChild(toast);
-  }
-  toast.textContent=text;
-  toast.style.display="block";
-  clearTimeout(toast._timer);
-  toast._timer=setTimeout(()=>toast.style.display="none",1800);
+function toggleSidebar(){
+ $("sidebar").classList.toggle("open");
+ $("backdrop").classList.toggle("show");
 }
-
-let thinkTimer=null;
-let thinkIndex=0;
-const thinkWords=[
-  "ESUKA is thinking",
-  "Understanding your message",
-  "Preparing your answer",
-  "Almost ready"
-];
-
-function showThinking(){
-  const row=document.createElement("div");
-  row.className="message-row ai";
-  row.id="thinkingRow";
-  row.innerHTML=`
-    <div class="message-avatar">E</div>
-    <div class="thinking">
-      <div class="think-orb"></div>
-      <div class="think-text"><span id="thinkWord">ESUKA is thinking</span>
-      <span class="dots"><span>.</span><span>.</span><span>.</span></span>
-      <div class="wave playing">${"<i></i>".repeat(12)}</div></div>
-    </div>`;
-  messages.appendChild(row);
-  thinkIndex=0;
-  thinkTimer=setInterval(()=>{
-    thinkIndex=(thinkIndex+1)%thinkWords.length;
-    const word=document.getElementById("thinkWord");
-    if(word)word.textContent=thinkWords[thinkIndex];
-  },1900);
-  scrollBottom();
-  return row;
+function buildPreferenceMessage(text){
+ return "[User preferences: Reply language: "+settings.language+
+ "; Response style: "+settings.responseStyle+
+ ". Follow these preferences naturally.]\n\nUser message: "+text;
 }
-
-function removeThinking(){
-  clearInterval(thinkTimer);
-  document.getElementById("thinkingRow")?.remove();
-}
-
-async function revealText(element,text){
-  element.textContent="";
-  const chars=Array.from(String(text||""));
-  const step=chars.length>1500?12:chars.length>500?5:2;
-  for(let i=0;i<chars.length;i+=step){
-    element.textContent+=chars.slice(i,i+step).join("");
-    if(i%40===0)scrollBottom();
-    await new Promise(resolve=>setTimeout(resolve,12));
-  }
-  scrollBottom();
-}
-
-function getReply(data){
-  if(typeof data==="string")return data;
-  return data?.reply || data?.response || data?.text ||
-    data?.message || data?.result?.reply || "I couldn't find a response. Please try again.";
-}
-
-function getImage(data){
-  if(!data)return null;
-  let image=data.image||data.url||data.result?.image||data.result?.url||data.output;
-  if(Array.isArray(image))image=image[0];
-  if(image&&typeof image==="object"){
-    image=image.url||image.image||image.data;
-  }
-  if(typeof image!=="string")return null;
-  if(image.startsWith("http")||image.startsWith("data:image/"))return image;
-  if(image.length>1000)return "data:image/png;base64,"+image;
-  return null;
-}
-
 async function sendMessage(){
-  const text=input.value.trim();
-  if(!text||busy)return;
-
-  const mode=imageMode?"image":"chat";
-  input.value="";
-  busy=true;
-  sendBtn.disabled=true;
-  sendBtn.style.opacity=".55";
-
-  addMessage("user",text);
-  currentHistory.push({role:"user",content:text});
-
-  const thinking=showThinking();
-  let loader=null;
-
-  if(mode==="image"){
-    thinking.remove();
-    clearInterval(thinkTimer);
-    loader=document.createElement("div");
-    loader.className="message-row ai";
-    loader.innerHTML=`
-      <div class="message-avatar">E</div>
-      <div class="image-loader">
-        <div class="loader-orb"></div>
-        <b>Creating your image</b>
-        <p style="color:#9eb6dc;font-size:13px;margin-top:8px">ESUKA is bringing your idea to life...</p>
-        <div class="progress-track"><div class="progress-bar"></div></div>
-      </div>`;
-    messages.appendChild(loader);
-    scrollBottom();
+ const text=$("prompt").value.trim();
+ if(!text||busy)return;
+ $("prompt").value="";
+ $("prompt").style.height="auto";
+ addMessage("user",text);
+ const useImage=imageMode;
+ busy=true;$("sendBtn").disabled=true;
+ showTyping();
+ try{
+  const payload=useImage?
+   {mode:"image",message:text,prompt:text,history:currentHistory}:
+   {message:buildPreferenceMessage(text),history:currentHistory.slice(0,-1)};
+  const response=await fetch(API_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(payload)
+  });
+  const data=await response.json();
+  removeTyping();
+  if(!response.ok||data.success===false){
+   throw new Error(data.error||data.message||"Server error");
   }
-
-  try{
-    const payload=mode==="image"
-      ?{mode:"image",message:text,prompt:text,history:currentHistory}
-      :{message:text,history:currentHistory.slice(0,-1)};
-
-    const response=await fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-
-    const raw=await response.text();
-    let data;
-    try{data=JSON.parse(raw)}catch(e){throw new Error("Server returned an invalid response.")}
-
-    if(!response.ok || data.success===false){
-      throw new Error(data.error||data.message||"Server error: "+response.status);
-    }
-
-    removeThinking();
-    if(loader)loader.remove();
-
-    if(mode==="image"){
-      const imageUrl=getImage(data);
-      if(imageUrl){
-        const result=addMessage("ai","Your image is ready! ✨");
-        const img=document.createElement("img");
-        img.className="generated-image";
-        img.src=imageUrl;
-        img.alt="Generated by ESUKA AI";
-        img.onload=scrollBottom;
-        result.bubble.appendChild(img);
-        lastReply="Your image is ready!";
-        currentHistory.push({role:"assistant",content:"Your image is ready!"});
-      }else{
-        const reply=getReply(data);
-        const result=addMessage("ai","");
-        await revealText(result.bubble,reply);
-        lastReply=reply;
-        currentHistory.push({role:"assistant",content:reply});
-      }
-    }else{
-      const reply=getReply(data);
-      const result=addMessage("ai","");
-      await revealText(result.bubble,reply);
-      lastReply=reply;
-      currentHistory.push({role:"assistant",content:reply});
-    }
-
-    if(!chats.length || !chats[chats.length-1].history ||
-       chats[chats.length-1].history!==currentHistory){
-      chats.push({title:text.slice(0,38),history:currentHistory});
-    }
-    saveChats();
-    renderHistory();
-
-  }catch(error){
-    removeThinking();
-    loader?.remove();
-    const result=addMessage("ai","Sorry, kuch problem aa gayi: "+error.message);
-    lastReply="Sorry, kuch problem aa gayi: "+error.message;
-  }finally{
-    busy=false;
-    sendBtn.disabled=false;
-    sendBtn.style.opacity="1";
-    imageMode=false;
-    updateMode();
-    input.focus();
+  if(useImage){
+   const image=data.image||data.url||data.result?.image||data.result?.url||data.output;
+   const msg=data.reply||data.message||"Image generation response received.";
+   addMessage("assistant",typeof msg==="string"?msg:"Your image is ready.");
+   if(typeof image==="string"&&(image.startsWith("http")||image.startsWith("data:image")||image.length>500)){
+    addImage(image.startsWith("data:image")||image.startsWith("http")?image:"data:image/png;base64,"+image);
+   }else if(!image){
+    showToast("Backend did not return an image");
+   }
+  }else{
+   const reply=data.reply||data.response||data.text||data.message||data.result?.reply;
+   if(!reply)throw new Error("Empty response from AI");
+   addMessage("assistant",String(reply));
+   if(settings.voiceEnabled)speakText(String(reply));
   }
+ }catch(error){
+  removeTyping();
+  addMessage("assistant","Sorry, kuch problem aa gayi: "+error.message);
+ }finally{
+  busy=false;$("sendBtn").disabled=false;
+  imageMode=false;updateMode();
+  $("prompt").focus();
+ }
 }
-
-/* VOICE OUTPUT */
+function copyText(text){
+ if(navigator.clipboard?.writeText){
+  navigator.clipboard.writeText(text).then(()=>showToast("Copied"));
+ }else{
+  const t=document.createElement("textarea");t.value=text;
+  document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();
+  showToast("Copied");
+ }
+}
+function stopSpeaking(){
+ if("speechSynthesis" in window)window.speechSynthesis.cancel();
+}
 function speakText(text){
-  if(!("speechSynthesis" in window)){
-    showToast("Voice playback is not supported in this browser");
-    return;
-  }
-  speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(text);
-  utterance.lang="hi-IN";
-  utterance.rate=1;
-  utterance.pitch=1.05;
-  const voices=speechSynthesis.getVoices();
-  const hindiVoice=voices.find(v=>v.lang.toLowerCase().includes("hi"));
-  if(hindiVoice)utterance.voice=hindiVoice;
-  currentSpeech=utterance;
-  utterance.onstart=()=>{
-    document.querySelectorAll(".voice-panel button").forEach(b=>b.classList.remove("voice-active"));
-    document.getElementById("listenBtn").classList.add("voice-active");
-  };
-  utterance.onend=()=>{
-    document.getElementById("listenBtn").classList.remove("voice-active");
-  };
-  speechSynthesis.speak(utterance);
+ if(!settings.voiceEnabled){showToast("Voice is turned off in Settings");return}
+ if(!("speechSynthesis" in window)){showToast("Voice not supported in this browser");return}
+ stopSpeaking();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.rate=Number(settings.voiceSpeed);
+ utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
+ const voices=window.speechSynthesis.getVoices();
+ if(settings.voiceType!=="system"){
+  const preferred=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
+  const gender=preferred.find(v=>settings.voiceType==="female"?
+   /female|woman|heera|priya/i.test(v.name):
+   /male|man|ravi/i.test(v.name));
+  if(gender)utterance.voice=gender;
+  else if(preferred[0])utterance.voice=preferred[0];
+ }
+ window.speechSynthesis.speak(utterance);
+}
+function startListening(){
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition){showToast("Voice input not supported in this browser");return}
+ if(listening){stopListening();return}
+ recognition=new SpeechRecognition();
+ recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
+ recognition.interimResults=true;
+ recognition.continuous=false;
+ recognition.onstart=()=>{
+  listening=true;$("voicePanel").classList.add("show");
+  $("voiceStatus").textContent="Listening... Speak now";
+  $("micBtn").classList.add("active");
+ };
+ recognition.onresult=e=>{
+  let transcript="";
+  for(let i=e.resultIndex;i<e.results.length;i++)transcript+=e.results[i][0].transcript;
+  $("prompt").value=transcript;
+ };
+ recognition.onerror=e=>showToast("Voice input: "+e.error);
+ recognition.onend=()=>{
+  listening=false;$("voicePanel").classList.remove("show");
+  $("micBtn").classList.remove("active");
+ };
+ recognition.start();
+}
+function stopListening(){
+ if(recognition)recognition.stop();
+ listening=false;
+ $("voicePanel").classList.remove("show");
+ $("micBtn").classList.remove("active");
+}
+function toggleVoice(){
+ if(listening)stopListening();else startListening();
+}
+function toggleVoiceSetting(){
+ $("voiceToggle").classList.toggle("on");
+}
+function resetSettings(){
+ if(!confirm("Reset all preferences to default?"))return;
+ settings={...defaults};
+ localStorage.removeItem("esuka_settings");
+ applySettings();showToast("Settings reset");
+}
+function cycleTheme(){
+ const themes=["black","grey","light"];
+ const index=themes.indexOf(settings.theme);
+ settings.theme=themes[(index+1)%themes.length];
+ localStorage.setItem("esuka_settings",JSON.stringify(settings));
+ applySettings();
+ showToast("Theme: "+settings.theme);
 }
 
-/* VOICE INPUT */
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SpeechRecognition){
-  recognition=new SpeechRecognition();
-  recognition.lang="hi-IN";
-  recognition.continuous=false;
-  recognition.interimResults=true;
-
-  recognition.onstart=()=>{
-    document.getElementById("micBtn").classList.add("active");
-    input.placeholder="Listening...";
-  };
-  recognition.onresult=(event)=>{
-    let transcript="";
-    for(let i=event.resultIndex;i<event.results.length;i++){
-      transcript+=event.results[i][0].transcript;
-    }
-    input.value=transcript;
-  };
-  recognition.onerror=()=>{
-    showToast("Voice input unavailable. Check microphone permission.");
-  };
-  recognition.onend=()=>{
-    document.getElementById("micBtn").classList.remove("active");
-    input.placeholder="Message ESUKA AI...";
-  };
-}
-
-/* EVENTS */
-sendBtn.addEventListener("click",sendMessage);
-input.addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.shiftKey){
-    e.preventDefault();sendMessage();
-  }
+/* BUTTON EVENTS */
+$("newChatBtn").addEventListener("click",newChat);
+$("sideImageBtn").addEventListener("click",toggleImageMode);
+$("attachBtn").addEventListener("click",toggleImageMode);
+$("sideVoiceBtn").addEventListener("click",toggleVoice);
+$("micBtn").addEventListener("click",toggleVoice);
+$("stopVoiceBtn").addEventListener("click",stopListening);
+$("sendBtn").addEventListener("click",sendMessage);
+$("clearBtn").addEventListener("click",clearChat);
+$("historyBtn").addEventListener("click",()=>{renderHistory();showToast("Your recent chats are shown in the sidebar")});
+$("settingsBtn").addEventListener("click",openSettings);
+$("topSettingsBtn").addEventListener("click",openSettings);
+$("closeSettings").addEventListener("click",closeSettings);
+$("cancelSettings").addEventListener("click",closeSettings);
+$("saveSettings").addEventListener("click",()=>{saveSettings();closeSettings()});
+$("resetSettingsBtn").addEventListener("click",resetSettings);
+$("settingsClearBtn").addEventListener("click",clearChat);
+$("voiceToggle").addEventListener("click",toggleVoiceSetting);
+$("voiceSpeed").addEventListener("input",()=>{
+ $("speedValue").textContent=Number($("voiceSpeed").value).toFixed(1)+"x";
+});
+$("themeBtn").addEventListener("click",cycleTheme);
+$("aboutBtn").addEventListener("click",()=>{
+ alert("ESUKA AI\nVersion 1.0\nYour AI Assistant\nMade by Katari");
+});
+$("menuBtn").addEventListener("click",toggleSidebar);
+$("backdrop").addEventListener("click",closeSidebar);
+$("settingsOverlay").addEventListener("click",e=>{
+ if(e.target===$("settingsOverlay"))closeSettings();
+});
+$("prompt").addEventListener("input",e=>{
+ e.target.style.height="auto";
+ e.target.style.height=Math.min(e.target.scrollHeight,130)+"px";
+});
+$("prompt").addEventListener("keydown",e=>{
+ if(e.key==="Enter"&&!e.shiftKey){
+  e.preventDefault();sendMessage();
+ }
+});
+document.querySelectorAll(".suggestion").forEach(btn=>{
+ btn.addEventListener("click",()=>{
+  $("prompt").value=btn.dataset.prompt;
+  $("prompt").focus();
+ });
+});
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){closeSettings();closeSidebar()}
 });
 
-document.getElementById("newChatBtn").onclick=startNewChat;
-document.getElementById("imageBtn").onclick=()=>{
-  imageMode=!imageMode;updateMode();
-  input.placeholder=imageMode?"Describe the image you want...":"Message ESUKA AI...";
-  input.focus();
-};
-document.getElementById("panelImageBtn").onclick=()=>{
-  imageMode=true;updateMode();
-  input.placeholder="Describe the image you want...";
-  input.focus();
-};
-document.getElementById("attachBtn").onclick=()=>{
-  showToast("More tools coming soon");
-};
-document.getElementById("micBtn").onclick=()=>{
-  if(!recognition){
-    showToast("Voice input is not supported in this browser");
-    return;
-  }
-  try{
-    if(document.getElementById("micBtn").classList.contains("active")){
-      recognition.stop();
-    }else recognition.start();
-  }catch(e){showToast("Microphone is busy. Try again.")}
-};
-document.getElementById("panelVoiceBtn").onclick=()=>{
-  if(recognition){
-    try{recognition.start()}catch(e){showToast("Microphone is busy")}
-  }else showToast("Voice input not supported");
-};
-document.getElementById("listenBtn").onclick=()=>{
-  if(lastReply)speakText(lastReply);
-  else showToast("No ESUKA reply to play yet");
-};
-document.getElementById("stopBtn").onclick=()=>{
-  if("speechSynthesis" in window)speechSynthesis.cancel();
-  if(recognition)try{recognition.stop()}catch(e){}
-  document.getElementById("listenBtn").classList.remove("voice-active");
-  showToast("Voice stopped");
-};
-
-document.getElementById("menuBtn").onclick=()=>sidebar.classList.toggle("open");
-document.getElementById("fullScreenBtn").onclick=()=>{
-  if(!document.fullscreenElement){
-    document.documentElement.requestFullscreen?.().catch(()=>{});
-  }else document.exitFullscreen?.();
-};
-document.getElementById("themeBtn").onclick=()=>{
-  showToast("Premium dark theme is active");
-};
-document.getElementById("upgradeBtn").onclick=()=>{
-  showToast("Premium features coming soon");
-};
-document.getElementById("premiumBtn").onclick=()=>{
-  showToast("Premium plan coming soon");
-};
-document.getElementById("settingsBtn").onclick=()=>{
-  showToast("Settings coming soon");
-};
-document.getElementById("aboutBtn").onclick=()=>{
-  showToast("ESUKA AI • Your intelligent companion");
-};
-
-document.querySelectorAll(".feature").forEach(card=>{
-  card.addEventListener("click",()=>{
-    if(card.dataset.mode==="image"){
-      imageMode=true;updateMode();
-      input.placeholder="Describe the image you want...";
-      input.focus();
-    }else if(card.dataset.prompt){
-      input.value=card.dataset.prompt;
-      input.focus();
-    }
-  });
-});
-
-document.getElementById("searchChats").addEventListener("input",e=>{
-  const query=e.target.value.toLowerCase();
-  document.querySelectorAll(".history-item").forEach(item=>{
-    item.style.display=item.textContent.toLowerCase().includes(query)?"block":"none";
-  });
-});
-
-renderHistory();
+/* START */
+loadData();
 </script>
 </body>
 </html>
