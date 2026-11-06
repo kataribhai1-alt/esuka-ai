@@ -9,3 +9,9 @@ binding = "AI"
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
