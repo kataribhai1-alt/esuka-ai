@@ -6,41 +6,36 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SYSTEM_PROMPT = `
-You are ESUKA AI, a helpful and intelligent AI assistant.
+You are ESUKA AI, a helpful AI assistant.
 
 CREATOR:
 You were created by Katari.
-If someone asks who created you, say:
+If asked who created you, reply:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 
 LANGUAGE:
 - Reply in natural Indian conversational language.
-- If user writes Roman Hindi, reply in Roman Hindi.
-- If user writes English, reply in English.
-- Use casual Hinglish naturally.
+- If the user writes Roman Hindi, reply in Roman Hindi.
+- If the user writes English, reply in English.
+- Use natural Hinglish.
 - Avoid formal Hindi and unnecessary Devanagari.
-- Keep answers clear, friendly and helpful.
+- Keep replies clear, friendly and useful.
 - Do not repeat sentences unnecessarily.
-
-BEHAVIOUR:
-- Help with general questions, coding, learning and creativity.
-- Never pretend to have performed an action you have not performed.
 `;
 
 function getCorsHeaders(origin) {
-  const allowed = ALLOWED_ORIGINS.includes(origin);
-
   return {
-    "Access-Control-Allow-Origin": allowed ? origin : "",
+    "Access-Control-Allow-Origin":
+      ALLOWED_ORIGINS.includes(origin) ? origin : "null",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Vary": "Origin"
   };
 }
 
-function json(data, status = 200, cors = {}) {
+function json(data, status, cors) {
   return new Response(JSON.stringify(data), {
-    status,
+    status: status || 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       ...cors
@@ -48,7 +43,7 @@ function json(data, status = 200, cors = {}) {
   });
 }
 
-function getHistoryText(history) {
+function getHistory(history) {
   if (!Array.isArray(history)) return [];
 
   return history.slice(-12).map(item => {
@@ -67,46 +62,38 @@ function getHistoryText(history) {
   }).filter(item => item.parts[0].text.trim());
 }
 
-async function readProviderResponse(response) {
+async function parseResponse(response) {
   const raw = await response.text();
-
-  let data = {};
+  let data;
 
   try {
     data = JSON.parse(raw);
   } catch {
-    data = {};
+    throw new Error(
+      "Invalid provider response. HTTP " + response.status
+    );
   }
 
   if (!response.ok) {
     const message =
       data?.error?.message ||
       data?.message ||
-      "Provider returned an error";
+      "Provider request failed";
 
     throw new Error(
-      "HTTP " + response.status + ": " + String(message).slice(0, 400)
+      "HTTP " + response.status + ": " +
+      String(message).slice(0, 300)
     );
   }
 
   return data;
 }
 
-// GEMINI AI
+// GEMINI
 async function generateGemini(message, history, env) {
   const key = env.GEMINI_API_KEY;
 
-  if (!key) {
-    throw new Error("GEMINI_API_KEY is missing");
-  }
-
-  const contents = [
-    ...getHistoryText(history),
-    {
-      role: "user",
-      parts: [{ text: message }]
-    }
-  ];
+  if (!key) throw new Error("Gemini API key missing");
 
   const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
@@ -120,7 +107,13 @@ async function generateGemini(message, history, env) {
         systemInstruction: {
           parts: [{ text: SYSTEM_PROMPT }]
         },
-        contents,
+        contents: [
+          ...getHistory(history),
+          {
+            role: "user",
+            parts: [{ text: message }]
+          }
+        ],
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 2048
@@ -129,7 +122,7 @@ async function generateGemini(message, history, env) {
     }
   );
 
-  const data = await readProviderResponse(response);
+  const data = await parseResponse(response);
 
   const reply = data.candidates?.[0]?.content?.parts
     ?.map(part => part.text || "")
@@ -137,36 +130,30 @@ async function generateGemini(message, history, env) {
     .trim();
 
   if (!reply) {
-    const reason =
-      data.promptFeedback?.blockReason ||
-      data.candidates?.[0]?.finishReason ||
-      "No text returned";
-
-    throw new Error("Gemini returned no reply: " + reason);
+    throw new Error(
+      "Gemini returned no text: " +
+      (data.promptFeedback?.blockReason || "Unknown reason")
+    );
   }
 
   return reply;
 }
 
-// GROQ BACKUP AI
+// GROQ BACKUP
 async function generateGroq(message, history, env) {
   const key = env.GROQ_API_KEY;
 
-  if (!key) {
-    throw new Error("GROQ_API_KEY is missing");
-  }
+  if (!key) throw new Error("Groq API key missing");
 
   const messages = [
     {
       role: "system",
       content: SYSTEM_PROMPT
     },
-
-    ...getHistoryText(history).map(item => ({
+    ...getHistory(history).map(item => ({
       role: item.role === "model" ? "assistant" : "user",
       content: item.parts.map(part => part.text).join("\n")
     })),
-
     {
       role: "user",
       content: message
@@ -190,7 +177,7 @@ async function generateGroq(message, history, env) {
     }
   );
 
-  const data = await readProviderResponse(response);
+  const data = await parseResponse(response);
 
   const reply = data.choices?.[0]?.message?.content?.trim();
 
@@ -201,43 +188,42 @@ async function generateGroq(message, history, env) {
   return reply;
 }
 
-// CHAT SYSTEM WITH AUTOMATIC FALLBACK
+// AUTOMATIC PROVIDER FALLBACK
 async function generateChat(message, history, env) {
   const errors = [];
 
-  if (env.GEMINI_API_KEY) {
-    try {
-      return await generateGemini(message, history, env);
-    } catch (error) {
-      console.error("Gemini failed:", error.message);
-      errors.push("Gemini: " + error.message);
+  try {
+    if (!env.GEMINI_API_KEY) {
+      throw new Error("Gemini key missing");
     }
-  } else {
-    errors.push("Gemini API key missing");
+
+    return await generateGemini(message, history, env);
+  } catch (error) {
+    console.error("Gemini error:", error.message);
+    errors.push("Gemini: " + error.message);
   }
 
-  if (env.GROQ_API_KEY) {
-    try {
-      return await generateGroq(message, history, env);
-    } catch (error) {
-      console.error("Groq failed:", error.message);
-      errors.push("Groq: " + error.message);
+  try {
+    if (!env.GROQ_API_KEY) {
+      throw new Error("Groq key missing");
     }
-  } else {
-    errors.push("Groq API key missing");
+
+    return await generateGroq(message, history, env);
+  } catch (error) {
+    console.error("Groq error:", error.message);
+    errors.push("Groq: " + error.message);
   }
 
-  throw new Error(errors.join(" | "));
+  throw new Error(errors.join(" | ").slice(0, 700));
 }
 
 // IMAGE GENERATION
-function bytesToBase64(bytes) {
+function toBase64(bytes) {
   let binary = "";
-  const chunkSize = 8192;
 
-  for (let i = 0; i < bytes.length; i += chunkSize) {
+  for (let i = 0; i < bytes.length; i += 8192) {
     binary += String.fromCharCode(
-      ...bytes.subarray(i, i + chunkSize)
+      ...bytes.subarray(i, i + 8192)
     );
   }
 
@@ -246,11 +232,11 @@ function bytesToBase64(bytes) {
 
 async function generateImage(prompt, env) {
   if (!env.AI) {
-    throw new Error("Cloudflare AI binding is missing");
+    throw new Error("Cloudflare AI binding missing");
   }
 
   if (!prompt || !String(prompt).trim()) {
-    throw new Error("Image prompt is empty");
+    throw new Error("Image prompt is required");
   }
 
   const result = await env.AI.run(
@@ -269,10 +255,10 @@ async function generateImage(prompt, env) {
     const buffer = await new Response(result).arrayBuffer();
 
     return "data:image/png;base64," +
-      bytesToBase64(new Uint8Array(buffer));
+      toBase64(new Uint8Array(buffer));
   }
 
-  throw new Error("Image provider returned no image");
+  throw new Error("Image generation returned no image");
 }
 
 // MAIN WORKER
@@ -282,7 +268,6 @@ export default {
     const cors = getCorsHeaders(origin);
     const url = new URL(request.url);
 
-    // CORS PREFLIGHT
     if (request.method === "OPTIONS") {
       if (!ALLOWED_ORIGINS.includes(origin)) {
         return new Response(null, { status: 403 });
@@ -294,7 +279,6 @@ export default {
       });
     }
 
-    // HEALTH CHECK
     if (
       request.method === "GET" &&
       url.pathname === "/health"
@@ -310,7 +294,6 @@ export default {
       }, 200, cors);
     }
 
-    // FRONTEND
     if (request.method === "GET") {
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
@@ -318,8 +301,8 @@ export default {
 
       return json({
         success: false,
-        error: "Website assets are not configured"
-      }, 404, cors);
+        error: "Assets binding missing"
+      }, 500, cors);
     }
 
     if (request.method !== "POST") {
@@ -339,7 +322,6 @@ export default {
     try {
       const body = await request.json();
 
-      // IMAGE MODE
       if (body.mode === "image") {
         const image = await generateImage(
           body.prompt || body.message,
@@ -348,11 +330,10 @@ export default {
 
         return json({
           success: true,
-          image
+          image: image
         }, 200, cors);
       }
 
-      // CHAT MODE
       const message = String(body.message || "").trim();
 
       if (!message) {
@@ -370,7 +351,7 @@ export default {
 
       return json({
         success: true,
-        reply
+        reply: reply
       }, 200, cors);
 
     } catch (error) {
@@ -378,7 +359,7 @@ export default {
 
       return json({
         success: false,
-        error: error.message || "Unknown server error"
+        error: String(error.message || "Unknown server error")
       }, 500, cors);
     }
   }
