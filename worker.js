@@ -1,3 +1,4 @@
+
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
@@ -6,6 +7,7 @@ const ALLOWED_ORIGINS = [
 
 const GROQ_MODEL = "openai/gpt-oss-20b";
 const GEMINI_MODEL = "gemini-3.8-flash";
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 const SYSTEM_PROMPT = `
 You are ESUKA AI, a smart, friendly and helpful Indian AI assistant.
@@ -107,6 +109,35 @@ async function parseResponse(response) {
   }
 
   return data;
+}
+
+// AUTOMATIC IMAGE REQUEST DETECTION
+function isImageRequest(message) {
+  const text = String(message || "")
+    .toLowerCase()
+    .trim();
+
+  if (!text) return false;
+
+  // Questions about how image generation works
+  const questionPattern =
+    /\b(how|what|why|where|kaise|kya|kyun|kis tarah)\b.*\b(make|create|generate|edit|bana|banaye|banau|generate kar)\b/i;
+
+  if (questionPattern.test(text)) return false;
+
+  const imageWords =
+    /\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र|पोस्टर|वॉलपेपर)\b/i;
+
+  const creationWords =
+    /\b(make|create|generate|draw|design|create|bana|banao|banaao|banado|bana do|bana ke do|taiyar karo|dikhao|generate karo|generate kar do|create karo|draw karo)\b/i;
+
+  const directImagePhrase =
+    /\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|boy|girl|person|mountain|nature|bird|dragon)\b/i;
+
+  return (
+    (imageWords.test(text) && creationWords.test(text)) ||
+    directImagePhrase.test(text)
+  );
 }
 
 // FAST PRIMARY: GROQ
@@ -247,17 +278,16 @@ async function generateImage(prompt, env) {
     throw new Error("Cloudflare AI binding missing");
   }
 
-  if (!prompt || !String(prompt).trim()) {
+  const cleanPrompt = String(prompt || "").trim();
+
+  if (!cleanPrompt) {
     throw new Error("Image prompt is required");
   }
 
-  const result = await env.AI.run(
-    "@cf/black-forest-labs/flux-1-schnell",
-    {
-      prompt: String(prompt).trim(),
-      steps: 8
-    }
-  );
+  const result = await env.AI.run(IMAGE_MODEL, {
+    prompt: cleanPrompt.slice(0, 1500),
+    steps: 8
+  });
 
   if (result?.image) {
     return "data:image/png;base64," + result.image;
@@ -302,6 +332,7 @@ export default {
         status: "Backend is running",
         primaryModel: GROQ_MODEL,
         backupModel: GEMINI_MODEL,
+        imageModel: IMAGE_MODEL,
         groqConfigured: Boolean(env.GROQ_API_KEY),
         geminiConfigured: Boolean(env.GEMINI_API_KEY),
         imageConfigured: Boolean(env.AI)
@@ -336,30 +367,36 @@ export default {
 
     try {
       const body = await request.json();
-
-      // IMAGE MODE
-      if (body.mode === "image") {
-        const image = await generateImage(
-          body.prompt || body.message,
-          env
-        );
-
-        return json({
-          success: true,
-          image
-        }, 200, cors);
-      }
-
-      // CHAT MODE
       const message = String(body.message || "").trim();
 
-      if (!message) {
+      if (!message && body.mode !== "image") {
         return json({
           success: false,
           error: "Message is required"
         }, 400, cors);
       }
 
+      // MANUAL OR AUTOMATIC IMAGE MODE
+      const useImage =
+        body.mode === "image" ||
+        isImageRequest(message);
+
+      if (useImage) {
+        const prompt = String(
+          body.prompt || message
+        ).trim();
+
+        const image = await generateImage(prompt, env);
+
+        return json({
+          success: true,
+          mode: "image",
+          image,
+          prompt
+        }, 200, cors);
+      }
+
+      // NORMAL CHAT MODE
       const reply = await generateChat(
         message,
         body.history || [],
@@ -368,6 +405,7 @@ export default {
 
       return json({
         success: true,
+        mode: "chat",
         reply
       }, 200, cors);
 
@@ -376,7 +414,9 @@ export default {
 
       return json({
         success: false,
-        error: String(error.message || "Unknown server error")
+        error: String(
+          error.message || "Unknown server error"
+        )
       }, 500, cors);
     }
   }
