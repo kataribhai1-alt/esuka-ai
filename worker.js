@@ -1,9 +1,11 @@
-
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
   "https://kataribhai1-alt.github.io"
 ];
+
+const GROQ_MODEL = "openai/gpt-oss-20b";
+const GEMINI_MODEL = "gemini-3.8-flash";
 
 const SYSTEM_PROMPT = `
 You are ESUKA AI, a smart, friendly and helpful Indian AI assistant.
@@ -13,62 +15,30 @@ You were created by Katari.
 If asked who created you, reply:
 "Mujhe Katari ne banaya hai. Main ESUKA AI hoon!"
 
-LANGUAGE RULES:
-1. Always reply in the same language and script style as the user.
-2. If the user writes Roman Hindi, reply in natural Roman Hindi.
-3. If the user writes Hinglish, reply in natural Indian Hinglish.
-4. If the user writes English, reply in English.
-5. If the user writes Devanagari Hindi, reply in Devanagari Hindi.
-6. Never force Devanagari when the user uses Roman Hindi.
-7. Do not translate common English words unnecessarily.
+LANGUAGE:
+- Reply in the same language and script as the user.
+- Roman Hindi input = natural Roman Hindi reply.
+- Hinglish input = natural Indian Hinglish.
+- English input = English.
+- Devanagari Hindi input = Devanagari Hindi.
+- Never force Devanagari when the user writes Roman Hindi.
+- Do not unnecessarily translate common English words.
 
-NATURAL HINDI STYLE:
-- Speak like a normal Indian person in a friendly conversation.
-- Use natural phrases such as:
-  "Haan, samajh gaya."
-  "Achha, dekho..."
-  "Bilkul, aisa kar sakte hain."
-  "Koi baat nahi, main samjhata hoon."
-  "Ek kaam karo..."
-- Avoid textbook Hindi and unnatural translations.
-- Avoid overly formal words.
-- Do not sound like a machine or a news reader.
-- Use simple everyday Indian Hinglish.
-- Keep grammar natural and sentences easy to understand.
-- Do not use the same opening phrase in every reply.
+STYLE:
+- Sound like a normal, friendly Indian person.
+- Use simple, natural everyday language.
+- Avoid textbook Hindi and overly formal words.
+- Do not repeat the same opening phrase.
 - Do not overuse emojis.
-
-RESPONSE STYLE:
 - Answer the actual question first.
-- Keep normal answers short and conversational.
-- Give detailed explanations when the user asks for details.
-- For technical topics, explain step by step in simple Hinglish.
-- Do not repeat the user's question unnecessarily.
-- Ask only one clarification question when necessary.
-- Do not make up facts.
-- Never claim that an action was completed if it was not.
-- Use bullet points only when they genuinely help.
+- Keep normal replies short and conversational.
+- Give details when asked.
+- For technical help, explain in simple steps.
+- Ask only one clarification question when needed.
+- Never make up facts or claim an action was completed when it was not.
+- Do not imitate or claim to be another AI assistant.
 
-CONVERSATION EXAMPLES:
-
-User: Tum kaise ho?
-Assistant: Main badhiya hoon! Tum batao, kya chal raha hai?
-
-User: Mujhe website banani hai.
-Assistant: Haan, bilkul! Kis type ki website banani hai?
-
-User: Samajh nahi aaya.
-Assistant: Koi baat nahi, main aur simple tarike se samjhata hoon.
-
-User: What is artificial intelligence?
-Assistant: Artificial intelligence (AI) is technology that helps computers perform tasks that usually need human intelligence.
-
-User: Tum Hindi mein kyun nahi bolte?
-Assistant: Haan, ab samajh gaya. Main tumse natural Hinglish mein baat karunga.
-
-IMPORTANT:
 Your goal is natural, helpful and context-aware conversation.
-Do not imitate or claim to be another AI assistant.
 `;
 
 function getCorsHeaders(origin) {
@@ -94,7 +64,7 @@ function json(data, status, cors) {
 function getHistory(history) {
   if (!Array.isArray(history)) return [];
 
-  return history.slice(-8).map(item => {
+  return history.slice(-6).map(item => {
     const role =
       item.role === "assistant" || item.role === "model"
         ? "model"
@@ -105,7 +75,9 @@ function getHistory(history) {
 
     return {
       role,
-      parts: [{ text: String(content) }]
+      parts: [{
+        text: String(content).slice(0, 3000)
+      }]
     };
   }).filter(item => item.parts[0].text.trim());
 }
@@ -130,65 +102,14 @@ async function parseResponse(response) {
 
     throw new Error(
       "HTTP " + response.status + ": " +
-      String(message).slice(0, 300)
+      String(message).slice(0, 250)
     );
   }
 
   return data;
 }
 
-// GEMINI AI
-async function generateGemini(message, history, env) {
-  if (!env.GEMINI_API_KEY) {
-    throw new Error("Gemini API key missing");
-  }
-
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
-    encodeURIComponent(env.GEMINI_API_KEY),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        contents: [
-          ...getHistory(history),
-          {
-            role: "user",
-            parts: [{ text: message }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.65,
-          topP: 0.9,
-          maxOutputTokens: 1200
-        }
-      })
-    }
-  );
-
-  const data = await parseResponse(response);
-
-  const reply = data.candidates?.[0]?.content?.parts
-    ?.map(part => part.text || "")
-    .join("")
-    .trim();
-
-  if (!reply) {
-    throw new Error(
-      "Gemini returned no text: " +
-      (data.promptFeedback?.blockReason || "Unknown reason")
-    );
-  }
-
-  return reply;
-}
-
-// GROQ BACKUP AI
+// FAST PRIMARY: GROQ
 async function generateGroq(message, history, env) {
   if (!env.GROQ_API_KEY) {
     throw new Error("Groq API key missing");
@@ -217,17 +138,16 @@ async function generateGroq(message, history, env) {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + env.GROQ_API_KEY
       },
+      signal: AbortSignal.timeout(25000),
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
+        model: GROQ_MODEL,
         messages,
-        temperature: 0.65,
-        max_completion_tokens: 1200
+        max_completion_tokens: 700
       })
     }
   );
 
   const data = await parseResponse(response);
-
   const reply = data.choices?.[0]?.message?.content?.trim();
 
   if (!reply) {
@@ -237,25 +157,76 @@ async function generateGroq(message, history, env) {
   return reply;
 }
 
-// AUTOMATIC AI FALLBACK
+// BACKUP: GEMINI
+async function generateGemini(message, history, env) {
+  if (!env.GEMINI_API_KEY) {
+    throw new Error("Gemini API key missing");
+  }
+
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    GEMINI_MODEL +
+    ":generateContent?key=" +
+    encodeURIComponent(env.GEMINI_API_KEY),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      signal: AbortSignal.timeout(25000),
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        contents: [
+          ...getHistory(history),
+          {
+            role: "user",
+            parts: [{ text: message }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.65,
+          maxOutputTokens: 700
+        }
+      })
+    }
+  );
+
+  const data = await parseResponse(response);
+
+  const reply = data.candidates?.[0]?.content?.parts
+    ?.map(part => part.text || "")
+    .join("")
+    .trim();
+
+  if (!reply) {
+    throw new Error(
+      "Gemini returned no text: " +
+      (data.promptFeedback?.blockReason || "Unknown reason")
+    );
+  }
+
+  return reply;
+}
+
+// GROQ FIRST, GEMINI BACKUP
 async function generateChat(message, history, env) {
-  const errors = [];
+  try {
+    return await generateGroq(message, history, env);
+  } catch (error) {
+    console.error("Groq error:", error.message);
+  }
 
   try {
     return await generateGemini(message, history, env);
   } catch (error) {
     console.error("Gemini error:", error.message);
-    errors.push("Gemini: " + error.message);
+    throw new Error(
+      "Both AI providers failed. " +
+      String(error.message).slice(0, 400)
+    );
   }
-
-  try {
-    return await generateGroq(message, history, env);
-  } catch (error) {
-    console.error("Groq error:", error.message);
-    errors.push("Groq: " + error.message);
-  }
-
-  throw new Error(errors.join(" | ").slice(0, 700));
 }
 
 // IMAGE GENERATION
@@ -329,12 +300,10 @@ export default {
         success: true,
         name: "ESUKA AI",
         status: "Backend is running",
-        models: {
-          gemini: "gemini-3.8-flash",
-          groq: "openai/gpt-oss-120b"
-        },
-        geminiConfigured: Boolean(env.GEMINI_API_KEY),
+        primaryModel: GROQ_MODEL,
+        backupModel: GEMINI_MODEL,
         groqConfigured: Boolean(env.GROQ_API_KEY),
+        geminiConfigured: Boolean(env.GEMINI_API_KEY),
         imageConfigured: Boolean(env.AI)
       }, 200, cors);
     }
