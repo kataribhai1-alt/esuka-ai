@@ -3,431 +3,430 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#090a0f">
+<meta name="theme-color" content="#050b1b">
 <title>ESUKA AI</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --bg:#090a0f;
-  --panel:#101118;
-  --border:#262832;
-  --muted:#9295a3;
-  --accent:#9877ff;
+  --bg:#030817;
+  --panel:#07142b;
+  --blue:#08caff;
+  --purple:#713bff;
+  --text:#f4f7ff;
+  --muted:#91a5c8;
+  --border:rgba(91,151,255,.22);
 }
-
+*{box-sizing:border-box;margin:0;padding:0}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   background:var(--bg);
-  color:#f5f5f8;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   height:100dvh;
   overflow:hidden;
 }
-
-button{font-family:inherit}
-
-.app{display:flex;height:100dvh}
+button,input{font:inherit}
+button{cursor:pointer;color:inherit}
+.app{
+  display:flex;
+  width:100%;
+  height:100dvh;
+  background:
+    radial-gradient(ellipse at 75% 15%,rgba(21,75,180,.17),transparent 40%),
+    radial-gradient(ellipse at 90% 95%,rgba(99,30,255,.15),transparent 38%),
+    #030817;
+}
 
 /* SIDEBAR */
-
 .sidebar{
   width:270px;
   flex-shrink:0;
-  background:#0c0d13;
+  background:rgba(5,14,34,.92);
   border-right:1px solid var(--border);
-  padding:21px;
+  padding:24px 17px;
   display:flex;
   flex-direction:column;
-  transition:left .3s;
+  z-index:10;
+  transition:transform .3s;
 }
-
+.brand{display:flex;align-items:center;gap:13px;margin:0 0 28px 5px}
 .logo{
-  font-size:25px;
-  font-weight:800;
-  letter-spacing:1.5px;
-  background:linear-gradient(100deg,#bd9aff,#62c7ff);
-  -webkit-background-clip:text;
-  color:transparent;
-}
-
-.tagline{
-  color:#777b89;
-  font-size:10px;
-  letter-spacing:1.4px;
-  margin-top:6px;
-}
-
-.newchat{
-  margin-top:30px;
-  padding:13px;
-  border-radius:13px;
-  background:#191a24;
-  border:1px solid #30313e;
+  width:58px;height:58px;
+  display:grid;place-items:center;
+  font-size:42px;font-weight:900;
+  border-radius:17px;
   color:white;
-  font-size:14px;
-  cursor:pointer;
+  background:linear-gradient(140deg,#00cfff,#174dff 55%,#842cff);
+  box-shadow:0 0 25px #087cff88,inset 0 0 13px #ffffff55;
+  text-shadow:0 0 15px white;
+  animation:logoGlow 4s infinite alternate;
 }
-
-.newchat:hover{background:#252637}
-
-.sideheading{
-  font-size:10px;
-  color:#777b89;
-  letter-spacing:1.5px;
-  margin:28px 0 12px;
+@keyframes logoGlow{
+  from{box-shadow:0 0 15px #087cff66}
+  to{box-shadow:0 0 35px #713bffbb,0 0 60px #087cff44}
 }
-
-.history{overflow-y:auto;flex:1}
-
+.brand h2{font-size:21px;letter-spacing:.4px}
+.brand p{font-size:12px;color:var(--muted);margin-top:3px}
+.side-btn{
+  border:1px solid transparent;
+  background:transparent;
+  padding:13px 14px;
+  border-radius:15px;
+  display:flex;align-items:center;gap:12px;
+  text-align:left;width:100%;
+  margin-bottom:9px;
+  color:#dce8ff;
+  transition:.25s;
+}
+.side-btn:hover,.side-btn.active{
+  background:linear-gradient(110deg,#0756c8aa,#5522b888);
+  border-color:#268dff77;
+  box-shadow:0 0 20px #087cff22;
+}
+.side-icon{font-size:20px;width:25px;text-align:center}
+.search{
+  width:100%;padding:12px 14px;
+  background:#07142b;border:1px solid var(--border);
+  border-radius:13px;color:white;outline:none;
+  margin:9px 0 20px;
+}
+.search:focus{border-color:var(--blue)}
+.side-label{
+  font-size:12px;color:#8299c0;
+  margin:5px 8px 12px;
+}
+.history-list{overflow:auto;flex:1}
 .history-item{
-  padding:12px;
-  border-radius:10px;
-  color:#c4c6d1;
-  font-size:13px;
+  font-size:13px;color:#c5d4ef;
+  padding:11px 9px;border-radius:10px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   cursor:pointer;
-  margin-bottom:5px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
 }
-
-.history-item.active,.history-item:hover{
-  background:#20212c;
+.history-item:hover{background:#13264a}
+.bottom-side{border-top:1px solid var(--border);padding-top:14px}
+.profile{display:flex;align-items:center;gap:10px;padding:12px 5px}
+.avatar{
+  width:39px;height:39px;border-radius:50%;
+  display:grid;place-items:center;font-weight:800;
+  background:linear-gradient(135deg,#00caff,#783cff);
 }
-
-.sidebar-bottom{
-  font-size:11px;
-  color:#777b89;
-  padding-top:15px;
-}
+.profile small{display:block;color:#16dfa2;margin-top:3px}
 
 /* MAIN */
-
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  height:100%;
-}
-
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
 .topbar{
-  height:65px;
-  border-bottom:1px solid #22232c;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 23px;
-  flex-shrink:0;
-  background:#0b0c12;
+  height:75px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:12px;padding:0 25px;
 }
-
-.topname{font-weight:750;font-size:15px}
-
-.status{
-  font-size:11px;
-  color:#63d7a2;
-  margin-top:5px;
+.top-pill{
+  background:#09162e;border:1px solid var(--border);
+  padding:10px 15px;border-radius:30px;
+  font-size:13px;color:#dce9ff;
 }
-
-.menu{
-  display:none;
-  background:none;
-  color:white;
-  border:0;
-  font-size:23px;
+.top-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:#0a1730;border:1px solid var(--border);
+  font-size:18px;transition:.25s;
 }
+.top-btn:hover{border-color:var(--blue);box-shadow:0 0 15px #087cff66}
+.mobile-menu{display:none;margin-right:auto}
 
-/* CHAT */
-
-.chat{
-  flex:1;
-  overflow-y:auto;
-  padding:30px 18px;
+/* CHAT AREA */
+.chat-area{
+  flex:1;min-height:0;overflow-y:auto;
+  padding:15px 25px 25px;
   scroll-behavior:smooth;
-  overscroll-behavior:contain;
 }
-
 .welcome{
-  text-align:center;
-  margin:12vh auto 30px;
-  max-width:550px;
+  min-height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:15px 0 35px;
 }
-
+.orb-wrap{
+  width:165px;height:165px;
+  position:relative;display:grid;place-items:center;
+  margin-bottom:30px;
+}
 .orb{
-  width:76px;
-  height:76px;
-  border-radius:25px;
-  margin:0 auto 25px;
-  background:linear-gradient(135deg,#9167ff,#43b9f7);
-  display:grid;
-  place-items:center;
-  font-size:31px;
-  box-shadow:0 0 65px #7955ff35;
+  width:135px;height:135px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:91px;font-weight:900;
+  color:#fff;
+  background:
+    radial-gradient(circle at 30% 20%,#a8f4ff,#147bff 35%,#2514a5 70%,#080d39);
+  border:2px solid #7ee9ff;
+  box-shadow:0 0 22px #00bfff,0 0 55px #334bff99,inset 0 0 20px #ffffff77;
+  text-shadow:0 0 18px white;
+  animation:orbFloat 4s ease-in-out infinite;
+  z-index:2;
 }
-
-.welcome h1{
-  font-size:32px;
-  margin-bottom:12px;
-  letter-spacing:-.8px;
+.orbit{
+  position:absolute;width:170px;height:62px;
+  border:2px solid transparent;
+  border-top-color:#00d9ff;
+  border-bottom-color:#753bff;
+  border-radius:50%;
+  transform:rotate(-27deg);
+  filter:drop-shadow(0 0 8px #00caff);
+  animation:orbitSpin 7s linear infinite;
 }
-
-.gradient{
-  background:linear-gradient(90deg,#bd9aff,#62c7ff);
-  -webkit-background-clip:text;
-  color:transparent;
+.orbit.two{
+  width:185px;height:72px;
+  transform:rotate(48deg);
+  border-top-color:#874cff;
+  border-bottom-color:#00caff;
+  animation-direction:reverse;
+  animation-duration:10s;
 }
-
-.welcome p{
-  color:#9295a3;
-  line-height:1.7;
-  font-size:14px;
+@keyframes orbFloat{50%{transform:translateY(-9px) scale(1.035)}}
+@keyframes orbitSpin{to{rotate:360deg}}
+.welcome h1{font-size:clamp(27px,4vw,42px);text-align:center}
+.gradient-text{
+  background:linear-gradient(90deg,#00d9ff,#6c80ff,#c05aff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
 }
-
-.suggestions{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:27px;
+.welcome .subtitle{
+  color:#a9bddf;text-align:center;
+  font-size:17px;margin-top:12px;
 }
-
-.suggestion{
-  background:#14151d;
-  border:1px solid #292b37;
-  padding:12px 15px;
-  border-radius:13px;
-  color:#d0d2dc;
-  font-size:12px;
-  cursor:pointer;
-  transition:.2s;
+.sparkle{color:#25caff;margin:20px 0;font-size:23px}
+.feature-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));
+  gap:13px;width:min(850px,100%);margin-top:15px;
 }
-
-.suggestion:hover{
-  background:#222431;
-  border-color:#7864c5;
+.feature{
+  padding:19px 10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg,#0d2145aa,#090e25dd);
+  text-align:center;transition:.25s;
 }
+.feature:hover{
+  transform:translateY(-5px);
+  border-color:#168cff;
+  box-shadow:0 0 25px #087cff33;
+}
+.feature .f-icon{font-size:29px;margin-bottom:10px}
+.feature b{font-size:14px;display:block}
+.feature small{display:block;color:var(--muted);margin-top:5px;font-size:12px}
 
 /* MESSAGES */
-
-.messages{
-  max-width:850px;
-  margin:auto;
+.messages{width:min(850px,100%);margin:0 auto}
+.message-row{display:flex;margin:20px 0;gap:11px;animation:messageIn .35s ease both}
+.message-row.user{justify-content:flex-end}
+.message-avatar{
+  flex-shrink:0;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#00bfff,#5b36ff);
+  font-weight:800;
 }
-
-.message{
-  display:flex;
-  gap:13px;
-  margin:25px 0;
-  align-items:flex-start;
+.message-content{max-width:85%;min-width:0}
+.message-name{font-size:12px;color:#8ea8d3;margin:0 0 7px 3px}
+.bubble{
+  padding:14px 17px;border-radius:17px;
+  line-height:1.65;font-size:15px;
+  overflow-wrap:anywhere;white-space:pre-wrap;
 }
-
-.avatar{
-  width:35px;
-  height:35px;
-  flex-shrink:0;
-  border-radius:12px;
-  display:grid;
-  place-items:center;
-  background:#252039;
-  font-size:14px;
+.ai-bubble{
+  background:linear-gradient(135deg,#0c1c39,#0a1129);
+  border:1px solid var(--border);
+  border-top-left-radius:5px;
 }
-
-.user .avatar{background:#19364a}
-
-.message-wrap{
-  max-width:88%;
-  min-width:0;
+.user-bubble{
+  background:linear-gradient(120deg,#124bb0,#5528a9);
+  border:1px solid #548dff66;
+  border-top-right-radius:5px;
 }
-
-.content{
-  background:#151720;
-  border:1px solid #292b36;
-  padding:14px 17px;
-  border-radius:5px 17px 17px 17px;
-  line-height:1.75;
-  font-size:14px;
-  overflow-wrap:anywhere;
-  white-space:pre-wrap;
+@keyframes messageIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
 }
-
-.user{justify-content:flex-end}
-.user .message-wrap{order:1}
-.user .avatar{order:2}
-
-.user .content{
-  background:#20212d;
-  border:1px solid #343543;
-  border-radius:17px 5px 17px 17px;
+.message-actions{display:flex;gap:12px;margin:8px 3px}
+.message-actions button{
+  background:none;border:0;color:#8ca7d1;font-size:12px;
 }
-
-.msg-actions{
-  margin-top:9px;
-  display:flex;
-  gap:8px;
-}
-
-.small-btn{
-  border:1px solid #30323e;
-  background:#171821;
-  color:#b8bac7;
-  border-radius:9px;
-  padding:8px 12px;
-  font-size:11px;
-  cursor:pointer;
-}
-
-.small-btn:hover{
-  background:#282a37;
-  color:white;
-}
-
-.typing{
-  color:#a4a6b3;
-  font-size:13px;
-  padding:12px;
-}
-
+.message-actions button:hover{color:white}
 .generated-image{
-  display:block;
-  width:100%;
-  max-width:450px;
-  height:auto;
-  margin-top:12px;
-  border-radius:14px;
+  display:block;max-width:100%;max-height:500px;
+  border-radius:16px;margin-top:10px;
+  border:1px solid #278cff66;
+  box-shadow:0 0 25px #087cff22;
 }
+
+/* THINKING */
+.thinking{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 16px;border:1px solid var(--border);
+  background:#09172e;border-radius:16px;width:fit-content;
+  animation:messageIn .3s;
+}
+.think-orb{
+  width:28px;height:28px;border-radius:50%;
+  background:radial-gradient(circle at 30% 25%,#a8ffff,#168bff 50%,#622cff);
+  box-shadow:0 0 16px #00aaff;
+  animation:thinkPulse 1.2s infinite;
+}
+@keyframes thinkPulse{
+  50%{transform:scale(.78);box-shadow:0 0 30px #7b40ff}
+}
+.think-text{font-size:13px;color:#c7d8f5}
+.dots span{animation:dot 1.2s infinite;opacity:.2}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{50%{opacity:1}}
+
+/* IMAGE LOADER */
+.image-loader{
+  width:min(340px,90%);padding:25px;
+  border-radius:22px;text-align:center;
+  background:linear-gradient(145deg,#0b1e42,#100d35);
+  border:1px solid #427cff66;
+  box-shadow:0 0 35px #3d4cff22;
+}
+.image-loader .loader-orb{
+  width:95px;height:95px;border-radius:50%;
+  margin:0 auto 20px;
+  border:3px solid transparent;
+  border-top-color:#00d9ff;
+  border-right-color:#813bff;
+  background:radial-gradient(circle,#194d9d,#080d2b);
+  box-shadow:0 0 25px #087cff;
+  animation:spin 1.5s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-track{
+  height:5px;background:#19294b;border-radius:10px;
+  margin-top:18px;overflow:hidden;
+}
+.progress-bar{
+  height:100%;width:35%;
+  background:linear-gradient(90deg,#00d9ff,#883dff);
+  border-radius:10px;animation:progress 2s ease-in-out infinite alternate;
+}
+@keyframes progress{to{width:92%}}
 
 /* COMPOSER */
-
 .composer-wrap{
-  padding:12px 18px 20px;
-  flex-shrink:0;
-  background:linear-gradient(transparent,#090a0f 20%);
+  padding:10px 25px 22px;
+  width:100%;flex-shrink:0;
 }
-
 .composer{
-  max-width:850px;
-  margin:auto;
-  background:#171920;
-  border:1px solid #353743;
-  border-radius:24px;
-  padding:9px 10px;
-  display:flex;
-  align-items:flex-end;
-  gap:9px;
-  box-shadow:0 12px 45px #0007;
-  transition:border-color .2s,box-shadow .2s;
+  width:min(900px,100%);margin:auto;
+  display:flex;align-items:center;gap:9px;
+  padding:10px 12px;
+  background:rgba(5,14,34,.94);
+  border:1px solid #2368cf88;
+  border-radius:28px;
+  box-shadow:0 0 22px #075bff22,inset 0 0 15px #102b5511;
+  transition:.25s;
 }
-
 .composer:focus-within{
-  border-color:#8069d0;
-  box-shadow:0 0 0 3px #8068dc18,0 12px 45px #0007;
+  border-color:#00bfff;
+  box-shadow:0 0 25px #087cff44;
 }
-
-textarea{
-  flex:1;
-  resize:none;
-  max-height:130px;
-  min-height:42px;
-  background:transparent;
-  border:0;
-  outline:0;
-  color:#f7f7fa;
-  padding:12px 9px;
-  font-size:16px;
-  font-family:inherit;
-  line-height:1.5;
-  caret-color:#a78bfa;
-}
-
-textarea::placeholder{color:#858895}
-
-.icon-btn{
-  width:41px;
-  height:41px;
-  border:0;
-  border-radius:14px;
-  background:#292c37;
-  color:#e1e2ea;
-  cursor:pointer;
-  font-size:17px;
-  flex-shrink:0;
+.tool-btn{
+  width:43px;height:43px;flex-shrink:0;
+  border-radius:50%;
+  border:1px solid #4265a655;
+  background:linear-gradient(145deg,#10264e,#080f25);
+  font-size:19px;
   transition:.2s;
 }
-
-.icon-btn:hover{background:#393c4a}
-
-.mic.listening{
-  background:#d84d70;
-  animation:pulse 1s infinite;
+.tool-btn:hover,.tool-btn.active{
+  border-color:#00caff;
+  box-shadow:0 0 18px #008cff66;
+  transform:scale(1.06);
 }
-
-.send{
-  background:linear-gradient(135deg,#9270ff,#529fff);
-  color:white;
-  font-size:19px;
+#messageInput{
+  flex:1;min-width:0;
+  background:transparent;border:0;outline:none;
+  color:white;font-size:15px;
+  padding:12px 5px;
 }
-
-.send:hover{filter:brightness(1.12)}
-
-.icon-btn:disabled{
-  opacity:.5;
-  cursor:wait;
+#messageInput::placeholder{color:#8396b8}
+.send-btn{
+  width:52px;height:52px;flex-shrink:0;
+  border-radius:50%;border:1px solid #6acbff;
+  background:linear-gradient(135deg,#00bfff,#245dff 55%,#842fff);
+  box-shadow:0 0 18px #087cff99;
+  font-size:24px;font-weight:800;
+  transition:.2s;
 }
-
-@keyframes pulse{
-  50%{box-shadow:0 0 0 8px #e34c7033}
+.send-btn:hover{transform:scale(1.08);box-shadow:0 0 30px #168dff}
+.send-btn:active{transform:scale(.94)}
+.mode-label{
+  display:none;text-align:center;color:#59d8ff;
+  font-size:12px;padding:0 0 8px;
 }
+.mode-label.show{display:block}
 
-.note{
-  text-align:center;
-  color:#737684;
-  font-size:10px;
-  margin-top:10px;
+/* RIGHT VOICE PANEL */
+.voice-panel{
+  position:absolute;right:15px;top:38%;
+  display:flex;flex-direction:column;gap:5px;
+  padding:10px 8px;
+  border-radius:24px;
+  border:1px solid #2464bb88;
+  background:rgba(8,20,48,.85);
+  box-shadow:0 0 22px #1655ff22;
+  z-index:3;
 }
+.voice-panel button{
+  background:transparent;border:0;
+  padding:9px 8px;border-radius:15px;
+  color:#c9dcff;font-size:12px;
+}
+.voice-panel button span{display:block;font-size:22px;margin-bottom:4px}
+.voice-panel button:hover{background:#163a78}
+.voice-panel .voice-active{color:#00d9ff;text-shadow:0 0 12px #00caff}
+
+/* WAVEFORM */
+.wave{
+  display:flex;align-items:center;justify-content:center;
+  gap:4px;height:30px;margin-top:7px;
+}
+.wave i{
+  width:3px;height:7px;border-radius:5px;
+  background:linear-gradient(#00e5ff,#854bff);
+}
+.wave.playing i{animation:wave .7s ease-in-out infinite alternate}
+.wave i:nth-child(2n){animation-delay:.2s}
+.wave i:nth-child(3n){animation-delay:.4s}
+@keyframes wave{to{height:27px}}
 
 /* MOBILE */
-
-@media(max-width:650px){
-
+@media(max-width:800px){
   .sidebar{
-    position:fixed;
-    z-index:5;
-    left:-280px;
-    top:0;
-    bottom:0;
-    height:100dvh;
+    position:absolute;left:0;top:0;bottom:0;
+    width:275px;transform:translateX(-105%);
+    box-shadow:15px 0 40px #0009;
   }
-
-  .sidebar.open{left:0}
-
-  .menu{display:block}
-
-  .topbar{padding:0 14px}
-
-  .chat{padding:20px 12px}
-
-  .welcome{margin-top:10vh}
-
-  .welcome h1{font-size:27px}
-
-  .composer-wrap{padding:10px 10px 16px}
-
-  .composer{
-    border-radius:23px;
-    padding:8px;
-    gap:7px;
-  }
-
-  .message-wrap{max-width:90%}
-
-  .avatar{width:32px;height:32px}
-
-  textarea{font-size:16px}
-
+  .sidebar.open{transform:translateX(0)}
+  .mobile-menu{display:block}
+  .topbar{height:62px;padding:0 13px;gap:8px}
+  .top-pill{font-size:11px;padding:9px}
+  .chat-area{padding:10px 13px 15px}
+  .welcome{padding:20px 0}
+  .orb-wrap{transform:scale(.83);margin-bottom:5px}
+  .welcome h1{font-size:28px}
+  .welcome .subtitle{font-size:14px}
+  .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .feature{padding:15px 7px}
+  .feature b{font-size:13px}
+  .voice-panel{display:none}
+  .composer-wrap{padding:8px 10px 13px}
+  .composer{gap:5px;padding:7px}
+  .tool-btn{width:37px;height:37px;font-size:16px}
+  .send-btn{width:43px;height:43px}
+  #messageInput{font-size:14px}
+  .bubble{font-size:14px}
 }
-
+@media(max-width:380px){
+  .top-pill{display:none}
+  .feature .f-icon{font-size:24px}
+  .tool-btn{width:33px;height:33px}
+}
 </style>
 </head>
 
@@ -435,615 +434,571 @@ textarea::placeholder{color:#858895}
 <div class="app">
 
 <aside class="sidebar" id="sidebar">
-  <div class="logo">ESUKA AI</div>
-  <div class="tagline">YOUR PERSONAL AI ASSISTANT</div>
+  <div class="brand">
+    <div class="logo">E</div>
+    <div>
+      <h2>ESUKA AI</h2>
+      <p>Simple • Smart • Powerful</p>
+    </div>
+  </div>
 
-  <button class="newchat" onclick="newChat()">＋ New Chat</button>
+  <button class="side-btn active" id="newChatBtn">
+    <span class="side-icon">▣</span> New Chat
+    <span style="margin-left:auto">✦</span>
+  </button>
 
-  <div class="sideheading">RECENT CONVERSATIONS</div>
-  <div class="history" id="historyList"></div>
+  <input class="search" id="searchChats" placeholder="⌕  Search chats...">
 
-  <div class="sidebar-bottom">Created with care by Katari</div>
+  <div class="side-label">◷ &nbsp; Recent Chats</div>
+  <div class="history-list" id="historyList"></div>
+
+  <div class="bottom-side">
+    <button class="side-btn" id="premiumBtn"><span class="side-icon">♛</span> Premium Plan</button>
+    <button class="side-btn" id="settingsBtn"><span class="side-icon">⚙</span> Settings</button>
+    <button class="side-btn" id="aboutBtn"><span class="side-icon">ⓘ</span> About ESUKA AI</button>
+    <div class="profile">
+      <div class="avatar">K</div>
+      <div><b>Katari</b><small>● Online</small></div>
+    </div>
+  </div>
 </aside>
 
 <main class="main">
+  <header class="topbar">
+    <button class="top-btn mobile-menu" id="menuBtn">☰</button>
+    <div class="top-pill">🔵 Model: ESUKA AI</div>
+    <button class="top-pill" id="upgradeBtn">♛ Upgrade</button>
+    <button class="top-btn" id="themeBtn" title="Theme">☾</button>
+    <button class="top-btn" id="fullScreenBtn" title="Fullscreen">⛶</button>
+  </header>
 
-<header class="topbar">
-  <div style="display:flex;align-items:center;gap:13px">
-    <button class="menu" onclick="toggleSidebar()">☰</button>
-    <div>
-      <div class="topname">ESUKA AI <span style="color:#9877ff">✦</span></div>
-      <div class="status">● Online Assistant</div>
+  <section class="chat-area" id="chatArea">
+    <div class="welcome" id="welcome">
+      <div class="orb-wrap">
+        <div class="orbit"></div>
+        <div class="orbit two"></div>
+        <div class="orb">E</div>
+      </div>
+      <h1>Welcome to <span class="gradient-text">ESUKA AI</span></h1>
+      <p class="subtitle">Your intelligent companion, always here to help.</p>
+      <div class="sparkle">✦ ─── ✧ ─── ✦</div>
+
+      <div class="feature-grid">
+        <button class="feature" data-prompt="Tell me something interesting">
+          <div class="f-icon">⚡</div>
+          <b>Get Answers</b><small>Instantly</small>
+        </button>
+        <button class="feature" data-mode="image">
+          <div class="f-icon">▧</div>
+          <b>Generate Images</b><small>Unleash Creativity</small>
+        </button>
+        <button class="feature" data-prompt="Help me write some code">
+          <div class="f-icon">‹/›</div>
+          <b>Write Code</b><small>Be Productive</small>
+        </button>
+        <button class="feature" data-prompt="Give me some creative ideas">
+          <div class="f-icon">♧</div>
+          <b>Explore More</b><small>Discover Ideas</small>
+        </button>
+      </div>
     </div>
+    <div class="messages" id="messages"></div>
+  </section>
+
+  <div class="voice-panel">
+    <button id="listenBtn"><span>♬</span>Listen</button>
+    <button id="stopBtn"><span>■</span>Stop</button>
+    <button id="panelImageBtn"><span>▧</span>Image</button>
+    <button id="panelVoiceBtn"><span>🎙</span>Voice</button>
   </div>
 
-  <button class="small-btn" onclick="stopSpeech()">⏹ Stop Voice</button>
-</header>
-
-<section class="chat" id="chat">
-
-  <div class="welcome" id="welcome">
-    <div class="orb">✦</div>
-
-    <h1>Hey! I'm <span class="gradient">ESUKA AI</span></h1>
-
-    <p>Your personal AI assistant. Ask me anything, share your ideas or just start a conversation.</p>
-
-    <div class="suggestions">
-      <button class="suggestion" onclick="useSuggestion('Tell me something interesting')">✦ Tell me something</button>
-
-      <button class="suggestion" onclick="useSuggestion('Help me learn coding')">⌘ Learn coding</button>
-
-      <button class="suggestion" onclick="useSuggestion('Give me a creative idea')">✧ Creative ideas</button>
-
-      <button class="suggestion" onclick="useSuggestion('Generate an image of a futuristic city at sunset')">🎨 Generate image</button>
+  <footer class="composer-wrap">
+    <div class="mode-label" id="modeLabel">✦ Image generation mode is ON</div>
+    <div class="composer">
+      <button class="tool-btn" id="attachBtn" title="More">＋</button>
+      <input id="messageInput" type="text" placeholder="Message ESUKA AI..." autocomplete="off">
+      <button class="tool-btn" id="micBtn" title="Voice input">🎙</button>
+      <button class="tool-btn" id="imageBtn" title="Image generation">▧</button>
+      <button class="send-btn" id="sendBtn" title="Send">➤</button>
     </div>
-  </div>
-
-  <div class="messages" id="messages"></div>
-
-</section>
-
-<div class="composer-wrap">
-  <div class="composer">
-
-    <button class="icon-btn mic" id="micBtn" onclick="toggleMic()" title="Voice input">🎙</button>
-
-    <textarea id="input" rows="1" placeholder="Message ESUKA AI..."></textarea>
-
-    <button class="icon-btn" onclick="stopSpeech()" title="Stop voice">■</button>
-
-    <button class="icon-btn send" id="sendBtn" onclick="sendMessage()">➤</button>
-
-  </div>
-
-  <div class="note">AI voice will play only when you press Listen.</div>
-</div>
-
+  </footer>
 </main>
 </div>
 
 <script>
-
+/* ESUKA AI FRONTEND CONFIG */
 const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
 
-const input = document.getElementById("input");
-const messages = document.getElementById("messages");
-const chat = document.getElementById("chat");
-const welcome = document.getElementById("welcome");
-const micBtn = document.getElementById("micBtn");
+const input = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
+const messages = document.getElementById("messages");
+const welcome = document.getElementById("welcome");
+const chatArea = document.getElementById("chatArea");
+const modeLabel = document.getElementById("modeLabel");
+const sidebar = document.getElementById("sidebar");
 
+let imageMode = false;
+let busy = false;
+let lastReply = "";
+let currentHistory = [];
 let chats = [];
-
-try {
-  chats = JSON.parse(localStorage.getItem("esuka_ai_chats_v3") || "[]");
-  if (!Array.isArray(chats)) chats = [];
-} catch {
-  chats = [];
-}
-
-let currentChat = null;
-let conversation = [];
 let recognition = null;
-let listening = false;
-let voices = [];
-let sending = false;
+let currentSpeech = null;
 
-function loadVoices() {
-  if ("speechSynthesis" in window) {
-    voices = speechSynthesis.getVoices();
-  }
+try{
+  chats = JSON.parse(localStorage.getItem("esuka_chats") || "[]");
+  if(!Array.isArray(chats)) chats=[];
+}catch(e){chats=[]}
+
+function saveChats(){
+  try{localStorage.setItem("esuka_chats",JSON.stringify(chats.slice(-30)))}catch(e){}
 }
 
-if ("speechSynthesis" in window) {
-  loadVoices();
-  speechSynthesis.onvoiceschanged = loadVoices;
+function scrollBottom(){
+  chatArea.scrollTo({top:chatArea.scrollHeight,behavior:"smooth"});
 }
 
-function saveChats() {
-  try {
-    localStorage.setItem("esuka_ai_chats_v3", JSON.stringify(chats));
-  } catch(error) {
-    console.error("Chat storage error:",error);
-  }
+function escapeHTML(str){
+  return String(str).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
 }
 
-function newChat() {
-  stopSpeech();
-  currentChat = null;
-  conversation = [];
-  messages.innerHTML = "";
-  welcome.style.display = "block";
-  input.value = "";
-  renderHistory();
-  document.getElementById("sidebar").classList.remove("open");
+function showWelcome(show){
+  welcome.style.display=show?"flex":"none";
 }
 
-function renderHistory() {
-  const list = document.getElementById("historyList");
-  list.innerHTML = "";
-
-  chats.forEach(c => {
-    const item = document.createElement("div");
-
-    item.className =
-      "history-item" + (c.id === currentChat ? " active" : "");
-
-    item.textContent = "◈ " + c.title;
-    item.onclick = () => openChat(c.id);
-
+function renderHistory(){
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+  chats.slice().reverse().forEach((chat,index)=>{
+    const item=document.createElement("div");
+    item.className="history-item";
+    item.textContent="◉  "+(chat.title||"New Chat");
+    item.addEventListener("click",()=>loadChat(chats.length-1-index));
     list.appendChild(item);
   });
 }
 
-function openChat(id) {
-  const selected = chats.find(c => c.id === id);
-  if (!selected) return;
+function startNewChat(){
+  if(busy)return;
+  messages.innerHTML="";
+  currentHistory=[];
+  lastReply="";
+  showWelcome(true);
+  imageMode=false;
+  updateMode();
+  input.value="";
+  sidebar.classList.remove("open");
+  input.focus();
+}
 
-  stopSpeech();
-  currentChat = id;
-  conversation = [...selected.messages];
-  messages.innerHTML = "";
-  welcome.style.display = "none";
-
-  conversation.forEach(m => {
-    addMessage(m.role,m.content);
+function loadChat(index){
+  const chat=chats[index];
+  if(!chat)return;
+  messages.innerHTML="";
+  currentHistory=chat.history||[];
+  showWelcome(false);
+  currentHistory.forEach((m)=>{
+    addMessage(m.role==="user"?"user":"ai",m.content,false);
   });
-
-  renderHistory();
-  document.getElementById("sidebar").classList.remove("open");
+  sidebar.classList.remove("open");
+  scrollBottom();
 }
 
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
+function updateMode(){
+  imageMode=!imageMode?false:true;
+  modeLabel.classList.toggle("show",imageMode);
+  document.getElementById("imageBtn").classList.toggle("active",imageMode);
 }
 
-function useSuggestion(text) {
-  input.value = text;
-  sendMessage();
-}
+function addMessage(role,text,animate=true){
+  showWelcome(false);
+  const row=document.createElement("div");
+  row.className="message-row "+(role==="user"?"user":"ai");
 
-/* IMAGE REQUEST DETECTION */
-
-function isImageRequest(text) {
-  const value = text.toLowerCase().trim();
-
-  const patterns = [
-    /\b(generate|create|draw|design|make)\b.{0,100}\b(image|picture|photo|wallpaper|illustration|artwork)\b/i,
-    /\b(image|picture|photo|wallpaper|illustration)\b.{0,80}\b(generate|create|draw|make)\b/i,
-    /\b(image|photo|picture)\b.{0,50}\b(banao|banado|bana do|bana|generate|create)\b/i,
-    /\b(banao|banado|bana do|bana)\b.{0,60}\b(image|photo|picture|tasveer)\b/i,
-    /\b(tasveer|photo|image)\b.{0,60}\b(bana|banao|banado|create)\b/i,
-    /\b(ek image|ek photo|ek tasveer|image bana|photo bana)\b/i
-  ];
-
-  return patterns.some(pattern => pattern.test(value));
-}
-
-/* MESSAGE DISPLAY */
-
-function addMessage(role,text) {
-  welcome.style.display = "none";
-
-  const row = document.createElement("div");
-  row.className = "message " + (role === "user" ? "user" : "assistant");
-
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = role === "user" ? "👤" : "✦";
-
-  const wrap = document.createElement("div");
-  wrap.className = "message-wrap";
-
-  const bubble = document.createElement("div");
-  bubble.className = "content";
-  bubble.textContent = text;
-
-  wrap.appendChild(bubble);
-
-  if (role === "assistant") {
-    const actions = document.createElement("div");
-    actions.className = "msg-actions";
-
-    const listen = document.createElement("button");
-    listen.className = "small-btn listen-btn";
-    listen.textContent = "🔊 Listen";
-
-    listen.onclick = () => {
-      if (speechSynthesis.speaking) {
-        stopSpeech();
-        return;
-      }
-
-      document.querySelectorAll(".listen-btn").forEach(b => {
-        b.textContent = "🔊 Listen";
-      });
-
-      listen.textContent = "⏹ Stop";
-      speakText(text,listen);
-    };
-
-    actions.appendChild(listen);
-    wrap.appendChild(actions);
+  if(role==="ai"){
+    const avatar=document.createElement("div");
+    avatar.className="message-avatar";
+    avatar.textContent="E";
+    row.appendChild(avatar);
   }
 
-  row.appendChild(avatar);
-  row.appendChild(wrap);
+  const content=document.createElement("div");
+  content.className="message-content";
+
+  const name=document.createElement("div");
+  name.className="message-name";
+  name.textContent=role==="user"?"You":"ESUKA AI";
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble "+(role==="user"?"user-bubble":"ai-bubble");
+  bubble.textContent=text;
+
+  content.appendChild(name);
+  content.appendChild(bubble);
+
+  if(role==="ai"){
+    const actions=document.createElement("div");
+    actions.className="message-actions";
+    const copy=document.createElement("button");
+    copy.textContent="Copy";
+    copy.onclick=()=>copyText(text);
+    const speak=document.createElement("button");
+    speak.textContent="🔊 Listen";
+    speak.onclick=()=>speakText(text);
+    actions.append(copy,speak);
+    content.appendChild(actions);
+  }
+
+  row.appendChild(content);
   messages.appendChild(row);
-
-  chat.scrollTop = chat.scrollHeight;
+  if(animate)scrollBottom();
+  return {row,bubble,content};
 }
 
-/* IMAGE DISPLAY */
-
-function addImageMessage(imageData) {
-
-  if (
-    typeof imageData !== "string" ||
-    !imageData.startsWith("data:image/")
-  ) {
-    throw new Error("Invalid image data received.");
+function copyText(text){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>showToast("Copied"));
+  }else{
+    const t=document.createElement("textarea");
+    t.value=text;document.body.appendChild(t);
+    t.select();document.execCommand("copy");t.remove();
+    showToast("Copied");
   }
+}
 
-  welcome.style.display = "none";
+function showToast(text){
+  let toast=document.getElementById("esukaToast");
+  if(!toast){
+    toast=document.createElement("div");
+    toast.id="esukaToast";
+    toast.style.cssText="position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#123365;border:1px solid #328cff;padding:11px 19px;border-radius:20px;z-index:99;font-size:13px";
+    document.body.appendChild(toast);
+  }
+  toast.textContent=text;
+  toast.style.display="block";
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(()=>toast.style.display="none",1800);
+}
 
-  const row = document.createElement("div");
-  row.className = "message assistant";
+let thinkTimer=null;
+let thinkIndex=0;
+const thinkWords=[
+  "ESUKA is thinking",
+  "Understanding your message",
+  "Preparing your answer",
+  "Almost ready"
+];
 
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = "✦";
-
-  const wrap = document.createElement("div");
-  wrap.className = "message-wrap";
-
-  const bubble = document.createElement("div");
-  bubble.className = "content";
-
-  const title = document.createElement("p");
-  title.textContent = "Your image is ready!";
-
-  const img = document.createElement("img");
-  img.className = "generated-image";
-  img.alt = "Image generated by ESUKA AI";
-  img.src = imageData;
-
-  bubble.appendChild(title);
-  bubble.appendChild(img);
-
-  wrap.appendChild(bubble);
-  row.appendChild(avatar);
-  row.appendChild(wrap);
-
+function showThinking(){
+  const row=document.createElement("div");
+  row.className="message-row ai";
+  row.id="thinkingRow";
+  row.innerHTML=`
+    <div class="message-avatar">E</div>
+    <div class="thinking">
+      <div class="think-orb"></div>
+      <div class="think-text"><span id="thinkWord">ESUKA is thinking</span>
+      <span class="dots"><span>.</span><span>.</span><span>.</span></span>
+      <div class="wave playing">${"<i></i>".repeat(12)}</div></div>
+    </div>`;
   messages.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
+  thinkIndex=0;
+  thinkTimer=setInterval(()=>{
+    thinkIndex=(thinkIndex+1)%thinkWords.length;
+    const word=document.getElementById("thinkWord");
+    if(word)word.textContent=thinkWords[thinkIndex];
+  },1900);
+  scrollBottom();
+  return row;
 }
 
-/* TYPING INDICATOR */
-
-function showTyping(message) {
-  removeTyping();
-
-  const t = document.createElement("div");
-  t.id = "typing";
-  t.className = "typing";
-  t.textContent = message || "ESUKA AI is thinking...";
-
-  messages.appendChild(t);
-  chat.scrollTop = chat.scrollHeight;
+function removeThinking(){
+  clearInterval(thinkTimer);
+  document.getElementById("thinkingRow")?.remove();
 }
 
-function removeTyping() {
-  document.getElementById("typing")?.remove();
-}
-
-/* SAVE CHAT */
-
-function saveConversation() {
-
-  const index = chats.findIndex(c => c.id === currentChat);
-
-  if (index >= 0) {
-
-    chats[index].messages = [...conversation];
-
-    chats[index].title =
-      conversation.find(m => m.role === "user")
-        ?.content.slice(0,32) || "New Chat";
-
-    const item = chats.splice(index,1)[0];
-    chats.unshift(item);
+async function revealText(element,text){
+  element.textContent="";
+  const chars=Array.from(String(text||""));
+  const step=chars.length>1500?12:chars.length>500?5:2;
+  for(let i=0;i<chars.length;i+=step){
+    element.textContent+=chars.slice(i,i+step).join("");
+    if(i%40===0)scrollBottom();
+    await new Promise(resolve=>setTimeout(resolve,12));
   }
-
-  saveChats();
-  renderHistory();
+  scrollBottom();
 }
 
-/* SEND MESSAGE */
+function getReply(data){
+  if(typeof data==="string")return data;
+  return data?.reply || data?.response || data?.text ||
+    data?.message || data?.result?.reply || "I couldn't find a response. Please try again.";
+}
 
-async function sendMessage() {
-
-  if (sending) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  sending = true;
-  sendBtn.disabled = true;
-
-  stopSpeech();
-
-  input.value = "";
-  input.style.height = "auto";
-
-  const imageMode = isImageRequest(text);
-
-  if (!currentChat) {
-
-    currentChat = Date.now().toString();
-
-    chats.unshift({
-      id:currentChat,
-      title:text.slice(0,32),
-      messages:[]
-    });
+function getImage(data){
+  if(!data)return null;
+  let image=data.image||data.url||data.result?.image||data.result?.url||data.output;
+  if(Array.isArray(image))image=image[0];
+  if(image&&typeof image==="object"){
+    image=image.url||image.image||image.data;
   }
+  if(typeof image!=="string")return null;
+  if(image.startsWith("http")||image.startsWith("data:image/"))return image;
+  if(image.length>1000)return "data:image/png;base64,"+image;
+  return null;
+}
 
-  conversation.push({
-    role:"user",
-    content:text
-  });
+async function sendMessage(){
+  const text=input.value.trim();
+  if(!text||busy)return;
+
+  const mode=imageMode?"image":"chat";
+  input.value="";
+  busy=true;
+  sendBtn.disabled=true;
+  sendBtn.style.opacity=".55";
 
   addMessage("user",text);
-  saveConversation();
+  currentHistory.push({role:"user",content:text});
 
-  showTyping(
-    imageMode
-      ? "ESUKA AI is creating your image..."
-      : "ESUKA AI is thinking..."
-  );
+  const thinking=showThinking();
+  let loader=null;
 
-  try {
+  if(mode==="image"){
+    thinking.remove();
+    clearInterval(thinkTimer);
+    loader=document.createElement("div");
+    loader.className="message-row ai";
+    loader.innerHTML=`
+      <div class="message-avatar">E</div>
+      <div class="image-loader">
+        <div class="loader-orb"></div>
+        <b>Creating your image</b>
+        <p style="color:#9eb6dc;font-size:13px;margin-top:8px">ESUKA is bringing your idea to life...</p>
+        <div class="progress-track"><div class="progress-bar"></div></div>
+      </div>`;
+    messages.appendChild(loader);
+    scrollBottom();
+  }
 
-    const requestBody = imageMode
-      ? {
-          mode:"image",
-          message:text,
-          prompt:text
-        }
-      : {
-          mode:"chat",
-          message:text,
-          history:conversation.slice(0,-1).slice(-6)
-        };
+  try{
+    const payload=mode==="image"
+      ?{mode:"image",message:text,prompt:text,history:currentHistory}
+      :{message:text,history:currentHistory.slice(0,-1)};
 
-    const response = await fetch(API_URL,{
+    const response=await fetch(API_URL,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify(requestBody)
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
 
+    const raw=await response.text();
     let data;
+    try{data=JSON.parse(raw)}catch(e){throw new Error("Server returned an invalid response.")}
 
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("Server returned an invalid response.");
+    if(!response.ok || data.success===false){
+      throw new Error(data.error||data.message||"Server error: "+response.status);
     }
 
-    if (!response.ok || data.success === false) {
-      throw new Error(data.error || "Server error: " + response.status);
-    }
+    removeThinking();
+    if(loader)loader.remove();
 
-    if (imageMode) {
-
-      if (!data.image) {
-        throw new Error("Server did not return an image.");
+    if(mode==="image"){
+      const imageUrl=getImage(data);
+      if(imageUrl){
+        const result=addMessage("ai","Your image is ready! ✨");
+        const img=document.createElement("img");
+        img.className="generated-image";
+        img.src=imageUrl;
+        img.alt="Generated by ESUKA AI";
+        img.onload=scrollBottom;
+        result.bubble.appendChild(img);
+        lastReply="Your image is ready!";
+        currentHistory.push({role:"assistant",content:"Your image is ready!"});
+      }else{
+        const reply=getReply(data);
+        const result=addMessage("ai","");
+        await revealText(result.bubble,reply);
+        lastReply=reply;
+        currentHistory.push({role:"assistant",content:reply});
       }
-
-      addImageMessage(data.image);
-
-      conversation.push({
-        role:"assistant",
-        content:"[Image generated]"
-      });
-
-      saveConversation();
-      return;
+    }else{
+      const reply=getReply(data);
+      const result=addMessage("ai","");
+      await revealText(result.bubble,reply);
+      lastReply=reply;
+      currentHistory.push({role:"assistant",content:reply});
     }
 
-    const reply = data.reply || data.response || data.text;
-
-    if (!reply || typeof reply !== "string") {
-      throw new Error("AI response was empty.");
+    if(!chats.length || !chats[chats.length-1].history ||
+       chats[chats.length-1].history!==currentHistory){
+      chats.push({title:text.slice(0,38),history:currentHistory});
     }
+    saveChats();
+    renderHistory();
 
-    conversation.push({
-      role:"assistant",
-      content:reply
-    });
-
-    addMessage("assistant",reply);
-    saveConversation();
-
-  } catch(error) {
-
-    console.error("ESUKA AI request error:",error);
-
-    addMessage(
-      "assistant",
-      (imageMode ? "Image generation failed: " : "Connection problem: ") +
-      error.message
-    );
-
-  } finally {
-
-    removeTyping();
-    sending = false;
-    sendBtn.disabled = false;
+  }catch(error){
+    removeThinking();
+    loader?.remove();
+    const result=addMessage("ai","Sorry, kuch problem aa gayi: "+error.message);
+    lastReply="Sorry, kuch problem aa gayi: "+error.message;
+  }finally{
+    busy=false;
+    sendBtn.disabled=false;
+    sendBtn.style.opacity="1";
+    imageMode=false;
+    updateMode();
     input.focus();
-
   }
 }
 
 /* VOICE OUTPUT */
-
-function speakText(text,button) {
-
-  if (!("speechSynthesis" in window)) {
-    alert("Voice output is not supported in this browser.");
+function speakText(text){
+  if(!("speechSynthesis" in window)){
+    showToast("Voice playback is not supported in this browser");
     return;
   }
-
   speechSynthesis.cancel();
-
-  const cleanText = text.replace(/[*#`_]/g,"");
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-
-  const isHindi =
-    /[\u0900-\u097F]/.test(cleanText) ||
-    /\b(kya|hai|haan|nahi|kaise|mera|tum|aap|mujhe)\b/i.test(cleanText);
-
-  utterance.lang = isHindi ? "hi-IN" : "en-US";
-  utterance.rate = 1;
-  utterance.pitch = 1.08;
-
-  const preferred = isHindi
-    ? ["heera","neerja","swara","female","hindi"]
-    : ["samantha","zira","female","aria","jenny"];
-
-  const matching = voices.find(v =>
-    preferred.some(p => v.name.toLowerCase().includes(p)) &&
-    (
-      isHindi
-        ? v.lang.toLowerCase().startsWith("hi")
-        : v.lang.toLowerCase().startsWith("en")
-    )
-  );
-
-  const fallback = voices.find(v =>
-    v.lang.toLowerCase().startsWith(isHindi ? "hi" : "en")
-  );
-
-  if (matching) utterance.voice = matching;
-  else if (fallback) utterance.voice = fallback;
-
-  utterance.onend = () => {
-    if (button) button.textContent = "🔊 Listen";
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang="hi-IN";
+  utterance.rate=1;
+  utterance.pitch=1.05;
+  const voices=speechSynthesis.getVoices();
+  const hindiVoice=voices.find(v=>v.lang.toLowerCase().includes("hi"));
+  if(hindiVoice)utterance.voice=hindiVoice;
+  currentSpeech=utterance;
+  utterance.onstart=()=>{
+    document.querySelectorAll(".voice-panel button").forEach(b=>b.classList.remove("voice-active"));
+    document.getElementById("listenBtn").classList.add("voice-active");
   };
-
-  utterance.onerror = () => {
-    if (button) button.textContent = "🔊 Listen";
+  utterance.onend=()=>{
+    document.getElementById("listenBtn").classList.remove("voice-active");
   };
-
   speechSynthesis.speak(utterance);
 }
 
-function stopSpeech() {
-
-  if ("speechSynthesis" in window) {
-    speechSynthesis.cancel();
-  }
-
-  document.querySelectorAll(".listen-btn").forEach(b => {
-    b.textContent = "🔊 Listen";
-  });
-}
-
 /* VOICE INPUT */
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SpeechRecognition){
+  recognition=new SpeechRecognition();
+  recognition.lang="hi-IN";
+  recognition.continuous=false;
+  recognition.interimResults=true;
 
-function toggleMic() {
-
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    alert("Voice input is not supported in this browser.");
-    return;
-  }
-
-  if (listening) {
-    recognition.stop();
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-
-  recognition.lang = "hi-IN";
-  recognition.interimResults = true;
-  recognition.continuous = false;
-
-  recognition.onstart = () => {
-    listening = true;
-    micBtn.classList.add("listening");
-    micBtn.textContent = "●";
+  recognition.onstart=()=>{
+    document.getElementById("micBtn").classList.add("active");
+    input.placeholder="Listening...";
   };
-
-  recognition.onresult = event => {
-
-    let result = "";
-
-    for (
-      let i = event.resultIndex;
-      i < event.results.length;
-      i++
-    ) {
-      result += event.results[i][0].transcript;
+  recognition.onresult=(event)=>{
+    let transcript="";
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      transcript+=event.results[i][0].transcript;
     }
-
-    input.value = result;
-
-    input.style.height = "auto";
-    input.style.height =
-      Math.min(input.scrollHeight,130) + "px";
+    input.value=transcript;
   };
-
-  recognition.onerror = event => {
-    console.log("Speech error:",event.error);
+  recognition.onerror=()=>{
+    showToast("Voice input unavailable. Check microphone permission.");
   };
-
-  recognition.onend = () => {
-    listening = false;
-    micBtn.classList.remove("listening");
-    micBtn.textContent = "🎙";
+  recognition.onend=()=>{
+    document.getElementById("micBtn").classList.remove("active");
+    input.placeholder="Message ESUKA AI...";
   };
-
-  recognition.start();
 }
 
-/* INPUT RESIZE */
-
-input.addEventListener("input",() => {
-
-  input.style.height = "auto";
-
-  input.style.height =
-    Math.min(input.scrollHeight,130) + "px";
-
-});
-
-/* ENTER TO SEND */
-
-input.addEventListener("keydown",event => {
-
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
+/* EVENTS */
+sendBtn.addEventListener("click",sendMessage);
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();sendMessage();
   }
-
 });
 
-/* INITIALIZE */
+document.getElementById("newChatBtn").onclick=startNewChat;
+document.getElementById("imageBtn").onclick=()=>{
+  imageMode=!imageMode;updateMode();
+  input.placeholder=imageMode?"Describe the image you want...":"Message ESUKA AI...";
+  input.focus();
+};
+document.getElementById("panelImageBtn").onclick=()=>{
+  imageMode=true;updateMode();
+  input.placeholder="Describe the image you want...";
+  input.focus();
+};
+document.getElementById("attachBtn").onclick=()=>{
+  showToast("More tools coming soon");
+};
+document.getElementById("micBtn").onclick=()=>{
+  if(!recognition){
+    showToast("Voice input is not supported in this browser");
+    return;
+  }
+  try{
+    if(document.getElementById("micBtn").classList.contains("active")){
+      recognition.stop();
+    }else recognition.start();
+  }catch(e){showToast("Microphone is busy. Try again.")}
+};
+document.getElementById("panelVoiceBtn").onclick=()=>{
+  if(recognition){
+    try{recognition.start()}catch(e){showToast("Microphone is busy")}
+  }else showToast("Voice input not supported");
+};
+document.getElementById("listenBtn").onclick=()=>{
+  if(lastReply)speakText(lastReply);
+  else showToast("No ESUKA reply to play yet");
+};
+document.getElementById("stopBtn").onclick=()=>{
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+  if(recognition)try{recognition.stop()}catch(e){}
+  document.getElementById("listenBtn").classList.remove("voice-active");
+  showToast("Voice stopped");
+};
+
+document.getElementById("menuBtn").onclick=()=>sidebar.classList.toggle("open");
+document.getElementById("fullScreenBtn").onclick=()=>{
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen?.().catch(()=>{});
+  }else document.exitFullscreen?.();
+};
+document.getElementById("themeBtn").onclick=()=>{
+  showToast("Premium dark theme is active");
+};
+document.getElementById("upgradeBtn").onclick=()=>{
+  showToast("Premium features coming soon");
+};
+document.getElementById("premiumBtn").onclick=()=>{
+  showToast("Premium plan coming soon");
+};
+document.getElementById("settingsBtn").onclick=()=>{
+  showToast("Settings coming soon");
+};
+document.getElementById("aboutBtn").onclick=()=>{
+  showToast("ESUKA AI • Your intelligent companion");
+};
+
+document.querySelectorAll(".feature").forEach(card=>{
+  card.addEventListener("click",()=>{
+    if(card.dataset.mode==="image"){
+      imageMode=true;updateMode();
+      input.placeholder="Describe the image you want...";
+      input.focus();
+    }else if(card.dataset.prompt){
+      input.value=card.dataset.prompt;
+      input.focus();
+    }
+  });
+});
+
+document.getElementById("searchChats").addEventListener("input",e=>{
+  const query=e.target.value.toLowerCase();
+  document.querySelectorAll(".history-item").forEach(item=>{
+    item.style.display=item.textContent.toLowerCase().includes(query)?"block":"none";
+  });
+});
 
 renderHistory();
-
 </script>
-
 </body>
 </html>
-
-
