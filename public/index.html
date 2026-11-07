@@ -1,1350 +1,1151 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080808">
+<title>ESUKA AI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --bg:#080808;
+  --panel:#111;
+  --panel2:#1b1b1b;
+  --text:#f5f5f5;
+  --muted:#999;
+  --border:#292929;
+  --accent:#fff;
+  --chat-font:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  height:100dvh;
+  overflow:hidden;
+}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;color:inherit}
+.hidden{display:none!important}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+/* AUTH */
+#authScreen{
+  height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:var(--bg);
+}
+.auth-card{
+  width:100%;
+  max-width:390px;
+  padding:28px;
+  border:1px solid var(--border);
+  border-radius:22px;
+  background:var(--panel);
+}
+.logo{
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-align:center;
+}
+.auth-sub{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  margin:8px 0 25px;
+}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px}
+.auth-tabs button{
+  flex:1;padding:11px;border:1px solid var(--border);
+  border-radius:10px;background:var(--panel2);
+}
+.auth-tabs button.active{background:#fff;color:#000}
+.field{
+  width:100%;padding:14px;margin:7px 0;
+  border:1px solid var(--border);border-radius:11px;
+  background:#090909;color:white;outline:none;
+}
+.primary{
+  width:100%;padding:14px;border:0;border-radius:11px;
+  background:white;color:black;font-weight:700;margin-top:12px;
+}
+.google{
+  width:100%;padding:13px;border:1px solid var(--border);
+  border-radius:11px;background:var(--panel2);margin-top:10px;
+}
+#authMessage{
+  min-height:20px;text-align:center;color:#bbb;
+  font-size:12px;margin-top:14px;overflow-wrap:anywhere;
+}
+
+/* APP */
+#app{height:100dvh;display:flex;position:relative}
+.sidebar{
+  width:270px;flex-shrink:0;background:var(--panel);
+  border-right:1px solid var(--border);padding:16px;
+  display:flex;flex-direction:column;z-index:5;
+}
+.brand{font-size:20px;font-weight:800;letter-spacing:1px;padding:8px 5px 20px}
+.side-btn{
+  width:100%;padding:12px;text-align:left;
+  background:transparent;border:1px solid transparent;
+  border-radius:10px;margin-bottom:5px;color:var(--text);
+}
+.side-btn:hover,.side-btn.active{background:var(--panel2);border-color:var(--border)}
+.side-label{font-size:11px;color:var(--muted);margin:20px 5px 9px}
+#historyList{overflow:auto;flex:1}
+.history-item{
+  padding:11px;border-radius:9px;font-size:13px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:pointer;color:#ccc;
+}
+.history-item:hover{background:var(--panel2)}
+.profile{
+  border-top:1px solid var(--border);padding-top:13px;
+  font-size:12px;color:var(--muted);overflow-wrap:anywhere;
+}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:58px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:space-between;padding:0 17px;
+  border-bottom:1px solid var(--border);
+}
+.topbar button,.icon-btn{
+  background:transparent;border:1px solid var(--border);
+  border-radius:9px;padding:9px 12px;
+}
+#chatArea{
+  flex:1;overflow:auto;padding:20px 16px 35px;
+  scroll-behavior:smooth;
+}
+.welcome{
+  max-width:650px;margin:12vh auto 30px;text-align:center;
+}
+.welcome h1{font-size:29px;margin:0 0 10px}
+.welcome p{color:var(--muted);font-size:14px}
+.suggestions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;margin-top:25px;
+}
+.suggestion{
+  background:var(--panel);border:1px solid var(--border);
+  color:var(--text);border-radius:12px;padding:13px;
+  text-align:left;font-size:12px;
+}
+#messages{max-width:780px;margin:auto}
+.message{display:flex;gap:12px;margin:22px auto;max-width:780px}
+.message.user{justify-content:flex-end}
+.msg-avatar{
+  width:29px;height:29px;flex-shrink:0;border-radius:50%;
+  background:var(--panel2);display:grid;place-items:center;
+  font-size:12px;font-weight:bold;
+}
+.msg-content{max-width:85%;min-width:0}
+.msg-name{font-size:11px;color:var(--muted);margin-bottom:7px}
+.msg-bubble{
+  font-size:var(--chat-font);line-height:1.65;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  background:var(--panel);padding:12px 14px;border-radius:13px;
+}
+.user .msg-bubble{background:#242424}
+.msg-actions,.image-actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.mini-btn{
+  border:1px solid var(--border);background:transparent;
+  padding:6px 9px;border-radius:7px;font-size:11px;color:var(--muted);
+}
+.generated-image{display:block;max-width:100%;border-radius:12px;margin-top:12px}
+.typing{display:flex;gap:5px;padding:8px}
+.typing i{width:6px;height:6px;background:#aaa;border-radius:50%;animation:pulse .8s infinite alternate}
+.typing i:nth-child(2){animation-delay:.2s}
+.typing i:nth-child(3){animation-delay:.4s}
+@keyframes pulse{to{opacity:.2;transform:translateY(-4px)}}
+
+/* INPUT */
+.composer-wrap{padding:12px 15px 17px;background:var(--bg)}
+.composer{
+  max-width:780px;margin:auto;display:flex;align-items:flex-end;
+  gap:8px;border:1px solid var(--border);background:var(--panel);
+  padding:9px;border-radius:17px;
+}
+#prompt{
+  flex:1;min-width:0;max-height:130px;resize:none;
+  border:0;outline:0;background:transparent;color:var(--text);
+  padding:9px;font-size:14px;
+}
+.round-btn{
+  width:38px;height:38px;flex-shrink:0;border-radius:11px;
+  border:1px solid var(--border);background:var(--panel2);
+}
+#sendBtn{background:white;color:black;border:0;font-weight:bold}
+#modeLabel{display:none;font-size:11px;color:#bbb;text-align:center;padding:4px}
+#modeLabel.show{display:block}
+#voicePanel{display:none;text-align:center;color:#bbb;font-size:12px;padding:7px}
+#voicePanel.show{display:block}
+
+/* SETTINGS */
+#settingsOverlay{
+  position:fixed;inset:0;background:#000b;z-index:20;
+  display:none;align-items:center;justify-content:center;padding:15px;
+}
+#settingsOverlay.show{display:flex}
+.settings-card{
+  width:100%;max-width:420px;max-height:90dvh;overflow:auto;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:18px;padding:20px;
+}
+.settings-card h2{margin-top:0}
+.setting-row{margin:15px 0}
+.setting-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+.setting-row select,.setting-row input{
+  width:100%;padding:11px;border:1px solid var(--border);
+  border-radius:9px;background:#090909;color:white;
+}
+.settings-actions{display:flex;gap:8px;margin-top:20px}
+.settings-actions button{flex:1;padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--panel2)}
+#toast{
+  position:fixed;bottom:25px;left:50%;transform:translateX(-50%);
+  background:#eee;color:#111;padding:10px 17px;border-radius:20px;
+  font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:50;
+}
+#toast.show{opacity:1}
+.backdrop{display:none}
+
+/* THEMES */
+body.grey{--bg:#171717;--panel:#222;--panel2:#303030;--border:#3b3b3b}
+body.light{
+  --bg:#f4f4f4;--panel:#fff;--panel2:#eee;
+  --text:#111;--muted:#666;--border:#ddd;
+}
+body.light .field,body.light .setting-row select,body.light .setting-row input{background:#fff;color:#111}
+body.light .user .msg-bubble{background:#e7e7e7}
+body.light #sendBtn{background:#111;color:white}
+
+@media(max-width:700px){
+  .sidebar{
+    position:fixed;left:-285px;top:0;bottom:0;
+    transition:left .2s;width:270px;
+  }
+  .sidebar.open{left:0}
+  .backdrop.show{
+    display:block;position:fixed;inset:0;background:#0009;z-index:4;
+  }
+  .suggestions{grid-template-columns:1fr}
+  #chatArea{padding:14px 12px}
+  .welcome{margin-top:10vh}
+}
+</style>
+</head>
+
+<body>
+
+<section id="authScreen">
+  <div class="auth-card">
+    <div class="logo">ESUKA AI</div>
+    <div class="auth-sub">Your personal AI assistant</div>
+
+    <div class="auth-tabs">
+      <button id="loginTab" class="active">Login</button>
+      <button id="signupTab">Create account</button>
+    </div>
+
+    <input id="authEmail" class="field" type="email" placeholder="Email address" autocomplete="email">
+    <input id="authPassword" class="field" type="password" placeholder="Password" autocomplete="current-password">
+
+    <button id="emailSubmit" class="primary">Login</button>
+    <button id="googleLogin" class="google">Continue with Google</button>
+    <div id="authMessage"></div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">ESUKA AI</div>
+    <button class="side-btn" id="newChatBtn">＋ New chat</button>
+    <button class="side-btn" id="sideImageBtn">▧ Image generation</button>
+    <button class="side-btn" id="sideVoiceBtn">🎙 Voice input</button>
+    <div class="side-label">RECENT CHATS</div>
+    <div id="historyList"></div>
+    <div class="profile">
+      <div id="profileName"></div>
+      <div style="margin-top:8px">ESUKA AI</div>
+    </div>
+  </aside>
+
+  <div id="backdrop" class="backdrop"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <button id="menuBtn">☰</button>
+        <strong style="margin-left:8px">ESUKA AI</strong>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button id="themeBtn">◐</button>
+        <button id="topSettingsBtn">⚙</button>
+      </div>
+    </header>
+
+    <section id="chatArea">
+      <div id="welcome" class="welcome">
+        <h1>How can I help you?</h1>
+        <p>Ask anything or create an image with ESUKA AI.</p>
+        <div class="suggestions">
+          <button class="suggestion" data-prompt="Explain artificial intelligence simply">Explain AI simply</button>
+          <button class="suggestion" data-prompt="Give me creative business ideas">Business ideas</button>
+          <button class="suggestion" data-prompt="Help me learn something new today">Learn something new</button>
+          <button class="suggestion" data-prompt="Write a creative story">Write a story</button>
+        </div>
+      </div>
+      <div id="messages"></div>
+    </section>
+
+    <div id="voicePanel"><span id="voiceStatus">Listening...</span> · <button id="stopVoiceBtn" class="mini-btn">Stop</button></div>
+    <div id="modeLabel">Image generation mode ON</div>
+
+    <footer class="composer-wrap">
+      <div class="composer">
+        <button id="attachBtn" class="round-btn" title="Image mode">＋</button>
+        <textarea id="prompt" rows="1" placeholder="Message ESUKA AI..."></textarea>
+        <button id="micBtn" class="round-btn" title="Voice input">🎙</button>
+        <button id="sendBtn" class="round-btn" title="Send">↑</button>
+      </div>
+    </footer>
+  </main>
+</section>
+
+<div id="settingsOverlay">
+  <div class="settings-card">
+    <h2>Settings</h2>
+    <div class="setting-row">
+      <label>Account</label>
+      <div id="settingsAccount" style="font-size:13px;overflow-wrap:anywhere"></div>
+    </div>
+    <div class="setting-row">
+      <label>Language</label>
+      <select id="language">
+        <option>Hinglish</option><option>Hindi</option><option>English</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>Response style</label>
+      <select id="responseStyle">
+        <option>Friendly</option><option>Professional</option><option>Simple</option><option>Detailed</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>Voice type</label>
+      <select id="voiceType">
+        <option value="female">Female</option><option value="male">Male</option><option value="system">System</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>Voice speed: <span id="speedValue">1.0x</span></label>
+      <input id="voiceSpeed" type="range" min=".5" max="2" step=".1" value="1">
+    </div>
+    <div class="setting-row">
+      <label>Automatic voice</label>
+      <button id="voiceToggle" class="side-btn" aria-pressed="false">Toggle automatic voice</button>
+    </div>
+    <div class="setting-row">
+      <label>Theme</label>
+      <select id="themeSelect">
+        <option value="black">Black</option><option value="grey">Grey</option><option value="light">Light</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>Chat font size</label>
+      <select id="fontSize">
+        <option value="12">Small</option><option value="14">Normal</option><option value="16">Large</option><option value="18">Extra large</option>
+      </select>
+    </div>
+    <div class="settings-actions">
+      <button id="saveSettings">Save</button>
+      <button id="resetSettingsBtn">Reset</button>
+    </div>
+    <div class="settings-actions">
+      <button id="settingsClearBtn">Clear chats</button>
+      <button id="settingsLogoutBtn">Logout</button>
+    </div>
+    <div class="settings-actions">
+      <button id="cancelSettings">Close</button>
+    </div>
+    <div id="settingsAccount"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
 <script>
 "use strict";
 
-/* =========================
-   ESUKA AI CONFIGURATION
-========================= */
-
+/* ESUKA AI CONFIGURATION */
 const SUPABASE_URL = "https://tdpiviiihjaiizltoegt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
 const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
 
 const $ = id => document.getElementById(id);
 
-if (!window.supabase) {
-  $("authMessage").textContent =
-    "Supabase library load nahi hui. Internet connection check karo.";
-  throw new Error("Supabase library unavailable");
-}
-
-/* =========================
-   SUPABASE CLIENT
-========================= */
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: "pkce"
-    }
-  }
-);
-
-/* =========================
-   APP VARIABLES
-========================= */
-
+let supabaseClient = null;
 let currentUser = null;
 let initializedUserId = null;
-
-let settings = {
-  language: "Hinglish",
-  responseStyle: "Friendly",
-  voiceEnabled: false,
-  voiceType: "female",
-  voiceSpeed: 1,
-  theme: "black",
-  fontSize: "14"
-};
-
+let authMode = "login";
 let imageMode = false;
 let busy = false;
 let currentHistory = [];
 let savedChats = [];
+let currentChatId = null;
 let recognition = null;
 let listening = false;
-let currentChatId = null;
-let authMode = "login";
 
-/* =========================
-   AUTHENTICATION
-========================= */
+let settings = {
+  language:"Hinglish",
+  responseStyle:"Friendly",
+  voiceEnabled:false,
+  voiceType:"female",
+  voiceSpeed:1,
+  theme:"black",
+  fontSize:"14"
+};
 
-function authMessage(message) {
+function authMessage(message){
   $("authMessage").textContent = message;
 }
 
-function switchAuthMode(mode) {
+function showToast(message){
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(()=>toast.classList.remove("show"),2400);
+}
+
+function switchAuthMode(mode){
   authMode = mode;
-
-  $("loginTab").classList.toggle("active", mode === "login");
-  $("signupTab").classList.toggle("active", mode === "signup");
-
-  $("emailSubmit").textContent =
-    mode === "login" ? "Login" : "Create account";
-
-  $("authPassword").autocomplete =
-    mode === "login" ? "current-password" : "new-password";
-
+  $("loginTab").classList.toggle("active",mode==="login");
+  $("signupTab").classList.toggle("active",mode==="signup");
+  $("emailSubmit").textContent = mode==="login"?"Login":"Create account";
+  $("authPassword").autocomplete = mode==="login"?"current-password":"new-password";
   authMessage("");
 }
 
-$("loginTab").onclick = () => switchAuthMode("login");
-$("signupTab").onclick = () => switchAuthMode("signup");
+$("loginTab").onclick = ()=>switchAuthMode("login");
+$("signupTab").onclick = ()=>switchAuthMode("signup");
 
-/* EMAIL LOGIN AND SIGNUP */
+/* SESSION HANDLING */
+async function handleLoginSession(session){
+  if(!session || !session.user) return;
 
-$("emailSubmit").addEventListener("click", async () => {
+  currentUser = session.user;
+  $("authScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  if(initializedUserId !== currentUser.id){
+    initializedUserId = currentUser.id;
+    initializeUser();
+  }
+}
+
+async function restoreLoginSession(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const oauthError = params.get("error_description") || params.get("error");
+
+    if(oauthError){
+      authMessage("Google login error: "+oauthError);
+      history.replaceState({},document.title,location.pathname);
+      return;
+    }
+
+    const {data,error} = await supabaseClient.auth.getSession();
+    if(error) throw error;
+
+    if(data.session){
+      await handleLoginSession(data.session);
+    }else{
+      $("authScreen").classList.remove("hidden");
+      $("app").classList.add("hidden");
+      authMessage("");
+    }
+  }catch(error){
+    console.error(error);
+    $("authScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    authMessage(error.message || "Could not restore session. Please login.");
+  }
+}
+
+/* EMAIL LOGIN */
+$("emailSubmit").onclick = async()=>{
   const email = $("authEmail").value.trim();
   const password = $("authPassword").value;
 
-  if (!email || !password) {
-    authMessage("Email aur password dono enter karo.");
+  if(!email || !password){
+    authMessage("Email aur password enter karo.");
     return;
   }
-
-  if (password.length < 6) {
-    authMessage("Password kam se kam 6 characters ka hona chahiye.");
+  if(password.length < 6){
+    authMessage("Password minimum 6 characters ka hona chahiye.");
     return;
   }
 
   $("emailSubmit").disabled = true;
   authMessage("Please wait...");
 
-  try {
-    if (authMode === "signup") {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password
-      });
+  try{
+    let result;
 
-      if (error) throw error;
+    if(authMode==="signup"){
+      result = await supabaseClient.auth.signUp({email,password});
+      if(result.error) throw result.error;
 
-      if (data.session) {
-        authMessage("Account created. Signing in...");
-        await handleLoginSession(data.session);
-      } else {
-        authMessage(
-          "Account created! Email verification link check karo, phir login karo."
-        );
+      if(result.data.session){
+        await handleLoginSession(result.data.session);
+      }else{
+        authMessage("Account created. Email verification karke login karo.");
       }
-    } else {
-      const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      if (error) throw error;
-
-      if (data.session) {
-        await handleLoginSession(data.session);
-      }
+    }else{
+      result = await supabaseClient.auth.signInWithPassword({email,password});
+      if(result.error) throw result.error;
+      await handleLoginSession(result.data.session);
     }
-  } catch (error) {
-    authMessage(error.message || "Authentication failed.");
-  } finally {
+  }catch(error){
+    authMessage(error.message || "Login failed.");
+  }finally{
     $("emailSubmit").disabled = false;
   }
-});
+};
 
 /* GOOGLE LOGIN */
-
-$("googleLogin").addEventListener("click", async () => {
+$("googleLogin").onclick = async()=>{
   $("googleLogin").disabled = true;
   authMessage("Opening Google sign-in...");
 
-  try {
-    const redirectURL = window.location.origin + "/";
+  try{
+    const redirectTo = location.origin + "/";
 
-    const { data, error } =
-      await supabaseClient.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectURL,
-          queryParams: {
-            prompt: "select_account"
-          }
-        }
-      });
+    const {error} = await supabaseClient.auth.signInWithOAuth({
+      provider:"google",
+      options:{
+        redirectTo,
+        queryParams:{prompt:"select_account"}
+      }
+    });
 
-    if (error) throw error;
-
-    if (data?.url) {
-      window.location.assign(data.url);
-    }
-  } catch (error) {
+    if(error) throw error;
+  }catch(error){
     authMessage(error.message || "Google login failed.");
     $("googleLogin").disabled = false;
   }
-});
+};
 
-/* RESTORE USER SESSION */
-
-async function restoreLoginSession() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-
-    const authError =
-      params.get("error_description") ||
-      params.get("error");
-
-    if (authError) {
-      authMessage("Google login error: " + authError);
-
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname
-      );
-
-      return;
-    }
-
-    authMessage("Checking login session...");
-
-    const { data, error } =
-      await supabaseClient.auth.getSession();
-
-    if (error) throw error;
-
-    if (data.session?.user) {
-      await handleLoginSession(data.session);
-    } else {
-      $("authScreen").classList.remove("hidden");
-      $("app").classList.add("hidden");
-      authMessage("");
-    }
-  } catch (error) {
-    console.error("Session restore error:", error);
-
-    $("authScreen").classList.remove("hidden");
-    $("app").classList.add("hidden");
-
-    authMessage(
-      error.message || "Session restore failed. Please login again."
-    );
-  }
-}
-
-/* LOGIN SESSION HANDLER */
-
-async function handleLoginSession(session) {
-  if (!session?.user) return;
-
-  currentUser = session.user;
-
-  $("authScreen").classList.add("hidden");
-  $("app").classList.remove("hidden");
-
-  if (initializedUserId !== currentUser.id) {
-    initializedUserId = currentUser.id;
-    initializeUser();
-  }
-}
-
-/* AUTH STATE LISTENER */
-
-supabaseClient.auth.onAuthStateChange(
-  (event, session) => {
-    if (session?.user) {
-      handleLoginSession(session);
-    }
-
-    if (event === "SIGNED_OUT") {
-      currentUser = null;
-      initializedUserId = null;
-
-      currentHistory = [];
-      savedChats = [];
-      currentChatId = null;
-
-      $("app").classList.add("hidden");
-      $("authScreen").classList.remove("hidden");
-
-      $("authEmail").value = "";
-      $("authPassword").value = "";
-
-      $("messages").innerHTML = "";
-      $("historyList").innerHTML = "";
-
-      switchAuthMode("login");
+/* AUTH LISTENER */
+supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY,
+  {
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:true,
+      flowType:"pkce"
     }
   }
 );
 
-/* START SESSION RESTORE */
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+  if(session?.user){
+    handleLoginSession(session);
+  }
 
-restoreLoginSession();
-
-/* LOGOUT */
-
-async function logout() {
-  if (!confirm("Are you sure you want to log out?")) return;
-
-  const buttons = [
-    $("logoutBtn"),
-    $("settingsLogoutBtn")
-  ];
-
-  buttons.forEach(button => {
-    button.disabled = true;
-    button.textContent = "Logging out...";
-  });
-
-  stopSpeaking();
-  stopListening();
-
-  try {
-    const { error } =
-      await supabaseClient.auth.signOut({
-        scope: "local"
-      });
-
-    if (error) throw error;
-
+  if(event==="SIGNED_OUT"){
     currentUser = null;
     initializedUserId = null;
-
     currentHistory = [];
     savedChats = [];
     currentChatId = null;
-
     $("messages").innerHTML = "";
     $("historyList").innerHTML = "";
-
     $("app").classList.add("hidden");
     $("authScreen").classList.remove("hidden");
-
-    $("authEmail").value = "";
-    $("authPassword").value = "";
-
     switchAuthMode("login");
-    authMessage("You have been logged out successfully.");
-
-    closeSettings();
-    closeSidebar();
-
-  } catch (error) {
-    showToast("Logout failed: " + error.message);
-  } finally {
-    buttons.forEach(button => {
-      button.disabled = false;
-      button.textContent = "Logout";
-    });
   }
-}
+});
 
-$("logoutBtn").onclick = logout;
-$("settingsLogoutBtn").onclick = logout;
-
-/* =========================
-   USER INITIALIZATION
-========================= */
-
-function initializeUser() {
-  if (!currentUser) return;
-
+/* USER DATA */
+function initializeUser(){
   const email = currentUser.email || "ESUKA User";
-
   $("profileName").textContent = email;
-  $("profileAvatar").textContent = email.charAt(0).toUpperCase();
   $("settingsAccount").textContent = email;
-
   loadData();
 }
 
-/* =========================
-   STORAGE
-========================= */
-
-function chatStorageKey() {
-  return "esuka_chats_" + (currentUser?.id || "guest");
+function chatStorageKey(){
+  return "esuka_chats_"+(currentUser?.id || "guest");
+}
+function settingsStorageKey(){
+  return "esuka_settings_"+(currentUser?.id || "guest");
 }
 
-function settingsStorageKey() {
-  return "esuka_settings_" + (currentUser?.id || "guest");
-}
+function loadData(){
+  try{
+    settings = {...settings,...JSON.parse(localStorage.getItem(settingsStorageKey()) || "{}")};
+  }catch(e){}
 
-function loadData() {
-  try {
-    settings = {
-      ...settings,
-      ...JSON.parse(
-        localStorage.getItem(settingsStorageKey()) || "{}"
-      )
-    };
-  } catch (error) {}
-
-  try {
-    savedChats = JSON.parse(
-      localStorage.getItem(chatStorageKey()) || "[]"
-    );
-
-    if (!Array.isArray(savedChats)) savedChats = [];
-  } catch (error) {
-    savedChats = [];
-  }
+  try{
+    savedChats = JSON.parse(localStorage.getItem(chatStorageKey()) || "[]");
+    if(!Array.isArray(savedChats)) savedChats = [];
+  }catch(e){savedChats=[];}
 
   applySettings();
   renderHistory();
 }
 
-function saveSettings() {
-  settings = {
-    language: $("language").value,
-    responseStyle: $("responseStyle").value,
-    voiceEnabled: $("voiceToggle").classList.contains("on"),
-    voiceType: $("voiceType").value,
-    voiceSpeed: Number($("voiceSpeed").value),
-    theme: $("themeSelect").value,
-    fontSize: $("fontSize").value
-  };
+function applySettings(){
+  document.body.classList.remove("grey","light");
+  if(settings.theme==="grey") document.body.classList.add("grey");
+  if(settings.theme==="light") document.body.classList.add("light");
 
-  localStorage.setItem(
-    settingsStorageKey(),
-    JSON.stringify(settings)
-  );
-
-  applySettings();
-  showToast("Preferences saved");
-}
-
-function applySettings() {
-  document.body.classList.remove("grey", "light");
-
-  if (settings.theme === "grey") {
-    document.body.classList.add("grey");
-  }
-
-  if (settings.theme === "light") {
-    document.body.classList.add("light");
-  }
-
-  document.documentElement.style.setProperty(
-    "--chat-font",
-    settings.fontSize + "px"
-  );
+  document.documentElement.style.setProperty("--chat-font",settings.fontSize+"px");
 
   $("language").value = settings.language;
   $("responseStyle").value = settings.responseStyle;
   $("voiceType").value = settings.voiceType;
   $("voiceSpeed").value = settings.voiceSpeed;
-
-  $("speedValue").textContent =
-    Number(settings.voiceSpeed).toFixed(1) + "x";
-
   $("themeSelect").value = settings.theme;
   $("fontSize").value = settings.fontSize;
-
-  $("voiceToggle").classList.toggle(
-    "on",
-    !!settings.voiceEnabled
-  );
-
-  $("voiceToggle").setAttribute(
-    "aria-pressed",
-    String(!!settings.voiceEnabled)
-  );
+  $("speedValue").textContent = Number(settings.voiceSpeed).toFixed(1)+"x";
+  $("voiceToggle").classList.toggle("active",!!settings.voiceEnabled);
+  $("voiceToggle").setAttribute("aria-pressed",String(!!settings.voiceEnabled));
 }
 
-/* =========================
-   TOAST
-========================= */
-
-function showToast(message) {
-  const toast = $("toast");
-
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  clearTimeout(showToast.timer);
-
-  showToast.timer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2400);
+function saveSettings(){
+  settings = {
+    language:$("language").value,
+    responseStyle:$("responseStyle").value,
+    voiceEnabled:$("voiceToggle").classList.contains("active"),
+    voiceType:$("voiceType").value,
+    voiceSpeed:Number($("voiceSpeed").value),
+    theme:$("themeSelect").value,
+    fontSize:$("fontSize").value
+  };
+  localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
+  applySettings();
+  showToast("Preferences saved");
 }
 
-/* =========================
-   CHAT HISTORY
-========================= */
+function resetSettings(){
+  settings = {
+    language:"Hinglish",responseStyle:"Friendly",
+    voiceEnabled:false,voiceType:"female",voiceSpeed:1,
+    theme:"black",fontSize:"14"
+  };
+  localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
+  applySettings();
+  stopSpeaking();
+  showToast("Settings reset");
+}
 
-function saveChats() {
-  try {
-    localStorage.setItem(
-      chatStorageKey(),
-      JSON.stringify(savedChats.slice(0, 30))
-    );
-  } catch (error) {
-    showToast("Storage full");
-  }
-
+/* HISTORY */
+function saveChats(){
+  try{
+    localStorage.setItem(chatStorageKey(),JSON.stringify(savedChats.slice(0,30)));
+  }catch(e){showToast("Storage full");}
   renderHistory();
 }
 
-function saveCurrentChat() {
-  if (!currentHistory.length) return;
-
-  const first = currentHistory.find(
-    message => message.role === "user"
-  );
-
+function saveCurrentChat(){
+  if(!currentHistory.length) return;
+  const first = currentHistory.find(m=>m.role==="user");
   const item = {
-    id: currentChatId || String(Date.now()),
-    title: (first?.content || "New Chat").slice(0, 38),
-    history: currentHistory,
-    date: Date.now()
+    id:currentChatId || String(Date.now()),
+    title:(first?.content || "New Chat").slice(0,38),
+    history:currentHistory,
+    date:Date.now()
   };
-
-  const index = savedChats.findIndex(
-    chat => chat.id === item.id
-  );
-
-  if (index >= 0) {
-    savedChats[index] = item;
-  } else {
-    savedChats.unshift(item);
-  }
-
-  currentChatId = item.id;
+  const index = savedChats.findIndex(c=>c.id===item.id);
+  if(index>=0) savedChats[index]=item;
+  else savedChats.unshift(item);
+  currentChatId=item.id;
   saveChats();
 }
 
-function renderHistory() {
-  $("historyList").innerHTML = "";
-
-  savedChats.slice(0, 20).forEach(chat => {
-    const button = document.createElement("div");
-    button.className = "history-item";
-
-    const icon = document.createElement("span");
-    icon.textContent = "◷";
-
-    const label = document.createElement("span");
-    label.textContent = chat.title || "Chat";
-
-    button.append(icon, label);
-    button.onclick = () => openChat(chat.id);
-
-    $("historyList").appendChild(button);
+function renderHistory(){
+  $("historyList").innerHTML="";
+  savedChats.slice(0,30).forEach(chat=>{
+    const item=document.createElement("div");
+    item.className="history-item";
+    item.textContent=chat.title || "Chat";
+    item.onclick=()=>openChat(chat.id);
+    $("historyList").appendChild(item);
   });
 }
 
-function openChat(id) {
-  const chat = savedChats.find(item => item.id === id);
-
-  if (!chat) return;
-
-  currentChatId = chat.id;
-
-  currentHistory = Array.isArray(chat.history)
-    ? chat.history.slice()
-    : [];
-
+function openChat(id){
+  const chat=savedChats.find(c=>c.id===id);
+  if(!chat) return;
+  currentChatId=chat.id;
+  currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
   renderMessages();
   closeSidebar();
 }
 
-function renderMessages() {
-  $("welcome").style.display =
-    currentHistory.length ? "none" : "block";
-
-  $("messages").innerHTML = "";
-
-  currentHistory.forEach(message => {
-    addMessage(message.role, message.content, false);
-  });
-
+function renderMessages(){
+  $("messages").innerHTML="";
+  $("welcome").style.display=currentHistory.length?"none":"block";
+  currentHistory.forEach(m=>addMessage(m.role,m.content,false));
   scrollBottom();
 }
 
-/* =========================
-   MESSAGES
-========================= */
+/* CHAT MESSAGES */
+function addMessage(role,content,save=true){
+  const row=document.createElement("div");
+  row.className="message "+(role==="user"?"user":"assistant");
 
-function addMessage(role, content, save = true) {
-  const row = document.createElement("div");
+  const avatar=document.createElement("div");
+  avatar.className="msg-avatar";
+  avatar.textContent=role==="user"?"U":"E";
 
-  row.className =
-    "message " + (role === "user" ? "user" : "assistant");
+  const box=document.createElement("div");
+  box.className="msg-content";
 
-  const avatar = document.createElement("div");
-  avatar.className = "msg-avatar";
-  avatar.textContent = role === "user" ? "U" : "E";
+  const name=document.createElement("div");
+  name.className="msg-name";
+  name.textContent=role==="user"?"You":"ESUKA AI";
 
-  const box = document.createElement("div");
-  box.className = "msg-content";
+  const bubble=document.createElement("div");
+  bubble.className="msg-bubble";
+  bubble.textContent=String(content);
 
-  const name = document.createElement("div");
-  name.className = "msg-name";
-  name.textContent = role === "user" ? "You" : "ESUKA AI";
+  box.append(name,bubble);
 
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble";
-  bubble.textContent = content;
+  if(role!=="user"){
+    const actions=document.createElement("div");
+    actions.className="msg-actions";
 
-  box.append(name, bubble);
+    const copy=document.createElement("button");
+    copy.className="mini-btn";
+    copy.textContent="Copy";
+    copy.onclick=()=>copyText(String(content));
 
-  if (role !== "user") {
-    const actions = document.createElement("div");
-    actions.className = "msg-actions";
+    const listen=document.createElement("button");
+    listen.className="mini-btn";
+    listen.textContent="Listen";
+    listen.onclick=()=>speakText(String(content),true);
 
-    const copy = document.createElement("button");
-    copy.className = "mini-btn";
-    copy.textContent = "Copy";
-    copy.onclick = () => copyText(content);
-
-    const listen = document.createElement("button");
-    listen.className = "mini-btn";
-    listen.textContent = "Listen";
-    listen.onclick = () => speakText(content, true);
-
-    const stop = document.createElement("button");
-    stop.className = "mini-btn";
-    stop.textContent = "Stop";
-    stop.onclick = stopSpeaking;
-
-    actions.append(copy, listen, stop);
+    actions.append(copy,listen);
     box.appendChild(actions);
   }
 
-  if (role === "user") {
-    row.append(box, avatar);
-  } else {
-    row.append(avatar, box);
-  }
+  if(role==="user") row.append(box,avatar);
+  else row.append(avatar,box);
 
   $("messages").appendChild(row);
 
-  if (save) {
-    currentHistory.push({ role, content });
-
-    if (role === "user") {
-      $("welcome").style.display = "none";
-    }
-
+  if(save){
+    currentHistory.push({role,content:String(content)});
+    if(role==="user") $("welcome").style.display="none";
     saveCurrentChat();
   }
-
   scrollBottom();
-
   return row;
 }
 
-function addImage(url) {
-  const last = $("messages").lastElementChild;
+function addImage(url){
+  const last=$("messages").lastElementChild;
+  if(!last) return;
 
-  if (!last) return;
+  const box=last.querySelector(".msg-content");
+  if(!box) return;
 
-  const box = last.querySelector(".msg-content");
+  const img=document.createElement("img");
+  img.className="generated-image";
+  img.alt="Generated image";
+  img.src=url;
+  img.onerror=()=>showToast("Image could not be displayed");
+  box.appendChild(img);
 
-  if (!box) return;
+  const actions=document.createElement("div");
+  actions.className="image-actions";
 
-  const image = document.createElement("img");
+  const open=document.createElement("button");
+  open.className="mini-btn";
+  open.textContent="Open image";
+  open.onclick=()=>window.open(url,"_blank","noopener");
 
-  image.className = "generated-image";
-  image.alt = "Image generated by ESUKA AI";
-  image.src = url;
-
-  image.onerror = () => {
-    image.remove();
-    showToast("Image could not be displayed");
+  const download=document.createElement("button");
+  download.className="mini-btn";
+  download.textContent="Download image";
+  download.onclick=()=>{
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="esuka-image.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
-  box.appendChild(image);
-
-  const actions = document.createElement("div");
-  actions.className = "image-actions";
-
-  const download = document.createElement("button");
-  download.className = "mini-btn";
-  download.textContent = "↓ Download image";
-  download.onclick = () => downloadImage(url);
-
-  const open = document.createElement("button");
-  open.className = "mini-btn";
-  open.textContent = "Open image";
-  open.onclick = () => window.open(url, "_blank", "noopener");
-
-  actions.append(download, open);
+  actions.append(open,download);
   box.appendChild(actions);
-
-  scrollBottom();
 }
 
-function downloadImage(url) {
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "esuka-ai-image-" + Date.now() + ".png";
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+function scrollBottom(){
+  $("chatArea").scrollTop=$("chatArea").scrollHeight;
 }
 
-function scrollBottom() {
-  $("chatArea").scrollTop = $("chatArea").scrollHeight;
-}
-
-/* =========================
-   LOADING ANIMATIONS
-========================= */
-
-function showTyping() {
-  const row = document.createElement("div");
-
-  row.className = "message assistant";
-  row.id = "typingRow";
-
-  row.innerHTML =
-    '<div class="msg-avatar">E</div>' +
-    '<div><div class="msg-name">ESUKA AI</div>' +
-    '<div class="msg-bubble">' +
-    '<div class="typing"><i></i><i></i><i></i></div>' +
-    '<div class="thinking-text">ESUKA is thinking...</div>' +
-    '</div></div>';
-
-  $("messages").appendChild(row);
-  scrollBottom();
-}
-
-function showImageProcessing() {
-  const row = document.createElement("div");
-
-  row.className = "message assistant";
-  row.id = "typingRow";
-
-  row.innerHTML =
-    '<div class="msg-avatar">E</div>' +
-    '<div class="msg-content"><div class="msg-name">ESUKA AI</div>' +
-    '<div class="image-processing">' +
-    '<div class="image-preview-skeleton"></div>' +
-    '<div class="image-processing-info">' +
-    '<div class="image-spinner"></div>' +
-    '<div><div class="image-processing-title">Creating your image</div>' +
-    '<div class="image-processing-sub">Preparing and rendering your image...</div>' +
-    '</div></div></div></div>';
-
-  $("messages").appendChild(row);
-  scrollBottom();
-}
-
-function removeTyping() {
-  $("typingRow")?.remove();
-}
-
-/* =========================
-   CHAT MANAGEMENT
-========================= */
-
-function newChat() {
+/* NEW CHAT */
+function newChat(){
   stopSpeaking();
   stopListening();
-
-  currentHistory = [];
-  currentChatId = null;
-
-  $("messages").innerHTML = "";
-  $("welcome").style.display = "block";
-
-  imageMode = false;
+  currentHistory=[];
+  currentChatId=null;
+  $("messages").innerHTML="";
+  $("welcome").style.display="block";
+  imageMode=false;
   updateMode();
-
-  $("prompt").value = "";
-
+  $("prompt").value="";
   closeSidebar();
 }
 
-function clearChat() {
-  if (!confirm("Clear all saved chat history for this account?")) {
-    return;
-  }
-
-  savedChats = [];
-  currentHistory = [];
-  currentChatId = null;
-
+function clearChat(){
+  if(!confirm("Clear all saved chat history?")) return;
+  savedChats=[];
+  currentHistory=[];
+  currentChatId=null;
   localStorage.removeItem(chatStorageKey());
-
-  $("messages").innerHTML = "";
-  $("welcome").style.display = "block";
-
+  $("messages").innerHTML="";
+  $("welcome").style.display="block";
   renderHistory();
   showToast("Chat history cleared");
 }
 
-/* =========================
-   IMAGE MODE
-========================= */
-
-function updateMode() {
-  $("modeLabel").classList.toggle("show", imageMode);
-  $("attachBtn").classList.toggle("active", imageMode);
-  $("sideImageBtn").classList.toggle("active", imageMode);
+/* IMAGE MODE */
+function updateMode(){
+  $("modeLabel").classList.toggle("show",imageMode);
+  $("attachBtn").classList.toggle("active",imageMode);
+  $("sideImageBtn").classList.toggle("active",imageMode);
 }
-
-function toggleImageMode() {
-  imageMode = !imageMode;
-
+function toggleImageMode(){
+  imageMode=!imageMode;
   updateMode();
-
-  showToast(
-    imageMode ? "Image mode ON" : "Image mode OFF"
-  );
+  showToast(imageMode?"Image mode ON":"Image mode OFF");
 }
 
-/* =========================
-   SIDEBAR
-========================= */
-
-function closeSidebar() {
-  $("sidebar").classList.remove("open");
-  $("backdrop").classList.remove("show");
+/* AI API */
+function buildPreferenceMessage(text){
+  return "[User preferences: Reply language: "+settings.language+
+    "; Response style: "+settings.responseStyle+
+    ". Follow these preferences naturally.]\n\nUser message: "+text;
 }
 
-function toggleSidebar() {
-  $("sidebar").classList.toggle("open");
-  $("backdrop").classList.toggle("show");
+function isImageRequest(text){
+  const value=String(text).toLowerCase();
+  const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|tasveer|फोटो|तस्वीर)\b/i;
+  const createWords=/\b(make|create|generate|draw|design|bana|banao|banado|bana do)\b/i;
+  return imageWords.test(value)&&createWords.test(value);
 }
 
-/* =========================
-   AI REQUEST
-========================= */
+async function sendMessage(){
+  const text=$("prompt").value.trim();
+  if(!text || busy) return;
 
-function buildPreferenceMessage(text) {
-  return (
-    "[User preferences: Reply language: " +
-    settings.language +
-    "; Response style: " +
-    settings.responseStyle +
-    ". Follow these preferences naturally.]\n\nUser message: " +
-    text
-  );
-}
+  $("prompt").value="";
+  $("prompt").style.height="auto";
+  addMessage("user",text);
 
-function isImageRequest(text) {
-  const value = String(text || "").toLowerCase().trim();
+  const useImage=imageMode || isImageRequest(text);
+  busy=true;
+  $("sendBtn").disabled=true;
 
-  if (
-    /\b(how|what|why|where|kaise|kyun)\b.*\b(make|create|generate|draw|bana)\b/i.test(value)
-  ) {
-    return false;
-  }
+  const typing=document.createElement("div");
+  typing.id="typingRow";
+  typing.className="message assistant";
+  typing.innerHTML='<div class="msg-avatar">E</div><div><div class="msg-name">ESUKA AI</div><div class="msg-bubble"><div class="typing"><i></i><i></i><i></i></div> Thinking...</div></div>';
+  $("messages").appendChild(typing);
+  scrollBottom();
 
-  const imageWords =
-    /\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र)\b/i;
+  try{
+    const payload=useImage
+      ?{mode:"image",message:text,prompt:text}
+      :{message:buildPreferenceMessage(text),history:currentHistory.slice(0,-1)};
 
-  const createWords =
-    /\b(make|create|generate|draw|design|bana|banao|banado|bana do|taiyar karo)\b/i;
-
-  const directDraw =
-    /\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
-
-  return (
-    (imageWords.test(value) && createWords.test(value)) ||
-    directDraw.test(value)
-  );
-}
-
-/* SEND MESSAGE */
-
-async function sendMessage() {
-  const text = $("prompt").value.trim();
-
-  if (!text || busy) return;
-
-  $("prompt").value = "";
-  $("prompt").style.height = "auto";
-
-  addMessage("user", text);
-
-  const useImage = imageMode || isImageRequest(text);
-
-  busy = true;
-  $("sendBtn").disabled = true;
-
-  if (useImage) {
-    showImageProcessing();
-  } else {
-    showTyping();
-  }
-
-  try {
-    const payload = useImage
-      ? {
-          mode: "image",
-          message: text,
-          prompt: text
-        }
-      : {
-          message: buildPreferenceMessage(text),
-          history: currentHistory.slice(0, -1)
-        };
-
-    const controller = new AbortController();
-
-    const timeout = setTimeout(
-      () => controller.abort(),
-      90000
-    );
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),90000);
 
     let response;
-
-    try {
-      response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
+    try{
+      response=await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload),
+        signal:controller.signal
       });
-    } finally {
-      clearTimeout(timeout);
+    }finally{clearTimeout(timeout);}
+
+    let data;
+    try{data=await response.json();}
+    catch(e){throw new Error("Server ne valid JSON response nahi diya.");}
+
+    if(!response.ok || data.success===false){
+      throw new Error(data.error || data.message || "Server error");
     }
 
-    const data = await response.json();
+    $("typingRow")?.remove();
 
-    removeTyping();
+    if(useImage){
+      const image=data.image || data.url || data.result?.image || data.result?.url || data.output;
+      if(typeof image!=="string" || !image) throw new Error("Image provider did not return an image.");
 
-    if (!response.ok || data.success === false) {
-      throw new Error(
-        data.error || data.message || "Server error"
-      );
-    }
+      const url=image.startsWith("data:image/") || image.startsWith("http")
+        ?image:"data:image/png;base64,"+image;
 
-    if (useImage) {
-      const image =
-        data.image ||
-        data.url ||
-        data.result?.image ||
-        data.result?.url ||
-        data.output;
-
-      if (typeof image !== "string" || !image) {
-        throw new Error(
-          "Image provider did not return an image"
-        );
-      }
-
-      let url = image;
-
-      if (
-        !image.startsWith("data:image/") &&
-        !image.startsWith("http")
-      ) {
-        url = "data:image/png;base64," + image;
-      }
-
-      addMessage("assistant", "Your image is ready.");
+      addMessage("assistant","Your image is ready.");
       addImage(url);
-
-    } else {
-      const reply =
-        data.reply ||
-        data.response ||
-        data.text ||
-        data.message ||
-        data.result?.reply;
-
-      if (!reply) {
-        throw new Error("Empty response from AI");
-      }
-
-      addMessage("assistant", String(reply));
-
-      if (settings.voiceEnabled) {
-        speakText(String(reply), false);
-      }
+    }else{
+      const reply=data.reply || data.response || data.text || data.message || data.result?.reply;
+      if(!reply) throw new Error("Empty response from AI.");
+      addMessage("assistant",String(reply));
+      if(settings.voiceEnabled) speakText(String(reply),false);
     }
-
-  } catch (error) {
-    removeTyping();
-
-    const message =
-      error.name === "AbortError"
-        ? "Request timed out. Please try again."
-        : error.message || "Unknown error";
-
-    addMessage(
-      "assistant",
-      "Sorry, kuch problem aa gayi: " + message
-    );
-
-  } finally {
-    busy = false;
-
-    $("sendBtn").disabled = false;
-
-    imageMode = false;
+  }catch(error){
+    $("typingRow")?.remove();
+    const message=error.name==="AbortError"
+      ?"Request timed out. Please try again."
+      :error.message || "Unknown error";
+    addMessage("assistant","Sorry, kuch problem aa gayi: "+message);
+  }finally{
+    busy=false;
+    $("sendBtn").disabled=false;
+    imageMode=false;
     updateMode();
-
-    $("prompt").focus();
   }
 }
 
-/* =========================
-   COPY
-========================= */
-
-function copyText(text) {
-  if (navigator.clipboard?.writeText) {
+/* COPY */
+function copyText(text){
+  if(navigator.clipboard?.writeText){
     navigator.clipboard.writeText(text)
-      .then(() => showToast("Copied"))
-      .catch(() => fallbackCopy(text));
-  } else {
-    fallbackCopy(text);
-  }
+      .then(()=>showToast("Copied"))
+      .catch(()=>fallbackCopy(text));
+  }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const area=document.createElement("textarea");
+  area.value=text;
+  document.body.appendChild(area);
+  area.select();
+  try{document.execCommand("copy");showToast("Copied");}
+  catch(e){showToast("Copy unavailable");}
+  area.remove();
 }
 
-function fallbackCopy(text) {
-  const textarea = document.createElement("textarea");
-
-  textarea.value = text;
-
-  document.body.appendChild(textarea);
-
-  textarea.select();
-
-  try {
-    document.execCommand("copy");
-    showToast("Copied");
-  } catch (error) {
-    showToast("Copy not available");
-  }
-
-  textarea.remove();
+/* VOICE OUTPUT */
+function stopSpeaking(){
+  if("speechSynthesis" in window) speechSynthesis.cancel();
 }
-
-/* =========================
-   AI VOICE OUTPUT
-========================= */
-
-function stopSpeaking() {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-}
-
-function speakText(text, manual = false) {
-  if (!manual && !settings.voiceEnabled) return;
-
-  if (!("speechSynthesis" in window)) {
+function speakText(text,manual=false){
+  if(!manual && !settings.voiceEnabled) return;
+  if(!("speechSynthesis" in window)){
     showToast("Voice not supported");
     return;
   }
-
   stopSpeaking();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.rate=Number(settings.voiceSpeed);
+  utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
 
-  const voices = window.speechSynthesis.getVoices();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  utterance.rate = Number(settings.voiceSpeed);
-
-  utterance.lang =
-    settings.language === "English" ? "en-IN" : "hi-IN";
-
-  if (settings.voiceType !== "system") {
-    const indian = voices.filter(voice =>
-      /india|hindi|en-in|hi-in/i.test(
-        voice.lang + " " + voice.name
-      )
-    );
-
-    const pattern =
-      settings.voiceType === "female"
-        ? /female|woman|heera|priya|neerja/i
-        : /male|man|ravi|amit|rahul/i;
-
-    const selected = indian.find(voice =>
-      pattern.test(voice.name)
-    );
-
-    if (selected) {
-      utterance.voice = selected;
-    }
+  const voices=speechSynthesis.getVoices();
+  if(settings.voiceType!=="system"){
+    const pattern=settings.voiceType==="female"
+      ?/female|woman|heera|priya|neerja/i
+      :/male|man|ravi|amit|rahul/i;
+    const selected=voices.find(v=>pattern.test(v.name));
+    if(selected) utterance.voice=selected;
   }
-
-  utterance.onerror = () => {
-    showToast("Voice playback failed");
-  };
-
-  window.speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance);
 }
 
-/* =========================
-   MICROPHONE
-========================= */
-
-function setMicRecording(active) {
-  $("micBtn").classList.toggle("recording", active);
-
-  $("micBtn").setAttribute(
-    "aria-label",
-    active ? "Stop voice input" : "Start voice input"
-  );
-
-  $("micBtn").title =
-    active ? "Stop voice input" : "Voice input";
-}
-
-function startListening() {
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
+/* MICROPHONE */
+function startListening(){
+  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
     showToast("Voice input not supported in this browser");
     return;
   }
+  if(listening){stopListening();return;}
 
-  if (listening) {
-    stopListening();
-    return;
-  }
+  recognition=new SpeechRecognition();
+  recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
+  recognition.interimResults=true;
+  recognition.continuous=false;
 
-  recognition = new SpeechRecognition();
-
-  recognition.lang =
-    settings.language === "English" ? "en-IN" : "hi-IN";
-
-  recognition.interimResults = true;
-  recognition.continuous = false;
-
-  recognition.onstart = () => {
-    listening = true;
-
+  recognition.onstart=()=>{
+    listening=true;
     $("voicePanel").classList.add("show");
-
-    setMicRecording(true);
-
-    $("voiceStatus").textContent = "Listening...";
+    $("voiceStatus").textContent="Listening...";
   };
 
-  recognition.onresult = event => {
-    let transcript = "";
-
-    for (
-      let i = event.resultIndex;
-      i < event.results.length;
-      i++
-    ) {
-      transcript += event.results[i][0].transcript;
+  recognition.onresult=event=>{
+    let transcript="";
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      transcript+=event.results[i][0].transcript;
     }
-
-    $("prompt").value = transcript;
-
-    $("prompt").style.height = "auto";
-
-    $("prompt").style.height =
-      Math.min($("prompt").scrollHeight, 130) + "px";
+    $("prompt").value=transcript;
   };
 
-  recognition.onerror = event => {
-    showToast("Voice input: " + event.error);
-  };
+  recognition.onerror=event=>showToast("Voice input: "+event.error);
 
-  recognition.onend = () => {
-    listening = false;
-
+  recognition.onend=()=>{
+    listening=false;
     $("voicePanel").classList.remove("show");
-
-    setMicRecording(false);
-
-    recognition = null;
+    recognition=null;
   };
 
-  try {
-    recognition.start();
-  } catch (error) {
-    showToast("Microphone could not start");
-  }
+  try{recognition.start();}
+  catch(e){showToast("Microphone could not start");}
 }
 
-function stopListening() {
-  if (recognition) {
-    try {
-      recognition.stop();
-    } catch (error) {}
+function stopListening(){
+  if(recognition){
+    try{recognition.stop();}catch(e){}
   }
-
-  listening = false;
-
+  listening=false;
   $("voicePanel").classList.remove("show");
-
-  setMicRecording(false);
 }
+function toggleVoice(){listening?stopListening():startListening();}
 
-function toggleVoice() {
-  if (listening) {
-    stopListening();
-  } else {
-    startListening();
-  }
+/* SIDEBAR AND SETTINGS */
+function closeSidebar(){
+  $("sidebar").classList.remove("open");
+  $("backdrop").classList.remove("show");
 }
-
-/* =========================
-   SETTINGS
-========================= */
-
-function toggleVoiceSetting() {
-  const enabled =
-    $("voiceToggle").classList.toggle("on");
-
-  $("voiceToggle").setAttribute(
-    "aria-pressed",
-    String(enabled)
-  );
-
-  settings.voiceEnabled = enabled;
-
-  if (!enabled) {
-    stopSpeaking();
-  }
-
-  showToast(
-    enabled ? "Automatic voice ON" : "Automatic voice OFF"
-  );
+function toggleSidebar(){
+  $("sidebar").classList.toggle("open");
+  $("backdrop").classList.toggle("show");
 }
-
-function resetSettings() {
-  if (!confirm("Reset all preferences to default?")) {
-    return;
-  }
-
-  settings = {
-    language: "Hinglish",
-    responseStyle: "Friendly",
-    voiceEnabled: false,
-    voiceType: "female",
-    voiceSpeed: 1,
-    theme: "black",
-    fontSize: "14"
-  };
-
-  localStorage.setItem(
-    settingsStorageKey(),
-    JSON.stringify(settings)
-  );
-
-  applySettings();
-
-  stopSpeaking();
-
-  showToast("Settings reset");
-}
-
-function cycleTheme() {
-  const themes = ["black", "grey", "light"];
-
-  settings.theme =
-    themes[(themes.indexOf(settings.theme) + 1) % 3];
-
-  localStorage.setItem(
-    settingsStorageKey(),
-    JSON.stringify(settings)
-  );
-
-  applySettings();
-
-  showToast("Theme: " + settings.theme);
-}
-
-function openSettings() {
+function openSettings(){
   $("settingsOverlay").classList.add("show");
 }
-
-function closeSettings() {
+function closeSettings(){
   $("settingsOverlay").classList.remove("show");
 }
 
-/* =========================
-   BUTTON EVENTS
-========================= */
+async function logout(){
+  if(!confirm("Are you sure you want to log out?")) return;
+  stopSpeaking();
+  stopListening();
 
-$("newChatBtn").onclick = newChat;
+  try{
+    const {error}=await supabaseClient.auth.signOut({scope:"local"});
+    if(error) throw error;
 
-$("sideImageBtn").onclick = toggleImageMode;
-$("attachBtn").onclick = toggleImageMode;
+    currentUser=null;
+    initializedUserId=null;
+    currentHistory=[];
+    savedChats=[];
+    currentChatId=null;
 
-$("sideVoiceBtn").onclick = toggleVoice;
-$("micBtn").onclick = toggleVoice;
+    $("messages").innerHTML="";
+    $("historyList").innerHTML="";
+    $("app").classList.add("hidden");
+    $("authScreen").classList.remove("hidden");
+    $("authEmail").value="";
+    $("authPassword").value="";
+    switchAuthMode("login");
+    closeSettings();
+    closeSidebar();
+    authMessage("Logged out successfully.");
+  }catch(error){
+    showToast("Logout failed: "+error.message);
+  }
+}
 
-$("stopVoiceBtn").onclick = stopListening;
+/* BUTTON EVENTS */
+$("newChatBtn").onclick=newChat;
+$("sideImageBtn").onclick=toggleImageMode;
+$("attachBtn").onclick=toggleImageMode;
+$("sideVoiceBtn").onclick=toggleVoice;
+$("micBtn").onclick=toggleVoice;
+$("stopVoiceBtn").onclick=stopListening;
+$("sendBtn").onclick=sendMessage;
+$("menuBtn").onclick=toggleSidebar;
+$("backdrop").onclick=closeSidebar;
+$("clearBtn")?.addEventListener("click",clearChat);
 
-$("sendBtn").onclick = sendMessage;
-
-$("clearBtn").onclick = clearChat;
-
-$("historyBtn").onclick = () => {
-  renderHistory();
-  showToast("Recent chats are in sidebar");
-};
-
-$("settingsBtn").onclick = openSettings;
-$("topSettingsBtn").onclick = openSettings;
-
-$("closeSettings").onclick = closeSettings;
-$("cancelSettings").onclick = closeSettings;
-
-$("saveSettings").onclick = () => {
+$("topSettingsBtn").onclick=openSettings;
+$("closeSettings")?.addEventListener("click",closeSettings);
+$("cancelSettings").onclick=closeSettings;
+$("saveSettings").onclick=()=>{
   saveSettings();
   closeSettings();
 };
-
-$("resetSettingsBtn").onclick = resetSettings;
-$("settingsClearBtn").onclick = clearChat;
-
-$("voiceToggle").onclick = toggleVoiceSetting;
-
-$("voiceSpeed").oninput = () => {
-  $("speedValue").textContent =
-    Number($("voiceSpeed").value).toFixed(1) + "x";
+$("resetSettingsBtn").onclick=resetSettings;
+$("settingsClearBtn").onclick=clearChat;
+$("settingsLogoutBtn").onclick=logout;
+$("themeBtn").onclick=()=>{
+  const themes=["black","grey","light"];
+  settings.theme=themes[(themes.indexOf(settings.theme)+1)%3];
+  $("themeSelect").value=settings.theme;
+  localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
+  applySettings();
+  showToast("Theme: "+settings.theme);
 };
 
-$("themeBtn").onclick = cycleTheme;
-
-$("aboutBtn").onclick = () => {
-  alert("ESUKA AI\nVersion 1.4\nYour AI Assistant");
+$("voiceToggle").onclick=()=>{
+  settings.voiceEnabled=!settings.voiceEnabled;
+  $("voiceToggle").classList.toggle("active",settings.voiceEnabled);
+  $("voiceToggle").setAttribute("aria-pressed",String(settings.voiceEnabled));
+  if(!settings.voiceEnabled) stopSpeaking();
+  showToast(settings.voiceEnabled?"Automatic voice ON":"Automatic voice OFF");
 };
 
-$("menuBtn").onclick = toggleSidebar;
-$("backdrop").onclick = closeSidebar;
-
-$("settingsOverlay").onclick = event => {
-  if (event.target === $("settingsOverlay")) {
-    closeSettings();
-  }
+$("voiceSpeed").oninput=()=>{
+  $("speedValue").textContent=Number($("voiceSpeed").value).toFixed(1)+"x";
 };
 
-/* TEXT INPUT */
-
-$("prompt").oninput = event => {
-  event.target.style.height = "auto";
-
-  event.target.style.height =
-    Math.min(event.target.scrollHeight, 130) + "px";
+$("prompt").oninput=event=>{
+  event.target.style.height="auto";
+  event.target.style.height=Math.min(event.target.scrollHeight,130)+"px";
 };
-
-$("prompt").onkeydown = event => {
-  if (event.key === "Enter" && !event.shiftKey) {
+$("prompt").onkeydown=event=>{
+  if(event.key==="Enter" && !event.shiftKey){
     event.preventDefault();
     sendMessage();
   }
 };
 
-/* SUGGESTIONS */
-
-document.querySelectorAll(".suggestion").forEach(button => {
-  button.onclick = () => {
-    $("prompt").value = button.dataset.prompt;
+document.querySelectorAll(".suggestion").forEach(button=>{
+  button.onclick=()=>{
+    $("prompt").value=button.dataset.prompt;
     $("prompt").focus();
   };
 });
 
-/* ESCAPE KEY */
+$("settingsOverlay").onclick=event=>{
+  if(event.target===$("settingsOverlay")) closeSettings();
+};
 
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"){
     closeSettings();
     closeSidebar();
   }
 });
+
+/* START APP */
+restoreLoginSession().catch(error=>{
+  console.error("ESUKA startup error:",error);
+  authMessage("App start error: "+error.message);
+});
 </script>
+
+</body>
+</html>
