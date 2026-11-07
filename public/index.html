@@ -124,7 +124,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  color:var(--muted);font-size:11px;font-weight:700;
  letter-spacing:1px;margin:27px 0 12px 8px;
 }
-.history-list{overflow-y:auto;flex:1}
+.history-list{overflow-y:auto;flex:1;min-height:0}
 .history-item{
  display:flex;align-items:center;gap:10px;padding:12px 10px;
  border-radius:11px;color:var(--muted);font-size:13px;cursor:pointer;
@@ -297,6 +297,107 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .voice-wave i:nth-child(3n){animation-delay:.4s}
 .voice-panel p{font-size:11px;color:var(--muted);margin-top:7px}
 
+/* FULL SCREEN VOICE MODE */
+.voice-screen{
+ position:fixed;inset:0;z-index:150;background:#080808;color:#fff;
+ display:none;flex-direction:column;align-items:center;
+ padding:env(safe-area-inset-top) 22px env(safe-area-inset-bottom);
+ overflow:hidden;
+}
+.voice-screen.show{display:flex;animation:fade .25s}
+.voice-top{
+ width:100%;display:flex;align-items:center;justify-content:space-between;
+ min-height:65px;
+}
+.voice-top-title{font-size:15px;font-weight:750;letter-spacing:1px}
+.voice-close{
+ width:43px;height:43px;border-radius:50%;border:1px solid #383838;
+ background:#171717;color:#fff;font-size:22px;
+}
+.voice-center{
+ flex:1;display:flex;flex-direction:column;
+ justify-content:center;align-items:center;width:100%;min-height:0;
+}
+.voice-orb-wrap{
+ width:230px;height:230px;display:grid;place-items:center;
+ position:relative;margin-bottom:48px;
+}
+.voice-orb-ring{
+ position:absolute;width:100%;height:100%;border-radius:50%;
+ border:1px solid #555;opacity:.4;
+}
+.voice-orb-ring:nth-child(2){width:82%;height:82%;opacity:.5}
+.voice-orb-ring:nth-child(3){width:65%;height:65%;opacity:.65}
+.voice-orb{
+ width:125px;height:125px;border-radius:50%;
+ display:grid;place-items:center;background:
+ radial-gradient(circle at 35% 30%,#777,#292929 48%,#101010 78%);
+ border:1px solid #777;
+ box-shadow:0 0 35px #ffffff20,inset 0 0 25px #ffffff22;
+ font-size:58px;font-weight:900;color:white;
+ transition:transform .3s,box-shadow .3s;
+ position:relative;z-index:2;
+}
+.voice-screen.listening .voice-orb{
+ animation:orbListen 1.7s ease-in-out infinite;
+ box-shadow:0 0 50px #ffffff35,inset 0 0 30px #ffffff35;
+}
+.voice-screen.thinking .voice-orb{
+ animation:orbThink 1s linear infinite;
+}
+.voice-screen.speaking .voice-orb{
+ animation:orbSpeak .7s ease-in-out infinite alternate;
+ box-shadow:0 0 65px #ffffff55,inset 0 0 35px #ffffff44;
+}
+.voice-screen.listening .voice-orb-ring{
+ animation:ringPulse 2s ease-out infinite;
+}
+.voice-screen.listening .voice-orb-ring:nth-child(2){animation-delay:.4s}
+.voice-screen.listening .voice-orb-ring:nth-child(3){animation-delay:.8s}
+.voice-screen.speaking .voice-orb-ring{
+ animation:ringPulse .8s ease-out infinite;
+}
+@keyframes orbListen{
+ 0%,100%{transform:scale(1)}
+ 50%{transform:scale(1.08)}
+}
+@keyframes orbThink{
+ to{transform:rotate(360deg)}
+}
+@keyframes orbSpeak{
+ from{transform:scale(1)}
+ to{transform:scale(1.13)}
+}
+@keyframes ringPulse{
+ 0%{transform:scale(.8);opacity:.65}
+ 100%{transform:scale(1.3);opacity:0}
+}
+.voice-state{
+ font-size:19px;font-weight:650;text-align:center;
+}
+.voice-caption{
+ margin-top:12px;font-size:13px;color:#999;
+ text-align:center;max-width:310px;line-height:1.6;
+ min-height:42px;overflow-wrap:anywhere;
+}
+.voice-bottom{
+ width:100%;display:flex;flex-direction:column;
+ align-items:center;gap:18px;padding-bottom:25px;
+}
+.voice-controls{display:flex;align-items:center;justify-content:center;gap:20px}
+.voice-control{
+ width:58px;height:58px;border-radius:50%;
+ border:1px solid #444;background:#1a1a1a;color:white;
+ display:grid;place-items:center;font-size:21px;
+}
+.voice-control.end{background:#eee;color:#111;border:0}
+.voice-control svg{width:23px;height:23px}
+.voice-hint{font-size:11px;color:#777;text-align:center}
+@media(max-width:400px){
+ .voice-orb-wrap{width:195px;height:195px}
+ .voice-orb{width:110px;height:110px}
+}
+
 /* SETTINGS */
 .overlay{
  display:none;position:fixed;inset:0;background:#000a;z-index:60;
@@ -346,7 +447,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  position:fixed;bottom:95px;left:50%;transform:translateX(-50%);
  background:var(--panel2);border:1px solid var(--border);
  padding:11px 17px;border-radius:12px;font-size:12px;
- z-index:100;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;
+ z-index:250;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;
 }
 .toast.show{opacity:1;bottom:110px}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -390,26 +491,13 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   <div class="auth-logo">E</div>
   <div class="auth-title">ESUKA AI</div>
   <div class="auth-subtitle">Your AI Assistant · Your World</div>
-
-  <input class="auth-input" id="authEmail" type="email"
-   placeholder="Email address" autocomplete="email">
-
-  <input class="auth-input" id="authPassword" type="password"
-   placeholder="Password" autocomplete="current-password">
-
+  <input class="auth-input" id="authEmail" type="email" placeholder="Email address" autocomplete="email">
+  <input class="auth-input" id="authPassword" type="password" placeholder="Password" autocomplete="current-password">
   <button class="auth-btn primary" id="emailLoginBtn">Login</button>
   <button class="auth-btn" id="signupBtn">Create Account</button>
-
   <div class="auth-divider">OR CONTINUE WITH</div>
-
-  <button class="auth-btn auth-google" id="googleLoginBtn">
-   <span>G</span> Continue with Google
-  </button>
-
-  <button class="auth-btn auth-apple" id="appleLoginBtn">
-   <span>●</span> Continue with Apple
-  </button>
-
+  <button class="auth-btn auth-google" id="googleLoginBtn"><span>G</span> Continue with Google</button>
+  <button class="auth-btn auth-apple" id="appleLoginBtn"><span>●</span> Continue with Apple</button>
   <button class="auth-switch" id="forgotPasswordBtn">Forgot password?</button>
   <div class="auth-status" id="authStatus">Sign in to continue to ESUKA AI.</div>
   <div class="auth-terms">Your account is used to sign in to ESUKA AI.</div>
@@ -417,13 +505,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </section>
 
 <div class="app" id="appRoot" style="display:none">
-
 <aside class="sidebar" id="sidebar">
  <div class="brand">
   <div class="logo">E</div>
   <div><div class="brand-name">ESUKA AI</div><div class="brand-sub">Your AI Assistant</div></div>
  </div>
-
  <button class="side-btn active" id="newChatBtn">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8z"/></svg>
   New Chat
@@ -530,6 +616,32 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </main>
 </div>
 
+<!-- FULL SCREEN VOICE MODE -->
+<section class="voice-screen" id="voiceScreen" aria-label="ESUKA AI Voice Mode">
+ <div class="voice-top">
+  <button class="voice-close" id="voiceCloseBtn" aria-label="Close voice mode">×</button>
+  <div class="voice-top-title">ESUKA AI</div>
+  <div style="width:43px"></div>
+ </div>
+ <div class="voice-center">
+  <div class="voice-orb-wrap">
+   <div class="voice-orb-ring"></div>
+   <div class="voice-orb-ring"></div>
+   <div class="voice-orb-ring"></div>
+   <div class="voice-orb" id="voiceOrb">E</div>
+  </div>
+  <div class="voice-state" id="voiceState">Listening...</div>
+  <div class="voice-caption" id="voiceCaption">Speak naturally. I'm listening.</div>
+ </div>
+ <div class="voice-bottom">
+  <div class="voice-controls">
+   <button class="voice-control" id="voiceMuteBtn" aria-label="Pause listening">Ⅱ</button>
+   <button class="voice-control end" id="voiceEndBtn" aria-label="End voice conversation">■</button>
+  </div>
+  <div class="voice-hint" id="voiceHint">Voice conversation is active</div>
+ </div>
+</section>
+
 <!-- SETTINGS -->
 <div class="overlay" id="settingsOverlay">
  <section class="settings">
@@ -620,276 +732,163 @@ const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
 const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
 
 const supabaseClient=window.supabase.createClient(
- SUPABASE_URL,
- SUPABASE_KEY,
- {
-  auth:{
-   persistSession:true,
-   autoRefreshToken:true,
-   detectSessionInUrl:false,
-   flowType:"pkce"
-  }
- }
+ SUPABASE_URL,SUPABASE_KEY,
+ {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,flowType:"pkce"}}
 );
 
 let currentSession=null;
 let authBusy=false;
 let authReady=false;
-
 const $=id=>document.getElementById(id);
 
-function authMessage(message){
- $("authStatus").textContent=message;
-}
-
+function authMessage(message){$("authStatus").textContent=message}
 function showAuth(){
  $("authScreen").style.display="flex";
  $("appRoot").style.display="none";
 }
-
 function showApp(session){
  currentSession=session;
  $("authScreen").style.display="none";
  $("appRoot").style.display="flex";
-
  const email=session?.user?.email||"ESUKA AI User";
  $("profileEmail").textContent=email;
  $("profileName").textContent=email.split("@")[0]||"ESUKA AI User";
  $("profileAvatar").textContent=(email[0]||"E").toUpperCase();
-
- if(!authReady){
-  authReady=true;
-  loadData();
- }
+ if(!authReady){authReady=true;loadData()}
 }
 
 async function initializeAuth(){
  showAuth();
  authMessage("Checking your account...");
-
  try{
   const params=new URLSearchParams(window.location.search);
   const code=params.get("code");
   const oauthError=params.get("error_description")||params.get("error");
-
-  if(oauthError){
-   throw new Error(oauthError);
-  }
-
+  if(oauthError)throw new Error(oauthError);
   if(code){
-   authMessage("Completing Google sign in...");
-
+   authMessage("Completing sign in...");
    const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
-
    if(error)throw error;
-
-   if(!data.session){
-    throw new Error("Google login did not return a session.");
-   }
-
+   if(!data.session)throw new Error("Login did not return a session.");
    window.history.replaceState({},document.title,window.location.pathname);
    showApp(data.session);
    authMessage("");
    return;
   }
-
   const {data,error}=await supabaseClient.auth.getSession();
   if(error)throw error;
-
-  if(data.session){
-   showApp(data.session);
-  }else{
-   currentSession=null;
-   showAuth();
+  if(data.session)showApp(data.session);
+  else{
+   currentSession=null;showAuth();
    authMessage("Sign in to continue to ESUKA AI.");
   }
-
  }catch(error){
-  currentSession=null;
-  showAuth();
+  currentSession=null;showAuth();
   authMessage("Login error: "+error.message);
  }
 }
 
-/* Auth events */
 supabaseClient.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_IN"||event==="TOKEN_REFRESHED"||event==="INITIAL_SESSION"){
   if(session)showApp(session);
  }
  if(event==="SIGNED_OUT"){
-  currentSession=null;
-  showAuth();
+  currentSession=null;showAuth();
  }
 });
 
-/* Email login */
 async function emailLogin(){
  if(authBusy)return;
-
  const email=$("authEmail").value.trim();
  const password=$("authPassword").value;
-
- if(!email||!password){
-  authMessage("Email aur password enter karo.");
-  return;
- }
-
- authBusy=true;
- $("emailLoginBtn").disabled=true;
+ if(!email||!password){authMessage("Email aur password enter karo.");return}
+ authBusy=true;$("emailLoginBtn").disabled=true;
  authMessage("Logging in...");
-
  try{
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
   if(error)throw error;
   if(data.session)showApp(data.session);
- }catch(error){
-  authMessage(error.message);
- }finally{
-  authBusy=false;
-  $("emailLoginBtn").disabled=false;
- }
+ }catch(error){authMessage(error.message)}
+ finally{authBusy=false;$("emailLoginBtn").disabled=false}
 }
 
-/* Email signup */
 async function emailSignup(){
  if(authBusy)return;
-
  const email=$("authEmail").value.trim();
  const password=$("authPassword").value;
-
- if(!email||!password){
-  authMessage("Email aur password enter karo.");
-  return;
- }
- if(password.length<8){
-  authMessage("Password minimum 8 characters ka hona chahiye.");
-  return;
- }
-
- authBusy=true;
- $("signupBtn").disabled=true;
+ if(!email||!password){authMessage("Email aur password enter karo.");return}
+ if(password.length<8){authMessage("Password minimum 8 characters ka hona chahiye.");return}
+ authBusy=true;$("signupBtn").disabled=true;
  authMessage("Creating your account...");
-
  try{
   const {data,error}=await supabaseClient.auth.signUp({
    email,password,
-   options:{
-    emailRedirectTo:window.location.origin+window.location.pathname
-   }
+   options:{emailRedirectTo:window.location.origin+window.location.pathname}
   });
-
   if(error)throw error;
-
-  if(data.session){
-   showApp(data.session);
-  }else{
-   authMessage("Account created. Email confirmation link open karo, phir login karo.");
-  }
- }catch(error){
-  authMessage(error.message);
- }finally{
-  authBusy=false;
-  $("signupBtn").disabled=false;
- }
+  if(data.session)showApp(data.session);
+  else authMessage("Account created. Email confirmation link open karo, phir login karo.");
+ }catch(error){authMessage(error.message)}
+ finally{authBusy=false;$("signupBtn").disabled=false}
 }
 
-/* Google / Apple OAuth */
 async function oauthLogin(provider){
  if(authBusy)return;
-
  authBusy=true;
  const button=provider==="google"?$("googleLoginBtn"):$("appleLoginBtn");
  button.disabled=true;
  authMessage("Connecting to "+provider+"...");
-
  try{
   const redirectURL=window.location.origin+window.location.pathname;
-
   const {error}=await supabaseClient.auth.signInWithOAuth({
-   provider,
-   options:{
-    redirectTo:redirectURL
-   }
+   provider,options:{redirectTo:redirectURL}
   });
-
   if(error)throw error;
-
  }catch(error){
   authMessage("Login error: "+error.message);
-  authBusy=false;
-  button.disabled=false;
+  authBusy=false;button.disabled=false;
  }
 }
 
-/* Forgot password */
 async function forgotPassword(){
  const email=$("authEmail").value.trim();
-
- if(!email){
-  authMessage("Pehle email address enter karo.");
-  return;
- }
-
+ if(!email){authMessage("Pehle email address enter karo.");return}
  authMessage("Sending password reset email...");
-
  try{
   const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
    redirectTo:window.location.origin+window.location.pathname
   });
   if(error)throw error;
   authMessage("Password reset email bhej diya gaya hai. Inbox check karo.");
- }catch(error){
-  authMessage(error.message);
- }
+ }catch(error){authMessage(error.message)}
 }
 
-/* Logout */
 async function logout(){
  if(!confirm("Are you sure you want to logout?"))return;
-
- stopSpeaking();
- stopListening();
-
+ closeVoiceMode();
+ stopSpeaking();stopListening();
  const {error}=await supabaseClient.auth.signOut();
-
- if(error){
-  showToast(error.message);
-  return;
- }
-
- currentSession=null;
- currentHistory=[];
- currentChatId=null;
- $("messages").innerHTML="";
- $("welcome").style.display="block";
- showAuth();
- authMessage("You have been logged out.");
+ if(error){showToast(error.message);return}
+ currentSession=null;currentHistory=[];currentChatId=null;
+ $("messages").innerHTML="";$("welcome").style.display="block";
+ showAuth();authMessage("You have been logged out.");
 }
 
-/* Auth button events */
 $("emailLoginBtn").addEventListener("click",emailLogin);
 $("signupBtn").addEventListener("click",emailSignup);
 $("googleLoginBtn").addEventListener("click",()=>oauthLogin("google"));
 $("appleLoginBtn").addEventListener("click",()=>oauthLogin("apple"));
 $("forgotPasswordBtn").addEventListener("click",forgotPassword);
 $("logoutBtn").addEventListener("click",logout);
-
-$("authPassword").addEventListener("keydown",e=>{
- if(e.key==="Enter")emailLogin();
-});
+$("authPassword").addEventListener("keydown",e=>{if(e.key==="Enter")emailLogin()});
 
 /* APP CONFIG */
 const SETTINGS_VERSION="2";
 const defaults={
- language:"Hinglish",
- responseStyle:"Friendly",
- voiceEnabled:false,
- voiceType:"female",
- voiceSpeed:1,
- theme:"black",
- fontSize:"14"
+ language:"Hinglish",responseStyle:"Friendly",
+ voiceEnabled:false,voiceType:"female",voiceSpeed:1,
+ theme:"black",fontSize:"14"
 };
-
 let settings={...defaults};
 let imageMode=false;
 let busy=false;
@@ -899,11 +898,18 @@ let recognition=null;
 let listening=false;
 let currentChatId=null;
 
-function loadData(){
- try{
-  settings={...defaults,...JSON.parse(localStorage.getItem("esuka_settings")||"{}")};
- }catch(e){settings={...defaults}}
+/* VOICE MODE STATE */
+let voiceModeActive=false;
+let voicePaused=false;
+let voiceProcessing=false;
+let voiceSpeaking=false;
+let voiceRecognition=null;
+let voiceRestartTimer=null;
+let voiceLastTranscript="";
 
+function loadData(){
+ try{settings={...defaults,...JSON.parse(localStorage.getItem("esuka_settings")||"{}")}}
+ catch(e){settings={...defaults}}
  try{
   if(localStorage.getItem("esuka_settings_version")!==SETTINGS_VERSION){
    settings.voiceEnabled=false;
@@ -911,14 +917,11 @@ function loadData(){
    localStorage.setItem("esuka_settings",JSON.stringify(settings));
   }
  }catch(e){settings.voiceEnabled=false}
-
  try{
   savedChats=JSON.parse(localStorage.getItem("esuka_chats")||"[]");
   if(!Array.isArray(savedChats))savedChats=[];
  }catch(e){savedChats=[]}
-
- applySettings();
- renderHistory();
+ applySettings();renderHistory();
 }
 
 function saveSettings(){
@@ -932,8 +935,7 @@ function saveSettings(){
   fontSize:$("fontSize").value
  };
  localStorage.setItem("esuka_settings",JSON.stringify(settings));
- applySettings();
- showToast("Preferences saved");
+ applySettings();showToast("Preferences saved");
 }
 
 function applySettings(){
@@ -956,17 +958,14 @@ function openSettings(){$("settingsOverlay").classList.add("show")}
 function closeSettings(){$("settingsOverlay").classList.remove("show")}
 
 function showToast(message){
- const t=$("toast");
- t.textContent=message;
- t.classList.add("show");
+ const t=$("toast");t.textContent=message;t.classList.add("show");
  clearTimeout(showToast.timer);
  showToast.timer=setTimeout(()=>t.classList.remove("show"),2400);
 }
 
 function saveChats(){
- try{localStorage.setItem("esuka_chats",JSON.stringify(savedChats.slice(0,30)))}catch(e){
-  showToast("Storage full: old chats may need clearing");
- }
+ try{localStorage.setItem("esuka_chats",JSON.stringify(savedChats.slice(0,30)))}
+ catch(e){showToast("Storage full: old chats may need clearing")}
  renderHistory();
 }
 
@@ -974,41 +973,31 @@ function saveCurrentChat(){
  if(!currentHistory.length)return;
  const first=currentHistory.find(m=>m.role==="user");
  const title=(first?.content||"New Chat").slice(0,38);
- const item={
-  id:currentChatId||String(Date.now()),
-  title,
-  history:currentHistory,
-  date:Date.now()
- };
+ const item={id:currentChatId||String(Date.now()),title,history:currentHistory,date:Date.now()};
  const index=savedChats.findIndex(c=>c.id===item.id);
  if(index>=0)savedChats[index]=item;
  else savedChats.unshift(item);
- currentChatId=item.id;
- saveChats();
+ currentChatId=item.id;saveChats();
 }
 
 function renderHistory(){
  $("historyList").innerHTML="";
  savedChats.slice(0,20).forEach(chat=>{
-  const b=document.createElement("div");
-  b.className="history-item";
-  const icon=document.createElement("span");
-  icon.textContent="◷";
-  const label=document.createElement("span");
-  label.textContent=chat.title||"Chat";
-  b.append(icon,label);
-  b.addEventListener("click",()=>openChat(chat.id));
+  const b=document.createElement("div");b.className="history-item";
+  const icon=document.createElement("span");icon.textContent="◷";
+  const label=document.createElement("span");label.textContent=chat.title||"Chat";
+  b.append(icon,label);b.addEventListener("click",()=>openChat(chat.id));
   $("historyList").appendChild(b);
  });
 }
 
 function openChat(id){
+ closeVoiceMode();
  const chat=savedChats.find(c=>c.id===id);
  if(!chat)return;
  currentChatId=chat.id;
  currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
- renderMessages();
- closeSidebar();
+ renderMessages();closeSidebar();
 }
 
 function renderMessages(){
@@ -1021,203 +1010,107 @@ function renderMessages(){
 function addMessage(role,content,save=true){
  const row=document.createElement("div");
  row.className="message "+(role==="user"?"user":"assistant");
-
  const avatar=document.createElement("div");
- avatar.className="msg-avatar";
- avatar.textContent=role==="user"?"U":"E";
-
- const contentBox=document.createElement("div");
- contentBox.className="msg-content";
-
- const name=document.createElement("div");
- name.className="msg-name";
+ avatar.className="msg-avatar";avatar.textContent=role==="user"?"U":"E";
+ const contentBox=document.createElement("div");contentBox.className="msg-content";
+ const name=document.createElement("div");name.className="msg-name";
  name.textContent=role==="user"?"You":"ESUKA AI";
-
- const bubble=document.createElement("div");
- bubble.className="msg-bubble";
- bubble.textContent=content;
- contentBox.append(name,bubble);
+ const bubble=document.createElement("div");bubble.className="msg-bubble";
+ bubble.textContent=content;contentBox.append(name,bubble);
 
  if(role!=="user"){
-  const actions=document.createElement("div");
-  actions.className="msg-actions";
-
-  const copy=document.createElement("button");
-  copy.className="mini-btn";
-  copy.textContent="Copy";
-  copy.addEventListener("click",()=>copyText(content));
-
-  const listenBtn=document.createElement("button");
-  listenBtn.className="mini-btn";
-  listenBtn.textContent="Listen";
-  listenBtn.addEventListener("click",()=>speakText(content,true));
-
-  const stop=document.createElement("button");
-  stop.className="mini-btn";
-  stop.textContent="Stop";
-  stop.addEventListener("click",stopSpeaking);
-
-  actions.append(copy,listenBtn,stop);
-  contentBox.appendChild(actions);
+  const actions=document.createElement("div");actions.className="msg-actions";
+  const copy=document.createElement("button");copy.className="mini-btn";
+  copy.textContent="Copy";copy.addEventListener("click",()=>copyText(content));
+  const listenBtn=document.createElement("button");listenBtn.className="mini-btn";
+  listenBtn.textContent="Listen";listenBtn.addEventListener("click",()=>speakText(content,true));
+  const stop=document.createElement("button");stop.className="mini-btn";
+  stop.textContent="Stop";stop.addEventListener("click",stopSpeaking);
+  actions.append(copy,listenBtn,stop);contentBox.appendChild(actions);
  }
-
  if(role==="user")row.append(contentBox,avatar);
  else row.append(avatar,contentBox);
-
  $("messages").appendChild(row);
-
  if(save){
   currentHistory.push({role,content});
   if(role==="user")$("welcome").style.display="none";
   saveCurrentChat();
  }
-
- scrollBottom();
- return row;
+ scrollBottom();return row;
 }
 
 function addImage(url){
  const last=$("messages").lastElementChild;
  if(!last)return;
-
  const contentBox=last.querySelector(".msg-content");
  if(!contentBox)return;
-
  const img=document.createElement("img");
- img.className="generated-image";
- img.alt="Image generated by ESUKA AI";
+ img.className="generated-image";img.alt="Image generated by ESUKA AI";
  img.loading="eager";
-
- img.onload=()=>{
-  requestAnimationFrame(()=>img.classList.add("revealed"));
-  scrollBottom();
- };
- img.onerror=()=>{
-  img.remove();
-  showToast("Image could not be displayed");
- };
- img.src=url;
- contentBox.appendChild(img);
-
- const actions=document.createElement("div");
- actions.className="image-actions";
-
- const download=document.createElement("button");
- download.className="mini-btn";
+ img.onload=()=>{requestAnimationFrame(()=>img.classList.add("revealed"));scrollBottom()};
+ img.onerror=()=>{img.remove();showToast("Image could not be displayed")};
+ img.src=url;contentBox.appendChild(img);
+ const actions=document.createElement("div");actions.className="image-actions";
+ const download=document.createElement("button");download.className="mini-btn";
  download.textContent="↓ Download image";
  download.addEventListener("click",()=>downloadImage(url));
-
- const open=document.createElement("button");
- open.className="mini-btn";
+ const open=document.createElement("button");open.className="mini-btn";
  open.textContent="Open image";
  open.addEventListener("click",()=>{
   const win=window.open();
   if(win)win.location.href=url;
   else showToast("Pop-up blocked by browser");
  });
-
- actions.append(download,open);
- contentBox.appendChild(actions);
- scrollBottom();
+ actions.append(download,open);contentBox.appendChild(actions);scrollBottom();
 }
 
 function downloadImage(url){
  try{
-  const a=document.createElement("a");
-  a.href=url;
+  const a=document.createElement("a");a.href=url;
   a.download="esuka-ai-image-"+Date.now()+".png";
-  a.style.display="none";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  showToast("Download started");
+  a.style.display="none";document.body.appendChild(a);
+  a.click();a.remove();showToast("Download started");
  }catch(e){showToast("Download not available in this browser")}
 }
 
-function scrollBottom(){
- $("chatArea").scrollTop=$("chatArea").scrollHeight;
-}
+function scrollBottom(){$("chatArea").scrollTop=$("chatArea").scrollHeight}
 
 function showTyping(){
- const row=document.createElement("div");
- row.className="message assistant";
- row.id="typingRow";
+ const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
  row.innerHTML='<div class="msg-avatar">E</div><div><div class="msg-name">ESUKA AI</div><div class="msg-bubble"><div class="typing"><i></i><i></i><i></i></div><div class="thinking-text">ESUKA is thinking...</div></div></div>';
- $("messages").appendChild(row);
- scrollBottom();
+ $("messages").appendChild(row);scrollBottom();
 }
 
 function showImageProcessing(){
- const row=document.createElement("div");
- row.className="message assistant";
- row.id="typingRow";
-
- const avatar=document.createElement("div");
- avatar.className="msg-avatar";
- avatar.textContent="E";
-
- const box=document.createElement("div");
- box.className="msg-content";
-
- const name=document.createElement("div");
- name.className="msg-name";
- name.textContent="ESUKA AI";
-
- const panel=document.createElement("div");
- panel.className="image-processing";
-
- const skeleton=document.createElement("div");
- skeleton.className="image-preview-skeleton";
-
- const info=document.createElement("div");
- info.className="image-processing-info";
-
- const spinner=document.createElement("div");
- spinner.className="image-spinner";
-
+ const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
+ const avatar=document.createElement("div");avatar.className="msg-avatar";avatar.textContent="E";
+ const box=document.createElement("div");box.className="msg-content";
+ const name=document.createElement("div");name.className="msg-name";name.textContent="ESUKA AI";
+ const panel=document.createElement("div");panel.className="image-processing";
+ const skeleton=document.createElement("div");skeleton.className="image-preview-skeleton";
+ const info=document.createElement("div");info.className="image-processing-info";
+ const spinner=document.createElement("div");spinner.className="image-spinner";
  const words=document.createElement("div");
- const title=document.createElement("div");
- title.className="image-processing-title";
- title.textContent="Creating your image";
-
- const sub=document.createElement("div");
- sub.className="image-processing-sub";
- sub.textContent="Preparing details and rendering your image...";
-
- words.append(title,sub);
- info.append(spinner,words);
- panel.append(skeleton,info);
- box.append(name,panel);
- row.append(avatar,box);
- $("messages").appendChild(row);
- scrollBottom();
+ const title=document.createElement("div");title.className="image-processing-title";title.textContent="Creating your image";
+ const sub=document.createElement("div");sub.className="image-processing-sub";sub.textContent="Preparing details and rendering your image...";
+ words.append(title,sub);info.append(spinner,words);panel.append(skeleton,info);
+ box.append(name,panel);row.append(avatar,box);$("messages").appendChild(row);scrollBottom();
 }
-
 function removeTyping(){$("typingRow")?.remove()}
 
 function newChat(){
- stopSpeaking();
- stopListening();
- currentHistory=[];
- currentChatId=null;
- $("messages").innerHTML="";
- $("welcome").style.display="block";
- imageMode=false;
- updateMode();
- $("prompt").value="";
- closeSidebar();
+ closeVoiceMode();stopSpeaking();stopListening();
+ currentHistory=[];currentChatId=null;
+ $("messages").innerHTML="";$("welcome").style.display="block";
+ imageMode=false;updateMode();$("prompt").value="";closeSidebar();
 }
 
 function clearChat(){
  if(!confirm("Clear all saved chat history?"))return;
- savedChats=[];
- currentHistory=[];
- currentChatId=null;
+ savedChats=[];currentHistory=[];currentChatId=null;
  localStorage.removeItem("esuka_chats");
- $("messages").innerHTML="";
- $("welcome").style.display="block";
- renderHistory();
- showToast("Chat history cleared");
+ $("messages").innerHTML="";$("welcome").style.display="block";
+ renderHistory();showToast("Chat history cleared");
 }
 
 function updateMode(){
@@ -1225,13 +1118,10 @@ function updateMode(){
  $("attachBtn").classList.toggle("active",imageMode);
  $("sideImageBtn").classList.toggle("active",imageMode);
 }
-
 function toggleImageMode(){
- imageMode=!imageMode;
- updateMode();
+ imageMode=!imageMode;updateMode();
  showToast(imageMode?"Image mode ON":"Image mode OFF");
 }
-
 function closeSidebar(){
  $("sidebar").classList.remove("open");
  $("backdrop").classList.remove("show");
@@ -1250,35 +1140,30 @@ function buildPreferenceMessage(text){
 function isImageRequest(text){
  const s=String(text||"").toLowerCase().trim();
  if(!s)return false;
-
  if(/\b(how|what|why|where|kaise|kyun|kis tarah)\b.*\b(make|create|generate|draw|bana|banaye)\b/i.test(s))return false;
-
  const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र|पोस्टर|वॉलपेपर)\b/i;
  const createWords=/\b(make|create|generate|draw|design|bana|banao|banado|banaao|banaaye|bana do|bana ke do|taiyar karo|generate karo|generate kar do|create karo|draw karo)\b/i;
  const directDraw=/\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
-
  return (imageWords.test(s)&&createWords.test(s))||directDraw.test(s);
 }
 
-async function sendMessage(){
- if(!currentSession){
-  showAuth();
-  return;
- }
-
- const text=$("prompt").value.trim();
+/* CHAT REQUEST - VOICE MODE REUSES SAME WORKER API */
+async function sendMessage(voiceConversation=false,voiceText=""){
+ if(!currentSession){showAuth();return}
+ const text=String(voiceText||$("prompt").value).trim();
  if(!text||busy)return;
-
- $("prompt").value="";
- $("prompt").style.height="auto";
+ $("prompt").value="";$("prompt").style.height="auto";
  addMessage("user",text);
 
- const useImage=imageMode||isImageRequest(text);
- busy=true;
- $("sendBtn").disabled=true;
-
+ const useImage=!voiceConversation&&(imageMode||isImageRequest(text));
+ busy=true;$("sendBtn").disabled=true;
  if(useImage)showImageProcessing();
  else showTyping();
+
+ if(voiceConversation){
+  voiceProcessing=true;
+  setVoiceState("thinking","Thinking...","Your message is being processed.");
+ }
 
  try{
   const payload=useImage
@@ -1287,23 +1172,17 @@ async function sendMessage(){
 
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),90000);
-
   let response;
   try{
    response=await fetch(API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(payload),
-    signal:controller.signal
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload),signal:controller.signal
    });
-  }finally{
-   clearTimeout(timeout);
-  }
+  }finally{clearTimeout(timeout)}
 
   let data;
   try{data=await response.json()}
   catch(e){throw new Error("Server returned an invalid response")}
-
   removeTyping();
 
   if(!response.ok||data.success===false){
@@ -1312,73 +1191,80 @@ async function sendMessage(){
 
   if(useImage){
    const image=data.image||data.url||data.result?.image||data.result?.url||data.output;
-   if(typeof image!=="string"||!image){
-    throw new Error("Image provider did not return an image");
-   }
-
+   if(typeof image!=="string"||!image)throw new Error("Image provider did not return an image");
    let imageURL=image;
    if(!image.startsWith("data:image/")&&!image.startsWith("http")){
     imageURL="data:image/png;base64,"+image;
    }
-
-   addMessage("assistant","Your image is ready.");
-   addImage(imageURL);
+   addMessage("assistant","Your image is ready.");addImage(imageURL);
   }else{
    const reply=data.reply||data.response||data.text||data.message||data.result?.reply;
    if(!reply)throw new Error("Empty response from AI");
-   addMessage("assistant",String(reply));
-   if(settings.voiceEnabled)speakText(String(reply),false);
-  }
+   const answer=String(reply);
+   addMessage("assistant",answer);
 
+   if(voiceConversation&&voiceModeActive){
+    voiceProcessing=false;
+    speakText(answer,false,true);
+   }else if(settings.voiceEnabled){
+    speakText(answer,false,false);
+   }
+  }
  }catch(error){
   removeTyping();
   const message=error.name==="AbortError"
    ?"Request timed out. Please try again."
    :error.message||"Unknown error";
-  addMessage("assistant","Sorry, kuch problem aa gayi: "+message);
+  const errorReply="Sorry, kuch problem aa gayi: "+message;
+  addMessage("assistant",errorReply);
+  if(voiceConversation&&voiceModeActive){
+   voiceProcessing=false;
+   speakText(errorReply,false,true);
+  }
  }finally{
-  busy=false;
-  $("sendBtn").disabled=false;
-  imageMode=false;
-  updateMode();
-  $("prompt").focus();
+  busy=false;$("sendBtn").disabled=false;
+  if(!voiceConversation){
+   imageMode=false;updateMode();$("prompt").focus();
+  }else{
+   voiceProcessing=false;
+   if(voiceModeActive&&!voiceSpeaking&&!voicePaused){
+    scheduleVoiceListening(700);
+   }
+  }
  }
 }
 
 function copyText(text){
  if(navigator.clipboard?.writeText){
-  navigator.clipboard.writeText(text)
-   .then(()=>showToast("Copied"))
-   .catch(()=>fallbackCopy(text));
+  navigator.clipboard.writeText(text).then(()=>showToast("Copied")).catch(()=>fallbackCopy(text));
  }else fallbackCopy(text);
 }
 function fallbackCopy(text){
- const t=document.createElement("textarea");
- t.value=text;
- document.body.appendChild(t);
- t.select();
+ const t=document.createElement("textarea");t.value=text;
+ document.body.appendChild(t);t.select();
  try{document.execCommand("copy");showToast("Copied")}
  catch(e){showToast("Copy not available")}
  t.remove();
 }
 
+/* TEXT TO SPEECH */
 function stopSpeaking(){
  if("speechSynthesis" in window)window.speechSynthesis.cancel();
+ voiceSpeaking=false;
 }
 
-function speakText(text,manual=false){
- if(!manual&&!settings.voiceEnabled)return;
-
+function speakText(text,manual=false,voiceConversation=false){
+ if(!manual&&!voiceConversation&&!settings.voiceEnabled)return;
  if(!("speechSynthesis" in window)){
   showToast("Voice not supported in this browser");
+  if(voiceConversation&&voiceModeActive)scheduleVoiceListening(500);
   return;
  }
 
- stopSpeaking();
-
+ window.speechSynthesis.cancel();
  const voices=window.speechSynthesis.getVoices();
  const utterance=new SpeechSynthesisUtterance(text);
- utterance.rate=Number(settings.voiceSpeed);
+ utterance.rate=Number(settings.voiceSpeed)||1;
  utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
 
  if(settings.voiceType!=="system"){
@@ -1386,43 +1272,60 @@ function speakText(text,manual=false){
   const namePattern=settings.voiceType==="female"
    ?/female|woman|heera|priya|neerja|lekha/i
    :/male|man|ravi|amit|rahul/i;
-
-  const selected=indianVoices.find(v=>namePattern.test(v.name));
-
-  if(!selected){
-   showToast("Selected voice is not available on this device");
-   return;
-  }
-  utterance.voice=selected;
+  const selected=indianVoices.find(v=>namePattern.test(v.name))
+   ||indianVoices.find(v=>v.lang.toLowerCase()==="hi-in")
+   ||indianVoices.find(v=>v.lang.toLowerCase()==="en-in")
+   ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
+   ||voices.find(v=>v.lang.toLowerCase().startsWith("en"));
+  if(selected)utterance.voice=selected;
  }else if(voices.length){
-  const selected=voices.find(v=>v.lang.toLowerCase()==="en-in"||v.lang.toLowerCase()==="hi-in");
+  const selected=voices.find(v=>v.lang.toLowerCase()==="en-in"||v.lang.toLowerCase()==="hi-in")
+   ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
+   ||voices.find(v=>v.lang.toLowerCase().startsWith("en"));
   if(selected)utterance.voice=selected;
  }
 
- utterance.onerror=()=>showToast("Voice playback failed");
+ utterance.onstart=()=>{
+  if(voiceConversation&&voiceModeActive){
+   voiceSpeaking=true;
+   setVoiceState("speaking","ESUKA is speaking...","Listen to my response.");
+  }
+ };
+ utterance.onend=()=>{
+  voiceSpeaking=false;
+  if(voiceConversation&&voiceModeActive&&!voicePaused){
+   voiceProcessing=false;
+   scheduleVoiceListening(500);
+  }
+ };
+ utterance.onerror=()=>{
+  voiceSpeaking=false;
+  if(voiceConversation&&voiceModeActive&&!voicePaused){
+   voiceProcessing=false;
+   scheduleVoiceListening(700);
+  }else if(manual){
+   showToast("Voice playback failed");
+  }
+ };
  window.speechSynthesis.speak(utterance);
 }
 
+/* NORMAL CHAT MIC - ONE SHOT ONLY */
 function startListening(){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SpeechRecognition){
-  showToast("Voice input not supported in this browser");
-  return;
+  showToast("Voice input not supported in this browser");return;
  }
  if(listening){stopListening();return}
-
  recognition=new SpeechRecognition();
  recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
  recognition.interimResults=true;
  recognition.continuous=false;
-
  recognition.onstart=()=>{
-  listening=true;
-  $("voicePanel").classList.add("show");
+  listening=true;$("voicePanel").classList.add("show");
   $("voiceStatus").textContent="Listening... Speak now";
   $("micBtn").classList.add("active");
  };
-
  recognition.onresult=e=>{
   let transcript="";
   for(let i=e.resultIndex;i<e.results.length;i++){
@@ -1430,33 +1333,175 @@ function startListening(){
   }
   $("prompt").value=transcript;
  };
-
- recognition.onerror=e=>{
-  showToast("Voice input: "+e.error);
- };
-
+ recognition.onerror=e=>showToast("Voice input: "+e.error);
  recognition.onend=()=>{
-  listening=false;
-  $("voicePanel").classList.remove("show");
+  listening=false;$("voicePanel").classList.remove("show");
   $("micBtn").classList.remove("active");
  };
-
- try{recognition.start()}
- catch(e){showToast("Microphone could not start")}
+ try{recognition.start()}catch(e){showToast("Microphone could not start")}
 }
-
 function stopListening(){
- if(recognition){
-  try{recognition.stop()}catch(e){}
- }
+ if(recognition){try{recognition.stop()}catch(e){}}
  listening=false;
  $("voicePanel").classList.remove("show");
  $("micBtn").classList.remove("active");
 }
-
 function toggleVoice(){
  if(listening)stopListening();
  else startListening();
+}
+
+/* FULL SCREEN CONTINUOUS VOICE MODE */
+function setVoiceState(state,title,caption){
+ const screen=$("voiceScreen");
+ screen.classList.remove("listening","thinking","speaking");
+ screen.classList.add(state);
+ $("voiceState").textContent=title;
+ $("voiceCaption").textContent=caption||"";
+}
+
+function openVoiceMode(){
+ if(!currentSession){showAuth();return}
+ if(voiceModeActive)return;
+
+ voiceModeActive=true;
+ voicePaused=false;
+ voiceProcessing=false;
+ voiceSpeaking=false;
+ voiceLastTranscript="";
+ $("voiceScreen").classList.add("show");
+ $("voiceMuteBtn").textContent="Ⅱ";
+ $("voiceHint").textContent="Voice conversation is active";
+
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition){
+  setVoiceState("thinking","Voice unavailable","This browser does not support speech recognition. Try a supported browser.");
+  showToast("Speech recognition is not supported here");
+  return;
+ }
+ setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
+ startVoiceListening();
+}
+
+function startVoiceListening(){
+ if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking)return;
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition)return;
+
+ if(voiceRecognition){
+  try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
+  voiceRecognition=null;
+ }
+
+ const rec=new SpeechRecognition();
+ voiceRecognition=rec;
+ rec.lang=settings.language==="English"?"en-IN":"hi-IN";
+ rec.interimResults=true;
+ rec.continuous=false;
+ rec.maxAlternatives=1;
+ let finalTranscript="";
+ let submitted=false;
+
+ rec.onstart=()=>{
+  if(!voiceModeActive)return;
+  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
+ };
+
+ rec.onresult=e=>{
+  let interim="";
+  for(let i=e.resultIndex;i<e.results.length;i++){
+   const result=e.results[i];
+   if(result.isFinal)finalTranscript+=result[0].transcript+" ";
+   else interim+=result[0].transcript;
+  }
+  const display=(finalTranscript+interim).trim();
+  if(display){
+   $("voiceCaption").textContent=display;
+  }
+  if(finalTranscript.trim()&&!submitted){
+   submitted=true;
+   const transcript=finalTranscript.trim();
+   voiceLastTranscript=transcript;
+   voiceProcessing=true;
+   try{rec.stop()}catch(e){}
+   sendMessage(true,transcript);
+  }
+ };
+
+ rec.onerror=e=>{
+  if(!voiceModeActive||voicePaused)return;
+  if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+   setVoiceState("thinking","Microphone permission needed","Allow microphone access in your browser settings, then reopen Voice Mode.");
+   showToast("Microphone permission denied");
+   voicePaused=true;
+   $("voiceHint").textContent="Microphone permission is required";
+  }else if(e.error!=="aborted"&&e.error!=="no-speech"){
+   $("voiceCaption").textContent="Trying to listen again...";
+  }
+ };
+
+ rec.onend=()=>{
+  if(voiceRecognition===rec)voiceRecognition=null;
+  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking){
+   scheduleVoiceListening(600);
+  }
+ };
+
+ try{rec.start()}
+ catch(e){
+  if(voiceModeActive&&!voicePaused){
+   scheduleVoiceListening(1000);
+  }
+ }
+}
+
+function scheduleVoiceListening(delay=600){
+ clearTimeout(voiceRestartTimer);
+ if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking)return;
+ voiceRestartTimer=setTimeout(()=>{
+  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking){
+   startVoiceListening();
+  }
+ },delay);
+}
+
+function pauseVoiceMode(){
+ if(!voiceModeActive)return;
+ voicePaused=!voicePaused;
+ if(voicePaused){
+  clearTimeout(voiceRestartTimer);
+  if(voiceRecognition){
+   try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
+   voiceRecognition=null;
+  }
+  stopSpeaking();
+  voiceProcessing=false;
+  setVoiceState("thinking","Paused","Press play to continue the conversation.");
+  $("voiceMuteBtn").textContent="▶";
+  $("voiceHint").textContent="Conversation paused";
+ }else{
+  $("voiceMuteBtn").textContent="Ⅱ";
+  $("voiceHint").textContent="Voice conversation is active";
+  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
+  startVoiceListening();
+ }
+}
+
+function closeVoiceMode(){
+ voiceModeActive=false;
+ voicePaused=false;
+ voiceProcessing=false;
+ voiceSpeaking=false;
+ clearTimeout(voiceRestartTimer);
+
+ if(voiceRecognition){
+  try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
+  voiceRecognition=null;
+ }
+ stopSpeaking();
+ $("voiceScreen").classList.remove("show","listening","thinking","speaking");
+ $("voiceMuteBtn").textContent="Ⅱ";
+ $("voiceHint").textContent="Voice conversation is active";
 }
 
 function toggleVoiceSetting(){
@@ -1471,9 +1516,7 @@ function resetSettings(){
  settings={...defaults};
  localStorage.setItem("esuka_settings",JSON.stringify(settings));
  localStorage.setItem("esuka_settings_version",SETTINGS_VERSION);
- applySettings();
- stopSpeaking();
- showToast("Settings reset");
+ applySettings();stopSpeaking();showToast("Settings reset");
 }
 
 function cycleTheme(){
@@ -1481,39 +1524,37 @@ function cycleTheme(){
  const index=themes.indexOf(settings.theme);
  settings.theme=themes[(index+1)%themes.length];
  localStorage.setItem("esuka_settings",JSON.stringify(settings));
- applySettings();
- showToast("Theme: "+settings.theme);
+ applySettings();showToast("Theme: "+settings.theme);
 }
 
 /* BUTTON EVENTS */
 $("newChatBtn").addEventListener("click",newChat);
 $("sideImageBtn").addEventListener("click",toggleImageMode);
 $("attachBtn").addEventListener("click",toggleImageMode);
-$("sideVoiceBtn").addEventListener("click",toggleVoice);
+$("sideVoiceBtn").addEventListener("click",openVoiceMode);
 $("micBtn").addEventListener("click",toggleVoice);
 $("stopVoiceBtn").addEventListener("click",stopListening);
-$("sendBtn").addEventListener("click",sendMessage);
+$("sendBtn").addEventListener("click",()=>sendMessage(false));
 $("clearBtn").addEventListener("click",clearChat);
 $("historyBtn").addEventListener("click",()=>{
- renderHistory();
- showToast("Your recent chats are shown in the sidebar");
+ renderHistory();showToast("Your recent chats are shown in the sidebar");
 });
 $("settingsBtn").addEventListener("click",openSettings);
 $("topSettingsBtn").addEventListener("click",openSettings);
 $("closeSettings").addEventListener("click",closeSettings);
 $("cancelSettings").addEventListener("click",closeSettings);
-$("saveSettings").addEventListener("click",()=>{
- saveSettings();
- closeSettings();
-});
+$("saveSettings").addEventListener("click",()=>{saveSettings();closeSettings()});
 $("resetSettingsBtn").addEventListener("click",resetSettings);
 $("settingsClearBtn").addEventListener("click",clearChat);
 $("voiceToggle").addEventListener("click",toggleVoiceSetting);
 
+$("voiceCloseBtn").addEventListener("click",closeVoiceMode);
+$("voiceEndBtn").addEventListener("click",closeVoiceMode);
+$("voiceMuteBtn").addEventListener("click",pauseVoiceMode);
+
 $("voiceSpeed").addEventListener("input",()=>{
  $("speedValue").textContent=Number($("voiceSpeed").value).toFixed(1)+"x";
 });
-
 $("themeBtn").addEventListener("click",cycleTheme);
 $("aboutBtn").addEventListener("click",()=>{
  alert("ESUKA AI\nVersion 1.2\nYour AI Assistant\nMade by Katari");
@@ -1524,30 +1565,24 @@ $("backdrop").addEventListener("click",closeSidebar);
 $("settingsOverlay").addEventListener("click",e=>{
  if(e.target===$("settingsOverlay"))closeSettings();
 });
-
 $("prompt").addEventListener("input",e=>{
  e.target.style.height="auto";
  e.target.style.height=Math.min(e.target.scrollHeight,130)+"px";
 });
-
 $("prompt").addEventListener("keydown",e=>{
  if(e.key==="Enter"&&!e.shiftKey){
-  e.preventDefault();
-  sendMessage();
+  e.preventDefault();sendMessage(false);
  }
 });
-
 document.querySelectorAll(".suggestion").forEach(btn=>{
  btn.addEventListener("click",()=>{
-  $("prompt").value=btn.dataset.prompt;
-  $("prompt").focus();
+  $("prompt").value=btn.dataset.prompt;$("prompt").focus();
  });
 });
-
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
-  closeSettings();
-  closeSidebar();
+  closeSettings();closeSidebar();
+  if(voiceModeActive)closeVoiceMode();
  }
 });
 
