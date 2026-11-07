@@ -1430,138 +1430,165 @@ function openVoiceMode(){
 
 /* UPDATED iPHONE VOICE RECOGNITION */
 function startVoiceListening(){
- if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
+ if(!voiceModeActive || voicePaused || voiceProcessing || voiceSpeaking || busy) return;
 
- const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SpeechRecognition)return;
+ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+ if(!SpeechRecognition){
+  setVoiceState(
+   "thinking",
+   "Voice not supported",
+   "Please use Safari or Chrome with microphone permission."
+  );
+  return;
+ }
 
  if(voiceRecognition){
   try{
-   voiceRecognition.onend=null;
+   voiceRecognition.onend = null;
+   voiceRecognition.onerror = null;
+   voiceRecognition.onresult = null;
    voiceRecognition.stop();
   }catch(e){}
-  voiceRecognition=null;
+  voiceRecognition = null;
  }
 
- const rec=new SpeechRecognition();
- voiceRecognition=rec;
+ const rec = new SpeechRecognition();
+ voiceRecognition = rec;
 
- rec.lang=settings.language==="English"?"en-IN":"hi-IN";
- rec.interimResults=true;
- rec.continuous=false;
- rec.maxAlternatives=1;
+ rec.lang = settings.language === "English" ? "en-IN" : "hi-IN";
+ rec.interimResults = true;
+ rec.continuous = false;
+ rec.maxAlternatives = 1;
 
- let submitted=false;
- let finalTranscript="";
- let interimTranscript="";
+ let finalTranscript = "";
+ let interimTranscript = "";
+ let submitted = false;
+ let silenceTimer = null;
 
- function submitTranscript(){
-  if(submitted||!voiceModeActive||voicePaused)return;
+ function submitVoice(){
+  if(submitted || !voiceModeActive || voicePaused) return;
 
-  const transcript=(finalTranscript+" "+interimTranscript).trim();
-  if(!transcript)return;
+  const transcript = (finalTranscript + " " + interimTranscript).trim();
 
-  submitted=true;
-  voiceLastTranscript=transcript;
+  if(!transcript) return;
 
+  submitted = true;
+  clearTimeout(silenceTimer);
   clearTimeout(voiceRestartTimer);
 
-  voiceProcessing=true;
-  voiceSpeaking=false;
-
-  if(voiceRecognition===rec)voiceRecognition=null;
+  voiceLastTranscript = transcript;
+  voiceProcessing = true;
 
   try{
-   rec.onend=null;
+   rec.onend = null;
    rec.stop();
   }catch(e){}
 
-  setVoiceState("thinking","Thinking...","ESUKA is preparing your reply.");
-  sendMessage(true,transcript);
+  if(voiceRecognition === rec) voiceRecognition = null;
+
+  $("voiceCaption").textContent = transcript;
+
+  setVoiceState(
+   "thinking",
+   "Thinking...",
+   "ESUKA AI is preparing a reply."
+  );
+
+  sendMessage(true, transcript);
  }
 
- rec.onstart=()=>{
-  if(!voiceModeActive||voicePaused)return;
+ rec.onstart = ()=>{
+  if(!voiceModeActive || voicePaused) return;
 
-  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
+  setVoiceState(
+   "listening",
+   "Listening...",
+   "Speak naturally. I'm listening."
+  );
  };
 
- rec.onresult=e=>{
-  finalTranscript="";
-  interimTranscript="";
+ rec.onresult = (e)=>{
+  finalTranscript = "";
+  interimTranscript = "";
 
-  /* Rebuild the transcript from all results.
-     This prevents duplicate interim words on iPhone. */
-  for(let i=0;i<e.results.length;i++){
-   const result=e.results[i];
-   const words=result[0]?.transcript||"";
+  for(let i = 0; i < e.results.length; i++){
+   const result = e.results[i];
+   const words = result[0].transcript;
 
    if(result.isFinal){
-    finalTranscript+=words+" ";
+    finalTranscript += words + " ";
    }else{
-    interimTranscript+=words+" ";
+    interimTranscript += words + " ";
    }
   }
 
-  const display=(finalTranscript+" "+interimTranscript).trim();
+  const display = (finalTranscript + interimTranscript).trim();
 
   if(display){
-   $("voiceCaption").textContent=display;
+   $("voiceCaption").textContent = display;
+
+   clearTimeout(silenceTimer);
+
+   silenceTimer = setTimeout(()=>{
+    submitVoice();
+   }, 1300);
   }
 
   if(finalTranscript.trim()){
-   submitTranscript();
+   submitVoice();
   }
  };
 
- rec.onerror=e=>{
-  if(!voiceModeActive||voicePaused)return;
+ rec.onerror = (e)=>{
+  clearTimeout(silenceTimer);
 
-  if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+  if(!voiceModeActive || voicePaused) return;
+
+  if(e.error === "not-allowed" || e.error === "service-not-allowed"){
+   voicePaused = true;
+
    setVoiceState(
     "thinking",
     "Microphone permission needed",
-    "Allow microphone access in browser settings, then reopen Voice Mode."
+    "Allow microphone access in your browser settings."
    );
 
    showToast("Microphone permission denied");
-   voicePaused=true;
-   $("voiceMuteBtn").textContent="▶";
-   $("voiceHint").textContent="Microphone permission is required";
-  }else if(e.error!=="aborted"&&e.error!=="no-speech"){
-   $("voiceCaption").textContent="Trying to listen again...";
+
+   $("voiceMuteBtn").textContent = "▶";
+   $("voiceHint").textContent = "Microphone permission is required";
+
+  }else if(e.error !== "aborted" && e.error !== "no-speech"){
+   $("voiceCaption").textContent = "Trying to listen again...";
   }
  };
 
- rec.onend=()=>{
-  if(voiceRecognition===rec)voiceRecognition=null;
+ rec.onend = ()=>{
+  clearTimeout(silenceTimer);
 
-  /* iOS sometimes ends recognition without isFinal.
-     Send the available interim transcript as a fallback. */
-  if(!submitted&&voiceModeActive&&!voicePaused){
-   const available=(finalTranscript+" "+interimTranscript).trim();
-
-   if(available){
-    submitTranscript();
-    return;
-   }
+  if(voiceRecognition === rec){
+   voiceRecognition = null;
   }
 
-  if(
-   voiceModeActive&&
-   !voicePaused&&
-   !voiceProcessing&&
-   !voiceSpeaking&&
-   !busy
-  ){
-   scheduleVoiceListening(650);
+  if(submitted) return;
+
+  const transcript = (finalTranscript + " " + interimTranscript).trim();
+
+  if(transcript){
+   submitVoice();
+   return;
+  }
+
+  if(voiceModeActive && !voicePaused && !voiceProcessing && !voiceSpeaking && !busy){
+   scheduleVoiceListening(600);
   }
  };
 
  try{
   rec.start();
  }catch(e){
-  if(voiceModeActive&&!voicePaused){
+  if(voiceModeActive && !voicePaused){
    scheduleVoiceListening(1000);
   }
  }
