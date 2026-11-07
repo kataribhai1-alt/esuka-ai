@@ -6,56 +6,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080808">
 <title>ESUKA AI</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}
 button,input,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-
-#authScreen{
- min-height:100vh;display:flex;align-items:center;
- justify-content:center;padding:20px
-}
-.authBox{
- width:100%;max-width:390px;background:#111;
- border:1px solid #292929;border-radius:22px;
- padding:28px 23px;text-align:center
-}
+#authScreen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}
+.authBox{width:100%;max-width:390px;background:#111;border:1px solid #292929;border-radius:22px;padding:28px 23px;text-align:center}
 .logo{font-size:32px;font-weight:900;letter-spacing:3px}
 .sub{color:#999;font-size:14px;margin:10px 0 25px}
-.authBox input{
- width:100%;padding:15px;margin:7px 0;
- background:#080808;border:1px solid #333;
- color:white;border-radius:12px;outline:none
-}
-.btn{
- width:100%;padding:15px;border:0;border-radius:12px;
- margin:7px 0;font-weight:700
-}
+.authBox input{width:100%;padding:15px;margin:7px 0;background:#080808;border:1px solid #333;color:white;border-radius:12px;outline:none}
+.btn{width:100%;padding:15px;border:0;border-radius:12px;margin:7px 0;font-weight:700}
 .white{background:#fff;color:#000}
 .dark{background:#222;color:#fff;border:1px solid #383838}
-#status{font-size:13px;color:#bbb;margin-top:12px;min-height:18px}
-
+#status{font-size:13px;color:#bbb;margin-top:12px;min-height:20px;overflow-wrap:anywhere}
 #app{height:100dvh;display:flex;flex-direction:column}
-header{
- height:62px;display:flex;align-items:center;
- justify-content:space-between;padding:0 17px;
- border-bottom:1px solid #252525;background:#101010
-}
+header{height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;border-bottom:1px solid #252525;background:#101010}
 .brand{font-size:20px;font-weight:900;letter-spacing:1px}
 .headerBtns{display:flex;gap:9px}
-.smallBtn{
- background:#222;color:white;border:1px solid #383838;
- border-radius:9px;padding:9px 12px
-}
-#messages{
- flex:1;overflow-y:auto;padding:18px 14px;
- width:100%;max-width:850px;margin:auto
-}
+.smallBtn{background:#222;color:white;border:1px solid #383838;border-radius:9px;padding:9px 12px}
+#messages{flex:1;overflow-y:auto;padding:18px 14px;width:100%;max-width:850px;margin:auto}
 .welcome{text-align:center;margin:18vh auto 25px}
 .welcome h1{font-size:29px}
 .welcome p{color:#999}
@@ -64,51 +36,31 @@ header{
 .ai{padding:8px 3px}
 .aiName{font-size:13px;color:#b69aff;margin-bottom:8px;font-weight:bold}
 .typing{color:#aaa;font-size:14px}
-#composerWrap{
- padding:12px 13px 18px;border-top:1px solid #252525;
- background:#101010
-}
-.composer{
- max-width:850px;margin:auto;display:flex;gap:8px;
- align-items:flex-end;background:#1b1b1b;
- border:1px solid #383838;border-radius:18px;padding:9px
-}
-#prompt{
- flex:1;resize:none;max-height:130px;min-height:40px;
- background:transparent;border:0;color:white;
- outline:none;padding:10px
-}
-.sendBtn,.micBtn{
- width:42px;height:42px;border:0;border-radius:13px;
- background:#fff;color:#000;font-size:18px
-}
+#composerWrap{padding:12px 13px 18px;border-top:1px solid #252525;background:#101010}
+.composer{max-width:850px;margin:auto;display:flex;gap:8px;align-items:flex-end;background:#1b1b1b;border:1px solid #383838;border-radius:18px;padding:9px}
+#prompt{flex:1;resize:none;max-height:130px;min-height:40px;background:transparent;border:0;color:white;outline:none;padding:10px}
+.sendBtn,.micBtn{width:42px;height:42px;border:0;border-radius:13px;background:#fff;color:#000;font-size:18px}
 .micBtn{background:#292929;color:white}
 .footer{text-align:center;color:#777;font-size:11px;margin-top:9px}
 #voiceStatus{color:#aaa;text-align:center;font-size:12px;margin-top:5px}
 </style>
 </head>
-
 <body>
 
-<!-- LOGIN SCREEN -->
 <section id="authScreen">
  <div class="authBox">
   <div class="logo">ESUKA AI</div>
   <div class="sub">Your AI. Your world.</div>
-
   <input id="email" type="email" placeholder="Email address" autocomplete="email">
   <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-
   <button class="btn white" onclick="signIn()">Login</button>
   <button class="btn dark" onclick="signUp()">Create Account</button>
   <button class="btn dark" onclick="oauthLogin('google')">Continue with Google</button>
   <button class="btn dark" onclick="oauthLogin('apple')">Continue with Apple</button>
-
   <div id="status"></div>
  </div>
 </section>
 
-<!-- CHAT SCREEN -->
 <section id="app" class="hidden">
  <header>
   <div class="brand">ESUKA AI</div>
@@ -117,19 +69,16 @@ header{
    <button class="smallBtn" onclick="logout()">Logout</button>
   </div>
  </header>
-
  <main id="messages">
   <div class="welcome" id="welcome">
    <h1>Hey! Welcome to ESUKA AI ✨</h1>
    <p>What would you like to explore today?</p>
   </div>
  </main>
-
  <div id="composerWrap">
   <div class="composer">
-   <button class="micBtn" onclick="startMic()" title="Voice input">🎙</button>
-   <textarea id="prompt" rows="1" placeholder="Message ESUKA AI..."
-    onkeydown="handleKey(event)"></textarea>
+   <button class="micBtn" onclick="startMic()">🎙</button>
+   <textarea id="prompt" rows="1" placeholder="Message ESUKA AI..." onkeydown="handleKey(event)"></textarea>
    <button class="sendBtn" onclick="sendMessage()">➤</button>
   </div>
   <div id="voiceStatus"></div>
@@ -140,10 +89,8 @@ header{
 <script>
 "use strict";
 
-/* CONFIGURATION */
-
 const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
-const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJW1YCSw";
+const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
 const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
 
 const supabaseClient=window.supabase.createClient(
@@ -153,7 +100,8 @@ const supabaseClient=window.supabase.createClient(
   auth:{
    persistSession:true,
    autoRefreshToken:true,
-   detectSessionInUrl:true
+   detectSessionInUrl:false,
+   flowType:"pkce"
   }
  }
 );
@@ -162,6 +110,7 @@ let currentSession=null;
 let history=[];
 let busy=false;
 let recognition=null;
+let authReady=false;
 
 const $=id=>document.getElementById(id);
 
@@ -179,7 +128,58 @@ function showApp(){
  $("app").classList.remove("hidden");
 }
 
-/* AUTHENTICATION */
+function updateAuth(session){
+ currentSession=session;
+ authReady=true;
+ if(session)showApp();
+ else showAuth();
+}
+
+/* OAuth callback and session recovery */
+
+async function initializeAuth(){
+ try{
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get("code");
+
+  if(code){
+   showStatus("Completing Google login...");
+
+   const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
+
+   if(error)throw error;
+
+   if(data.session){
+    window.history.replaceState({},document.title,window.location.pathname);
+    updateAuth(data.session);
+    return;
+   }
+  }
+
+  const {data,error}=await supabaseClient.auth.getSession();
+
+  if(error)throw error;
+
+  updateAuth(data.session||null);
+
+ }catch(error){
+  showStatus("Login callback error: "+error.message);
+  updateAuth(null);
+ }
+}
+
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+ if(event==="SIGNED_IN"||event==="TOKEN_REFRESHED"||event==="INITIAL_SESSION"){
+  updateAuth(session);
+ }
+ if(event==="SIGNED_OUT"){
+  updateAuth(null);
+ }
+});
+
+initializeAuth();
+
+/* Email login */
 
 async function signIn(){
  const email=$("email").value.trim();
@@ -189,9 +189,7 @@ async function signIn(){
 
  showStatus("Logging in...");
 
- const {error}=await supabaseClient.auth.signInWithPassword({
-  email,password
- });
+ const {error}=await supabaseClient.auth.signInWithPassword({email,password});
 
  if(error)showStatus(error.message);
 }
@@ -215,82 +213,53 @@ async function signUp(){
  if(error)return showStatus(error.message);
 
  if(data.session){
-  showStatus("Account created successfully!");
+  showStatus("Account created!");
  }else{
   showStatus("Account created! Email confirmation check karo.");
  }
 }
 
+/* Google and Apple OAuth */
+
 async function oauthLogin(provider){
- showStatus("Connecting to "+provider+"...");
+ try{
+  showStatus("Connecting to "+provider+"...");
 
- const {error}=await supabaseClient.auth.signInWithOAuth({
-  provider,
-  options:{
-   redirectTo:window.location.origin+window.location.pathname,
-   queryParams:provider==="google"?{prompt:"select_account"}:undefined
-  }
- });
+  const redirectURL=window.location.origin+window.location.pathname;
 
- if(error)showStatus(error.message);
+  const {error}=await supabaseClient.auth.signInWithOAuth({
+   provider,
+   options:{
+    redirectTo:redirectURL
+   }
+  });
+
+  if(error)throw error;
+
+ }catch(error){
+  showStatus("Login error: "+error.message);
+ }
 }
 
+/* Logout */
+
 async function logout(){
- speechSynthesis.cancel();
+ if(recognition)recognition.stop();
+ if("speechSynthesis" in window)speechSynthesis.cancel();
 
  const {error}=await supabaseClient.auth.signOut();
+
  if(error){
   alert(error.message);
   return;
  }
 
+ currentSession=null;
  history=[];
  showAuth();
 }
 
-function updateAuth(session){
- currentSession=session;
-
- if(session){
-  showApp();
- }else{
-  showAuth();
- }
-}
-
-supabaseClient.auth.onAuthStateChange((event,session)=>{
- updateAuth(session);
-});
-
-async function initialize(){
- const {data,error}=await supabaseClient.auth.getSession();
-
- if(error){
-  showStatus("Session error: "+error.message);
-  showAuth();
-  return;
- }
-
- if(data.session){
-  updateAuth(data.session);
- }else{
-  const {data: refreshed,error: refreshError} =
-   await supabaseClient.auth.refreshSession();
-
-  if(refreshed?.session){
-   updateAuth(refreshed.session);
-  }else{
-   updateAuth(null);
-   if(refreshError){
-    showStatus("Login error: "+refreshError.message);
-   }
-  }
- }
-}
-
-initialize();
-
-/* CHAT */
+/* Chat */
 
 function addMessage(text,type){
  const welcome=$("welcome");
@@ -314,7 +283,6 @@ function addMessage(text,type){
 
  $("messages").appendChild(div);
  $("messages").scrollTop=$("messages").scrollHeight;
-
  return div;
 }
 
@@ -322,7 +290,7 @@ function newChat(){
  history=[];
  $("messages").innerHTML=
  '<div class="welcome" id="welcome"><h1>Hey! Welcome to ESUKA AI ✨</h1><p>What would you like to explore today?</p></div>';
- speechSynthesis.cancel();
+ if("speechSynthesis" in window)speechSynthesis.cancel();
 }
 
 function handleKey(e){
@@ -341,7 +309,6 @@ async function sendMessage(){
 
  const input=$("prompt");
  const text=input.value.trim();
-
  if(!text)return;
 
  input.value="";
@@ -349,7 +316,6 @@ async function sendMessage(){
 
  const typing=addMessage("Thinking...","ai");
  typing.classList.add("typing");
-
  busy=true;
 
  try{
@@ -362,14 +328,11 @@ async function sendMessage(){
    })
   });
 
-  if(!response.ok){
-   throw new Error("Server error: "+response.status);
-  }
+  if(!response.ok)throw new Error("Server error: "+response.status);
 
   const data=await response.json();
 
-  const reply=
-   data.reply||
+  const reply=data.reply||
    data.response||
    data.text||
    data.message||
@@ -406,23 +369,22 @@ async function sendMessage(){
 function typeText(element,text){
  return new Promise(resolve=>{
   let i=0;
-  const step=()=>{
+  function step(){
    if(i<text.length){
     element.textContent+=text.slice(i,i+3);
     i+=3;
     $("messages").scrollTop=$("messages").scrollHeight;
     setTimeout(step,12);
    }else resolve();
-  };
+  }
   step();
  });
 }
 
-/* VOICE INPUT */
+/* Voice input */
 
 function startMic(){
- const SpeechRecognition=
-  window.SpeechRecognition||window.webkitSpeechRecognition;
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
  if(!SpeechRecognition){
   $("voiceStatus").textContent="Voice input is not supported in this browser.";
@@ -452,26 +414,9 @@ function startMic(){
   $("voiceStatus").textContent="Microphone error: "+e.error;
  };
 
- recognition.onend=()=>{
-  recognition=null;
- };
+ recognition.onend=()=>{recognition=null};
 
  recognition.start();
-}
-
-/* AI VOICE REPLY */
-
-function speakText(text){
- if(!("speechSynthesis" in window))return;
-
- speechSynthesis.cancel();
-
- const utterance=new SpeechSynthesisUtterance(text);
- utterance.lang="hi-IN";
- utterance.rate=1;
- utterance.pitch=1;
-
- speechSynthesis.speak(utterance);
 }
 </script>
 </body>
