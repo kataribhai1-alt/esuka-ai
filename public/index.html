@@ -1,862 +1,1350 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#080808">
-<title>ESUKA AI</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-:root{--bg:#080808;--panel:#111;--panel2:#1b1b1b;--card:#171717;--text:#f5f5f5;--muted:#999;--border:#303030;--input:#111;--bubble:#191919;--user:#343434}
-body.grey{--bg:#171717;--panel:#202020;--panel2:#292929;--card:#252525;--input:#202020;--bubble:#292929;--user:#414141;--border:#414141}
-body.light{--bg:#ededed;--panel:#fff;--panel2:#e6e6e6;--card:#f7f7f7;--text:#171717;--muted:#666;--border:#d0d0d0;--input:#fff;--bubble:#f4f4f4;--user:#dedede}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;transition:.25s}
-button,input,textarea,select{font:inherit}
-button{color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #999;outline-offset:3px}
-.hidden{display:none!important}
-.app{height:100dvh;display:flex;overflow:hidden}
-.sidebar{width:280px;min-width:280px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px;z-index:30;transition:transform .25s}
-.brand{display:flex;align-items:center;gap:13px;margin-bottom:35px;padding:3px 8px}
-.logo{width:48px;height:48px;border-radius:16px;border:2px solid #555;background:#242424;display:grid;place-items:center;font-size:29px;font-weight:900;color:white;box-shadow:inset 0 0 0 4px #111}
-.brand-name{font-size:20px;font-weight:800}.brand-sub{font-size:11px;color:var(--muted);margin-top:4px}
-.side-btn{width:100%;display:flex;align-items:center;gap:14px;padding:14px;border:1px solid transparent;background:transparent;border-radius:15px;color:var(--text);font-size:14px;text-align:left;margin-bottom:7px}
-.side-btn:hover,.side-btn.active{background:#303030;border-color:#414141}
-.side-heading{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:1px;margin:27px 0 12px 8px}
-.history-list{overflow-y:auto;flex:1}
-.history-item{display:flex;align-items:center;gap:10px;padding:12px 10px;border-radius:11px;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden}
-.history-item:hover{background:var(--panel2);color:var(--text)}
-.history-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.side-bottom{border-top:1px solid var(--border);padding-top:14px;margin-top:12px}
-.profile{display:flex;align-items:center;gap:10px;padding:8px 3px}
-.profile-avatar{width:39px;height:39px;border-radius:50%;background:#454545;display:grid;place-items:center;font-size:18px;color:white}
-.profile-name{font-size:12px;font-weight:700;max-width:155px;overflow:hidden;text-overflow:ellipsis}
-.profile-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.logout-small{margin-left:auto;border:1px solid var(--border);background:var(--panel2);border-radius:9px;padding:8px;font-size:11px}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
-.topbar{height:70px;min-height:70px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 23px;background:var(--bg)}
-.top-left,.top-right{display:flex;align-items:center;gap:12px}
-.top-title{font-weight:750;font-size:16px}
-.status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#aaa}
-.icon-btn{width:43px;height:43px;border-radius:14px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center}
-.icon-btn:hover{background:#333}
-.menu-btn{display:none}
-.chat-area{flex:1;overflow-y:auto;padding:25px 18px 20px;scroll-behavior:smooth}
-.chat-inner{max-width:850px;margin:0 auto;width:100%}
-.welcome{text-align:center;padding:8vh 10px 30px;animation:fadeUp .5s}
-.hero-orb{width:105px;height:105px;border-radius:50%;margin:0 auto 27px;display:grid;place-items:center;border:8px solid #303030;background:#111;box-shadow:0 0 0 5px #1c1c1c;font-size:54px;font-weight:900;color:white}
-.welcome h1{font-size:clamp(27px,5vw,38px);font-weight:800}
-.welcome p{color:var(--muted);font-size:14px;margin-top:13px}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:35px auto 0;max-width:610px}
-.suggestion{text-align:left;padding:18px;border:1px solid var(--border);border-radius:17px;background:var(--card);min-height:88px}
-.suggestion strong{font-size:13px;display:block;margin-bottom:7px}
-.suggestion small{font-size:11px;color:var(--muted);line-height:1.5}
-.s-icon{font-size:20px;margin-bottom:10px;display:block}
-.messages{display:flex;flex-direction:column;gap:23px;padding-bottom:20px}
-.message{display:flex;gap:11px;animation:fadeUp .3s;max-width:100%}
-.message.user{justify-content:flex-end}
-.msg-avatar{flex-shrink:0;width:35px;height:35px;border-radius:12px;display:grid;place-items:center;background:#333;border:1px solid #555;font-weight:900}
-.msg-content{max-width:min(82%,680px);min-width:0}
-.msg-name{font-size:11px;color:var(--muted);margin:2px 0 7px}
-.msg-bubble{background:var(--bubble);border:1px solid var(--border);padding:13px 15px;border-radius:5px 17px 17px 17px;font-size:var(--chat-font,14px);line-height:1.7;overflow-wrap:anywhere;white-space:pre-wrap}
-.user .msg-bubble{background:var(--user);border-color:#555;border-radius:17px 5px 17px 17px}
-.msg-actions,.image-actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
-.mini-btn{border:1px solid var(--border);background:var(--panel);color:var(--muted);padding:7px 10px;border-radius:9px;font-size:11px}
-.generated-image{display:block;width:100%;max-width:440px;border-radius:15px;margin-top:10px;border:1px solid var(--border);background:var(--panel2)}
-.typing{display:flex;gap:5px;padding:17px}
-.typing i{width:7px;height:7px;background:#aaa;border-radius:50%;animation:bounce .8s infinite}
-.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
-.thinking-text{font-size:11px;color:var(--muted);margin:8px 0 0 10px}
-.image-processing{width:min(100%,390px);padding:17px;border:1px solid var(--border);border-radius:18px;background:var(--panel)}
-.image-preview-skeleton{height:210px;border-radius:13px;background:#1d1d1d;border:1px solid #333;position:relative;overflow:hidden}
-.image-preview-skeleton:after{content:"";position:absolute;left:0;right:0;height:2px;top:0;background:#aaa;animation:scanner 2.8s infinite}
-.image-processing-info{display:flex;align-items:center;gap:10px;margin-top:14px}
-.image-spinner{width:19px;height:19px;border:2px solid #555;border-top-color:#eee;border-radius:50%;animation:spin .8s linear infinite}
-.image-processing-title{font-size:13px;font-weight:700}
-.image-processing-sub{font-size:11px;color:var(--muted);margin-top:4px}
-.composer-wrap{padding:10px 18px 17px;background:var(--bg)}
-.composer{max-width:850px;margin:auto}
-.mode-label{display:none;font-size:11px;color:var(--muted);margin:0 0 8px 7px}
-.mode-label.show{display:block}
-.input-box{display:flex;align-items:flex-end;gap:8px;padding:10px;border:1px solid var(--border);border-radius:25px;background:var(--input)}
-.input-box:focus-within{border-color:#777}
-#prompt{flex:1;min-width:0;max-height:130px;min-height:40px;resize:none;border:0;outline:0;background:transparent;color:var(--text);font-size:14px;line-height:1.5;padding:10px 5px}
-#prompt::placeholder{color:var(--muted)}
-.action-btn{width:43px;height:43px;flex-shrink:0;border-radius:50%;border:1px solid var(--border);background:var(--panel2);display:grid;place-items:center}
-.action-btn svg{width:21px;height:21px}
-.action-btn.active{background:#444}
-
-/* CHATGPT-STYLE MICROPHONE */
-.mic-btn{background:transparent;border:0;color:var(--text);width:43px;height:43px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;transition:background .2s,transform .2s}
-.mic-btn svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.mic-btn:hover{background:var(--panel2)}
-.mic-btn.recording{background:#d93030;color:white;border:0;animation:micPulse 1.2s infinite}
-.mic-btn.recording svg{stroke:white}
-@keyframes micPulse{0%{box-shadow:0 0 0 0 #e33a3a66}70%{box-shadow:0 0 0 10px #e33a3a00}100%{box-shadow:0 0 0 0 #e33a3a00}}
-
-.send-btn{background:#e5e5e5;color:#111;border:0}
-.send-btn:disabled{opacity:.45}
-.composer-note{text-align:center;color:var(--muted);font-size:10px;margin-top:10px}
-.voice-panel{display:none;max-width:850px;margin:0 auto 10px;padding:13px;border-radius:16px;background:var(--panel);border:1px solid var(--border);text-align:center}
-.voice-panel.show{display:block}
-.voice-wave{display:flex;justify-content:center;align-items:center;gap:4px;height:35px}
-.voice-wave i{width:4px;height:12px;border-radius:5px;background:#aaa;animation:wave .7s infinite alternate}
-.voice-panel p{font-size:11px;color:var(--muted);margin-top:7px}
-.overlay{display:none;position:fixed;inset:0;background:#000b;z-index:60;align-items:center;justify-content:center;padding:15px;backdrop-filter:blur(5px)}
-.overlay.show{display:flex;animation:fade .2s}
-.settings{width:100%;max-width:570px;max-height:88dvh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:23px;padding:22px}
-.settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.settings-head h2{font-size:21px}.settings-head p{font-size:11px;color:var(--muted);margin-top:5px}
-.setting-group{margin-top:21px}
-.setting-title{font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:800;margin-bottom:10px}
-.setting-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px 12px;border:1px solid var(--border);border-radius:14px;margin-bottom:8px;background:var(--card)}
-.setting-label{font-size:13px;font-weight:650}.setting-desc{font-size:10px;color:var(--muted);margin-top:4px}
-.setting-control{max-width:185px;width:48%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:12px}
-.toggle{width:45px;height:25px;border:0;border-radius:20px;background:#555;position:relative;flex-shrink:0}
-.toggle:after{content:"";position:absolute;width:19px;height:19px;top:3px;left:3px;background:white;border-radius:50%;transition:.2s}
-.toggle.on{background:#aaa}.toggle.on:after{left:23px;background:#111}
-.setting-range{width:110px;accent-color:#999}
-.settings-footer{display:flex;gap:9px;margin-top:20px}
-.primary-btn,.secondary-btn{flex:1;padding:12px;border-radius:13px;border:1px solid var(--border);font-size:12px;font-weight:750}
-.primary-btn{background:#e4e4e4;color:#111;border:0}.secondary-btn{background:var(--panel2);color:var(--text)}
-.mobile-backdrop{display:none}
-.toast{position:fixed;bottom:95px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);padding:11px 17px;border-radius:12px;font-size:12px;z-index:100;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap}
-.toast.show{opacity:1;bottom:110px}
-
-/* AUTH */
-#authScreen{position:fixed;inset:0;z-index:200;background:#080808;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.auth-card{width:100%;max-width:410px;background:#111;border:1px solid #303030;border-radius:25px;padding:28px 23px;box-shadow:0 20px 80px #0009}
-.auth-brand{text-align:center;margin-bottom:25px}
-.auth-logo{width:67px;height:67px;border:2px solid #555;border-radius:21px;background:#242424;display:grid;place-items:center;font-size:39px;font-weight:900;margin:0 auto 14px}
-.auth-brand h1{font-size:25px}.auth-brand p{font-size:12px;color:#999;margin-top:7px}
-.auth-tabs{display:flex;background:#1c1c1c;padding:4px;border-radius:12px;margin-bottom:18px}
-.auth-tab{flex:1;border:0;background:transparent;color:#aaa;padding:11px;border-radius:9px;font-size:13px}
-.auth-tab.active{background:#383838;color:white}
-.auth-field{margin:13px 0}
-.auth-field label{display:block;font-size:12px;color:#bbb;margin-bottom:7px}
-.auth-field input{width:100%;padding:14px;border:1px solid #383838;background:#1b1b1b;color:white;border-radius:12px;outline:0;font-size:14px}
-.auth-field input:focus{border-color:#888}
-.auth-submit,.google-login{width:100%;padding:14px;border-radius:12px;font-size:13px;font-weight:750;margin-top:10px}
-.auth-submit{border:0;background:#eee;color:#111}
-.google-login{border:1px solid #444;background:#1b1b1b;color:white}
-.auth-divider{display:flex;align-items:center;gap:10px;color:#777;font-size:11px;margin:17px 0}
-.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#333;flex:1}
-.auth-message{font-size:12px;line-height:1.6;color:#ccc;margin-top:14px;min-height:18px;text-align:center}
-.auth-note{font-size:10px;color:#777;line-height:1.6;text-align:center;margin-top:19px}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
-@keyframes wave{to{height:29px}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes scanner{0%{top:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:100%;opacity:0}}
-@media(max-width:760px){
- .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);width:280px}
- .sidebar.open{transform:translateX(0)}
- .mobile-backdrop.show{display:block;position:fixed;inset:0;background:#0009;z-index:25}
- .menu-btn{display:grid}.topbar{padding:0 13px}.top-right{gap:7px}
- .top-right .icon-btn{width:39px;height:39px}
- .chat-area{padding:15px 12px}.welcome{padding-top:7vh}
- .suggestions{gap:9px;margin-top:25px}.suggestion{padding:13px;min-height:85px}
- .composer-wrap{padding:9px 10px 13px}.input-box{gap:5px;padding:8px}
- .action-btn,.mic-btn{width:39px;height:39px}.settings{padding:17px}
-}
-@media(max-width:380px){.suggestions{grid-template-columns:1fr}.msg-content{max-width:88%}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-</style>
-</head>
-
-<body>
-
-<div id="authScreen">
- <div class="auth-card">
-  <div class="auth-brand">
-   <div class="auth-logo">E</div>
-   <h1>ESUKA AI</h1>
-   <p>Your personal AI assistant</p>
-  </div>
-  <div class="auth-tabs">
-   <button class="auth-tab active" id="loginTab">Login</button>
-   <button class="auth-tab" id="signupTab">Create account</button>
-  </div>
-  <div id="emailFields">
-   <div class="auth-field">
-    <label>Email address</label>
-    <input id="authEmail" type="email" placeholder="Enter your email" autocomplete="email">
-   </div>
-   <div class="auth-field">
-    <label>Password</label>
-    <input id="authPassword" type="password" placeholder="Enter password" autocomplete="current-password">
-   </div>
-   <button class="auth-submit" id="emailSubmit">Login</button>
-  </div>
-  <div class="auth-divider">OR</div>
-  <button class="google-login" id="googleLogin">🌐 Continue with Google</button>
-  <div class="auth-message" id="authMessage"></div>
-  <p class="auth-note">Your account is secured by Supabase Authentication. Never share your password with anyone.</p>
- </div>
-</div>
-
-<div class="app hidden" id="app">
-<aside class="sidebar" id="sidebar">
- <div class="brand">
-  <div class="logo">E</div>
-  <div><div class="brand-name">ESUKA AI</div><div class="brand-sub">Your AI Assistant</div></div>
- </div>
- <button class="side-btn active" id="newChatBtn">✧　New Chat</button>
- <button class="side-btn" id="sideImageBtn">▧　Image Mode</button>
- <button class="side-btn" id="sideVoiceBtn">🎙　Voice Mode</button>
- <div style="height:1px;background:var(--border);margin:12px 0"></div>
- <button class="side-btn" id="settingsBtn">⚙　Settings</button>
- <button class="side-btn" id="historyBtn">◷　Chat History</button>
- <button class="side-btn" id="aboutBtn">ⓘ　About</button>
- <div class="side-heading">RECENT CHATS</div>
- <div class="history-list" id="historyList"></div>
- <div class="side-bottom">
-  <div class="profile">
-   <div class="profile-avatar" id="profileAvatar">E</div>
-   <div style="min-width:0">
-    <div class="profile-name" id="profileName">User</div>
-    <div class="profile-sub">Signed in</div>
-   </div>
-   <button class="logout-small" id="logoutBtn">Logout</button>
-  </div>
- </div>
-</aside>
-
-<div class="mobile-backdrop" id="backdrop"></div>
-<main class="main">
- <header class="topbar">
-  <div class="top-left">
-   <button class="icon-btn menu-btn" id="menuBtn">☰</button>
-   <div class="top-title">ESUKA AI</div>
-   <div class="status"><span class="status-dot"></span>Online</div>
-  </div>
-  <div class="top-right">
-   <button class="icon-btn" id="clearBtn" title="Clear chat">⌫</button>
-   <button class="icon-btn" id="themeBtn" title="Change theme">◐</button>
-   <button class="icon-btn" id="topSettingsBtn" title="Settings">⚙</button>
-  </div>
- </header>
-
- <section class="chat-area" id="chatArea">
-  <div class="chat-inner">
-   <div class="welcome" id="welcome">
-    <div class="hero-orb">E</div>
-    <h1>Welcome to ESUKA AI</h1>
-    <p>Ask anything... I'm here to help you!</p>
-    <div class="suggestions">
-     <button class="suggestion" data-prompt="Explain something simply"><span class="s-icon">✧</span><strong>Explain something simply</strong><small>Understand any topic easily</small></button>
-     <button class="suggestion" data-prompt="Help me write some code"><span class="s-icon">&lt;/&gt;</span><strong>Write code for me</strong><small>Build and understand code</small></button>
-     <button class="suggestion" data-prompt="Give me some creative ideas"><span class="s-icon">♧</span><strong>Give me ideas</strong><small>Explore something new</small></button>
-     <button class="suggestion" data-prompt="Summarize this topic for me"><span class="s-icon">▤</span><strong>Summarize this</strong><small>Get the key points</small></button>
-    </div>
-   </div>
-   <div class="messages" id="messages"></div>
-  </div>
- </section>
-
- <div class="composer-wrap">
-  <div class="voice-panel" id="voicePanel">
-   <div class="voice-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-   <p id="voiceStatus">Listening...</p>
-   <button class="mini-btn" id="stopVoiceBtn">Stop listening</button>
-  </div>
-  <div class="composer">
-   <div class="mode-label" id="modeLabel">▧ Image generation mode is ON</div>
-   <div class="input-box">
-    <button class="action-btn" id="attachBtn" title="Image mode">▧</button>
-    <textarea id="prompt" rows="1" placeholder="Type your message..." aria-label="Message"></textarea>
-
-    <!-- NEW CHATGPT STYLE MIC -->
-    <button class="mic-btn" id="micBtn" title="Voice input" aria-label="Start voice input">
-     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="9" y="2.5" width="6" height="12" rx="3"></rect>
-      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"></path>
-      <path d="M12 18v3.5"></path>
-      <path d="M8.5 21.5h7"></path>
-     </svg>
-    </button>
-
-    <button class="action-btn send-btn" id="sendBtn" title="Send">➤</button>
-   </div>
-   <div class="composer-note">ESUKA AI can make mistakes. Check important information.</div>
-  </div>
- </div>
-</main>
-</div>
-
-<div class="overlay" id="settingsOverlay">
- <section class="settings">
-  <div class="settings-head">
-   <div><h2>⚙ Settings</h2><p>Make ESUKA AI work your way</p></div>
-   <button class="icon-btn" id="closeSettings">✕</button>
-  </div>
-  <div class="setting-group">
-   <div class="setting-title">PERSONALIZATION</div>
-   <div class="setting-row">
-    <div><div class="setting-label">Language</div><div class="setting-desc">Preferred reply language</div></div>
-    <select class="setting-control" id="language"><option>Hinglish</option><option>Hindi</option><option>English</option></select>
-   </div>
-   <div class="setting-row">
-    <div><div class="setting-label">Response Style</div><div class="setting-desc">How should ESUKA reply?</div></div>
-    <select class="setting-control" id="responseStyle"><option>Friendly</option><option>Professional</option><option>Short</option><option>Detailed</option><option>Simple</option></select>
-   </div>
-  </div>
-  <div class="setting-group">
-   <div class="setting-title">VOICE SETTINGS</div>
-   <div class="setting-row">
-    <div><div class="setting-label">AI Voice</div><div class="setting-desc">Automatic spoken replies</div></div>
-    <button class="toggle" id="voiceToggle" aria-pressed="false"></button>
-   </div>
-   <div class="setting-row">
-    <div><div class="setting-label">Voice Type</div><div class="setting-desc">Browser voice preference</div></div>
-    <select class="setting-control" id="voiceType"><option value="female">Indian Female</option><option value="male">Indian Male</option><option value="system">System Default</option></select>
-   </div>
-   <div class="setting-row">
-    <div><div class="setting-label">Voice Speed</div></div>
-    <input class="setting-range" id="voiceSpeed" type="range" min=".7" max="1.5" step=".1" value="1">
-    <span id="speedValue">1.0x</span>
-   </div>
-  </div>
-  <div class="setting-group">
-   <div class="setting-title">APPEARANCE</div>
-   <div class="setting-row">
-    <div><div class="setting-label">Theme</div></div>
-    <select class="setting-control" id="themeSelect"><option value="black">Pure Black</option><option value="grey">Charcoal Grey</option><option value="light">Light Grey</option></select>
-   </div>
-   <div class="setting-row">
-    <div><div class="setting-label">Chat Font Size</div></div>
-    <select class="setting-control" id="fontSize"><option value="13">Small</option><option value="14">Medium</option><option value="16">Large</option><option value="18">Extra Large</option></select>
-   </div>
-  </div>
-  <div class="setting-group">
-   <div class="setting-title">CHAT MANAGEMENT</div>
-   <div class="setting-row"><div><div class="setting-label">Clear Chat History</div></div><button class="secondary-btn" id="settingsClearBtn">Clear</button></div>
-   <div class="setting-row"><div><div class="setting-label">Reset Settings</div></div><button class="secondary-btn" id="resetSettingsBtn">Reset</button></div>
-  </div>
-  <div class="setting-group">
-   <div class="setting-title">ACCOUNT</div>
-   <div class="setting-row">
-    <div><div class="setting-label">Signed-in account</div><div class="setting-desc" id="settingsAccount">Loading...</div></div>
-    <button class="secondary-btn" id="settingsLogoutBtn">Logout</button>
-   </div>
-  </div>
-  <div class="settings-footer">
-   <button class="secondary-btn" id="cancelSettings">Close</button>
-   <button class="primary-btn" id="saveSettings">Save Preferences</button>
-  </div>
- </section>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script>
 "use strict";
 
-const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
-const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
-const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
+/* =========================
+   ESUKA AI CONFIGURATION
+========================= */
 
-if(!window.supabase){
- $("authMessage").textContent="Supabase library load nahi hui. Internet connection check karo.";
- throw new Error("Supabase library unavailable");
+const SUPABASE_URL = "https://tdpiviiihjaiizltoegt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
+const API_URL = "https://esuka-ai-web.kataribhai1.workers.dev/";
+
+const $ = id => document.getElementById(id);
+
+if (!window.supabase) {
+  $("authMessage").textContent =
+    "Supabase library load nahi hui. Internet connection check karo.";
+  throw new Error("Supabase library unavailable");
 }
 
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
- auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-});
+/* =========================
+   SUPABASE CLIENT
+========================= */
 
-const $=id=>document.getElementById(id);
-
-let currentUser=null,initializedUserId=null;
-let settings={language:"Hinglish",responseStyle:"Friendly",voiceEnabled:false,voiceType:"female",voiceSpeed:1,theme:"black",fontSize:"14"};
-let imageMode=false,busy=false,currentHistory=[],savedChats=[],recognition=null,listening=false,currentChatId=null,authMode="login";
-
-function authMessage(message){$("authMessage").textContent=message}
-
-function switchAuthMode(mode){
- authMode=mode;
- $("loginTab").classList.toggle("active",mode==="login");
- $("signupTab").classList.toggle("active",mode==="signup");
- $("emailSubmit").textContent=mode==="login"?"Login":"Create account";
- $("authPassword").autocomplete=mode==="login"?"current-password":"new-password";
- authMessage("");
-}
-
-$("loginTab").onclick=()=>switchAuthMode("login");
-$("signupTab").onclick=()=>switchAuthMode("signup");
-
-$("emailSubmit").addEventListener("click",async()=>{
- const email=$("authEmail").value.trim(),password=$("authPassword").value;
- if(!email||!password){authMessage("Email aur password dono enter karo.");return}
- if(password.length<6){authMessage("Password kam se kam 6 characters ka hona chahiye.");return}
- $("emailSubmit").disabled=true;authMessage("Please wait...");
- try{
-  if(authMode==="signup"){
-   const {data,error}=await supabaseClient.auth.signUp({email,password});
-   if(error)throw error;
-   if(data.session)authMessage("Account created. Signing in...");
-   else authMessage("Account created! Email verification link check karo, phir login karo.");
-  }else{
-   const {error}=await supabaseClient.auth.signInWithPassword({email,password});
-   if(error)throw error;
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "pkce"
+    }
   }
- }catch(error){authMessage(error.message||"Authentication failed.")}
- finally{$("emailSubmit").disabled=false}
+);
+
+/* =========================
+   APP VARIABLES
+========================= */
+
+let currentUser = null;
+let initializedUserId = null;
+
+let settings = {
+  language: "Hinglish",
+  responseStyle: "Friendly",
+  voiceEnabled: false,
+  voiceType: "female",
+  voiceSpeed: 1,
+  theme: "black",
+  fontSize: "14"
+};
+
+let imageMode = false;
+let busy = false;
+let currentHistory = [];
+let savedChats = [];
+let recognition = null;
+let listening = false;
+let currentChatId = null;
+let authMode = "login";
+
+/* =========================
+   AUTHENTICATION
+========================= */
+
+function authMessage(message) {
+  $("authMessage").textContent = message;
+}
+
+function switchAuthMode(mode) {
+  authMode = mode;
+
+  $("loginTab").classList.toggle("active", mode === "login");
+  $("signupTab").classList.toggle("active", mode === "signup");
+
+  $("emailSubmit").textContent =
+    mode === "login" ? "Login" : "Create account";
+
+  $("authPassword").autocomplete =
+    mode === "login" ? "current-password" : "new-password";
+
+  authMessage("");
+}
+
+$("loginTab").onclick = () => switchAuthMode("login");
+$("signupTab").onclick = () => switchAuthMode("signup");
+
+/* EMAIL LOGIN AND SIGNUP */
+
+$("emailSubmit").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+
+  if (!email || !password) {
+    authMessage("Email aur password dono enter karo.");
+    return;
+  }
+
+  if (password.length < 6) {
+    authMessage("Password kam se kam 6 characters ka hona chahiye.");
+    return;
+  }
+
+  $("emailSubmit").disabled = true;
+  authMessage("Please wait...");
+
+  try {
+    if (authMode === "signup") {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        authMessage("Account created. Signing in...");
+        await handleLoginSession(data.session);
+      } else {
+        authMessage(
+          "Account created! Email verification link check karo, phir login karo."
+        );
+      }
+    } else {
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+
+      if (data.session) {
+        await handleLoginSession(data.session);
+      }
+    }
+  } catch (error) {
+    authMessage(error.message || "Authentication failed.");
+  } finally {
+    $("emailSubmit").disabled = false;
+  }
 });
 
-$("googleLogin").addEventListener("click",async()=>{
- $("googleLogin").disabled=true;authMessage("Opening Google sign-in...");
- try{
-  const {error}=await supabaseClient.auth.signInWithOAuth({
-   provider:"google",
-   options:{redirectTo:window.location.origin}
+/* GOOGLE LOGIN */
+
+$("googleLogin").addEventListener("click", async () => {
+  $("googleLogin").disabled = true;
+  authMessage("Opening Google sign-in...");
+
+  try {
+    const redirectURL = window.location.origin + "/";
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectURL,
+          queryParams: {
+            prompt: "select_account"
+          }
+        }
+      });
+
+    if (error) throw error;
+
+    if (data?.url) {
+      window.location.assign(data.url);
+    }
+  } catch (error) {
+    authMessage(error.message || "Google login failed.");
+    $("googleLogin").disabled = false;
+  }
+});
+
+/* RESTORE USER SESSION */
+
+async function restoreLoginSession() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+
+    const authError =
+      params.get("error_description") ||
+      params.get("error");
+
+    if (authError) {
+      authMessage("Google login error: " + authError);
+
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+
+      return;
+    }
+
+    authMessage("Checking login session...");
+
+    const { data, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    if (data.session?.user) {
+      await handleLoginSession(data.session);
+    } else {
+      $("authScreen").classList.remove("hidden");
+      $("app").classList.add("hidden");
+      authMessage("");
+    }
+  } catch (error) {
+    console.error("Session restore error:", error);
+
+    $("authScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+
+    authMessage(
+      error.message || "Session restore failed. Please login again."
+    );
+  }
+}
+
+/* LOGIN SESSION HANDLER */
+
+async function handleLoginSession(session) {
+  if (!session?.user) return;
+
+  currentUser = session.user;
+
+  $("authScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  if (initializedUserId !== currentUser.id) {
+    initializedUserId = currentUser.id;
+    initializeUser();
+  }
+}
+
+/* AUTH STATE LISTENER */
+
+supabaseClient.auth.onAuthStateChange(
+  (event, session) => {
+    if (session?.user) {
+      handleLoginSession(session);
+    }
+
+    if (event === "SIGNED_OUT") {
+      currentUser = null;
+      initializedUserId = null;
+
+      currentHistory = [];
+      savedChats = [];
+      currentChatId = null;
+
+      $("app").classList.add("hidden");
+      $("authScreen").classList.remove("hidden");
+
+      $("authEmail").value = "";
+      $("authPassword").value = "";
+
+      $("messages").innerHTML = "";
+      $("historyList").innerHTML = "";
+
+      switchAuthMode("login");
+    }
+  }
+);
+
+/* START SESSION RESTORE */
+
+restoreLoginSession();
+
+/* LOGOUT */
+
+async function logout() {
+  if (!confirm("Are you sure you want to log out?")) return;
+
+  const buttons = [
+    $("logoutBtn"),
+    $("settingsLogoutBtn")
+  ];
+
+  buttons.forEach(button => {
+    button.disabled = true;
+    button.textContent = "Logging out...";
   });
-  if(error)throw error;
- }catch(error){
-  authMessage(error.message||"Google login failed.");
-  $("googleLogin").disabled=false;
- }
-});
 
-function handleLoginSession(session){
- if(!session?.user)return;
- currentUser=session.user;
- $("authScreen").classList.add("hidden");
- $("app").classList.remove("hidden");
- if(initializedUserId!==currentUser.id){
-  initializedUserId=currentUser.id;
-  initializeUser();
- }
-}
+  stopSpeaking();
+  stopListening();
 
-supabaseClient.auth.onAuthStateChange((event,session)=>{
- if(session?.user)handleLoginSession(session);
- if(event==="SIGNED_OUT"){
-  currentUser=null;initializedUserId=null;
-  currentHistory=[];savedChats=[];currentChatId=null;
-  $("app").classList.add("hidden");
-  $("authScreen").classList.remove("hidden");
-  $("authEmail").value="";$("authPassword").value="";
-  $("messages").innerHTML="";$("historyList").innerHTML="";
- }
-});
+  try {
+    const { error } =
+      await supabaseClient.auth.signOut({
+        scope: "local"
+      });
 
-async function logout(){
- if(!confirm("Are you sure you want to log out?"))return;
- const buttons=[$("logoutBtn"),$("settingsLogoutBtn")];
- buttons.forEach(b=>{b.disabled=true;b.textContent="Logging out..."});
- stopSpeaking();stopListening();
- try{
-  const {error}=await supabaseClient.auth.signOut({scope:"local"});
-  if(error)throw error;
-  currentUser=null;initializedUserId=null;
-  currentHistory=[];savedChats=[];currentChatId=null;
-  $("messages").innerHTML="";$("historyList").innerHTML="";
-  $("app").classList.add("hidden");
-  $("authScreen").classList.remove("hidden");
-  $("authEmail").value="";$("authPassword").value="";
-  switchAuthMode("login");
-  authMessage("You have been logged out successfully.");
-  closeSettings();closeSidebar();
- }catch(error){
-  showToast("Logout failed: "+(error.message||"Please try again."));
- }finally{
-  buttons.forEach(b=>{b.disabled=false;b.textContent="Logout"});
- }
-}
-$("logoutBtn").onclick=logout;
-$("settingsLogoutBtn").onclick=logout;
+    if (error) throw error;
 
-function initializeUser(){
- if(!currentUser)return;
- const email=currentUser.email||"ESUKA User";
- $("profileName").textContent=email;
- $("profileAvatar").textContent=email.charAt(0).toUpperCase();
- $("settingsAccount").textContent=email;
- loadData();
-}
+    currentUser = null;
+    initializedUserId = null;
 
-function chatStorageKey(){return "esuka_chats_"+(currentUser?.id||"guest")}
-function settingsStorageKey(){return "esuka_settings_"+(currentUser?.id||"guest")}
+    currentHistory = [];
+    savedChats = [];
+    currentChatId = null;
 
-function loadData(){
- try{settings={...settings,...JSON.parse(localStorage.getItem(settingsStorageKey())||"{}")}}catch(e){}
- try{savedChats=JSON.parse(localStorage.getItem(chatStorageKey())||"[]");if(!Array.isArray(savedChats))savedChats=[]}catch(e){savedChats=[]}
- applySettings();renderHistory();
-}
+    $("messages").innerHTML = "";
+    $("historyList").innerHTML = "";
 
-function saveSettings(){
- settings={
-  language:$("language").value,
-  responseStyle:$("responseStyle").value,
-  voiceEnabled:$("voiceToggle").classList.contains("on"),
-  voiceType:$("voiceType").value,
-  voiceSpeed:Number($("voiceSpeed").value),
-  theme:$("themeSelect").value,
-  fontSize:$("fontSize").value
- };
- localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
- applySettings();showToast("Preferences saved");
-}
+    $("app").classList.add("hidden");
+    $("authScreen").classList.remove("hidden");
 
-function applySettings(){
- document.body.classList.remove("grey","light");
- if(settings.theme==="grey")document.body.classList.add("grey");
- if(settings.theme==="light")document.body.classList.add("light");
- document.documentElement.style.setProperty("--chat-font",settings.fontSize+"px");
- $("language").value=settings.language;
- $("responseStyle").value=settings.responseStyle;
- $("voiceType").value=settings.voiceType;
- $("voiceSpeed").value=settings.voiceSpeed;
- $("speedValue").textContent=Number(settings.voiceSpeed).toFixed(1)+"x";
- $("themeSelect").value=settings.theme;
- $("fontSize").value=settings.fontSize;
- $("voiceToggle").classList.toggle("on",!!settings.voiceEnabled);
- $("voiceToggle").setAttribute("aria-pressed",String(!!settings.voiceEnabled));
-}
+    $("authEmail").value = "";
+    $("authPassword").value = "";
 
-function showToast(message){
- const toast=$("toast");toast.textContent=message;toast.classList.add("show");
- clearTimeout(showToast.timer);
- showToast.timer=setTimeout(()=>toast.classList.remove("show"),2400);
-}
+    switchAuthMode("login");
+    authMessage("You have been logged out successfully.");
 
-function saveChats(){
- try{localStorage.setItem(chatStorageKey(),JSON.stringify(savedChats.slice(0,30)))}catch(e){showToast("Storage full")}
- renderHistory();
-}
+    closeSettings();
+    closeSidebar();
 
-function saveCurrentChat(){
- if(!currentHistory.length)return;
- const first=currentHistory.find(m=>m.role==="user");
- const item={id:currentChatId||String(Date.now()),title:(first?.content||"New Chat").slice(0,38),history:currentHistory,date:Date.now()};
- const index=savedChats.findIndex(c=>c.id===item.id);
- if(index>=0)savedChats[index]=item;else savedChats.unshift(item);
- currentChatId=item.id;saveChats();
-}
-
-function renderHistory(){
- $("historyList").innerHTML="";
- savedChats.slice(0,20).forEach(chat=>{
-  const button=document.createElement("div");button.className="history-item";
-  const icon=document.createElement("span");icon.textContent="◷";
-  const label=document.createElement("span");label.textContent=chat.title||"Chat";
-  button.append(icon,label);button.onclick=()=>openChat(chat.id);
-  $("historyList").appendChild(button);
- });
-}
-
-function openChat(id){
- const chat=savedChats.find(c=>c.id===id);if(!chat)return;
- currentChatId=chat.id;currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
- renderMessages();closeSidebar();
-}
-
-function renderMessages(){
- $("welcome").style.display=currentHistory.length?"none":"block";
- $("messages").innerHTML="";
- currentHistory.forEach(message=>addMessage(message.role,message.content,false));
- scrollBottom();
-}
-
-function addMessage(role,content,save=true){
- const row=document.createElement("div");row.className="message "+(role==="user"?"user":"assistant");
- const avatar=document.createElement("div");avatar.className="msg-avatar";avatar.textContent=role==="user"?"U":"E";
- const box=document.createElement("div");box.className="msg-content";
- const name=document.createElement("div");name.className="msg-name";name.textContent=role==="user"?"You":"ESUKA AI";
- const bubble=document.createElement("div");bubble.className="msg-bubble";bubble.textContent=content;
- box.append(name,bubble);
- if(role!=="user"){
-  const actions=document.createElement("div");actions.className="msg-actions";
-  const copy=document.createElement("button");copy.className="mini-btn";copy.textContent="Copy";copy.onclick=()=>copyText(content);
-  const listen=document.createElement("button");listen.className="mini-btn";listen.textContent="Listen";listen.onclick=()=>speakText(content,true);
-  const stop=document.createElement("button");stop.className="mini-btn";stop.textContent="Stop";stop.onclick=stopSpeaking;
-  actions.append(copy,listen,stop);box.appendChild(actions);
- }
- if(role==="user")row.append(box,avatar);else row.append(avatar,box);
- $("messages").appendChild(row);
- if(save){
-  currentHistory.push({role,content});
-  if(role==="user")$("welcome").style.display="none";
-  saveCurrentChat();
- }
- scrollBottom();return row;
-}
-
-function addImage(url){
- const last=$("messages").lastElementChild;if(!last)return;
- const box=last.querySelector(".msg-content");if(!box)return;
- const image=document.createElement("img");image.className="generated-image";image.alt="Image generated by ESUKA AI";image.src=url;
- image.onerror=()=>{image.remove();showToast("Image could not be displayed")};
- box.appendChild(image);
- const actions=document.createElement("div");actions.className="image-actions";
- const download=document.createElement("button");download.className="mini-btn";download.textContent="↓ Download image";download.onclick=()=>downloadImage(url);
- const open=document.createElement("button");open.className="mini-btn";open.textContent="Open image";open.onclick=()=>window.open(url,"_blank","noopener");
- actions.append(download,open);box.appendChild(actions);scrollBottom();
-}
-
-function downloadImage(url){
- const link=document.createElement("a");link.href=url;link.download="esuka-ai-image-"+Date.now()+".png";
- document.body.appendChild(link);link.click();link.remove();
-}
-function scrollBottom(){$("chatArea").scrollTop=$("chatArea").scrollHeight}
-
-function showTyping(){
- const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
- row.innerHTML='<div class="msg-avatar">E</div><div><div class="msg-name">ESUKA AI</div><div class="msg-bubble"><div class="typing"><i></i><i></i><i></i></div><div class="thinking-text">ESUKA is thinking...</div></div></div>';
- $("messages").appendChild(row);scrollBottom();
-}
-
-function showImageProcessing(){
- const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
- row.innerHTML='<div class="msg-avatar">E</div><div class="msg-content"><div class="msg-name">ESUKA AI</div><div class="image-processing"><div class="image-preview-skeleton"></div><div class="image-processing-info"><div class="image-spinner"></div><div><div class="image-processing-title">Creating your image</div><div class="image-processing-sub">Preparing and rendering your image...</div></div></div></div></div>';
- $("messages").appendChild(row);scrollBottom();
-}
-function removeTyping(){$("typingRow")?.remove()}
-
-function newChat(){
- stopSpeaking();stopListening();currentHistory=[];currentChatId=null;
- $("messages").innerHTML="";$("welcome").style.display="block";
- imageMode=false;updateMode();$("prompt").value="";closeSidebar();
-}
-
-function clearChat(){
- if(!confirm("Clear all saved chat history for this account?"))return;
- savedChats=[];currentHistory=[];currentChatId=null;
- localStorage.removeItem(chatStorageKey());
- $("messages").innerHTML="";$("welcome").style.display="block";
- renderHistory();showToast("Chat history cleared");
-}
-
-function updateMode(){
- $("modeLabel").classList.toggle("show",imageMode);
- $("attachBtn").classList.toggle("active",imageMode);
- $("sideImageBtn").classList.toggle("active",imageMode);
-}
-function toggleImageMode(){imageMode=!imageMode;updateMode();showToast(imageMode?"Image mode ON":"Image mode OFF")}
-function closeSidebar(){$("sidebar").classList.remove("open");$("backdrop").classList.remove("show")}
-function toggleSidebar(){$("sidebar").classList.toggle("open");$("backdrop").classList.toggle("show")}
-
-function buildPreferenceMessage(text){
- return "[User preferences: Reply language: "+settings.language+"; Response style: "+settings.responseStyle+". Follow these preferences naturally.]\n\nUser message: "+text;
-}
-
-function isImageRequest(text){
- const value=String(text||"").toLowerCase().trim();
- if(/\b(how|what|why|where|kaise|kyun)\b.*\b(make|create|generate|draw|bana)\b/i.test(value))return false;
- const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र)\b/i;
- const createWords=/\b(make|create|generate|draw|design|bana|banao|banado|bana do|taiyar karo)\b/i;
- const directDraw=/\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
- return(imageWords.test(value)&&createWords.test(value))||directDraw.test(value);
-}
-
-async function sendMessage(){
- const text=$("prompt").value.trim();if(!text||busy)return;
- $("prompt").value="";$("prompt").style.height="auto";
- addMessage("user",text);
- const useImage=imageMode||isImageRequest(text);
- busy=true;$("sendBtn").disabled=true;
- if(useImage)showImageProcessing();else showTyping();
- try{
-  const payload=useImage?{mode:"image",message:text,prompt:text}:{message:buildPreferenceMessage(text),history:currentHistory.slice(0,-1)};
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),90000);
-  let response;
-  try{
-   response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:controller.signal});
-  }finally{clearTimeout(timeout)}
-  const data=await response.json();removeTyping();
-  if(!response.ok||data.success===false)throw new Error(data.error||data.message||"Server error");
-  if(useImage){
-   const image=data.image||data.url||data.result?.image||data.result?.url||data.output;
-   if(typeof image!=="string"||!image)throw new Error("Image provider did not return an image");
-   let url=image;
-   if(!image.startsWith("data:image/")&&!image.startsWith("http"))url="data:image/png;base64,"+image;
-   addMessage("assistant","Your image is ready.");addImage(url);
-  }else{
-   const reply=data.reply||data.response||data.text||data.message||data.result?.reply;
-   if(!reply)throw new Error("Empty response from AI");
-   addMessage("assistant",String(reply));
-   if(settings.voiceEnabled)speakText(String(reply),false);
+  } catch (error) {
+    showToast("Logout failed: " + error.message);
+  } finally {
+    buttons.forEach(button => {
+      button.disabled = false;
+      button.textContent = "Logout";
+    });
   }
- }catch(error){
-  removeTyping();
-  const message=error.name==="AbortError"?"Request timed out. Please try again.":(error.message||"Unknown error");
-  addMessage("assistant","Sorry, kuch problem aa gayi: "+message);
- }finally{
-  busy=false;$("sendBtn").disabled=false;imageMode=false;updateMode();$("prompt").focus();
- }
 }
 
-function copyText(text){
- if(navigator.clipboard?.writeText){
-  navigator.clipboard.writeText(text).then(()=>showToast("Copied")).catch(()=>fallbackCopy(text));
- }else fallbackCopy(text);
-}
-function fallbackCopy(text){
- const textarea=document.createElement("textarea");textarea.value=text;document.body.appendChild(textarea);textarea.select();
- try{document.execCommand("copy");showToast("Copied")}catch(error){showToast("Copy not available")}
- textarea.remove();
-}
+$("logoutBtn").onclick = logout;
+$("settingsLogoutBtn").onclick = logout;
 
-function stopSpeaking(){
- if("speechSynthesis"in window)window.speechSynthesis.cancel();
-}
+/* =========================
+   USER INITIALIZATION
+========================= */
 
-function speakText(text,manual=false){
- if(!manual&&!settings.voiceEnabled)return;
- if(!("speechSynthesis"in window)){showToast("Voice not supported");return}
- stopSpeaking();
- const voices=window.speechSynthesis.getVoices();
- const utterance=new SpeechSynthesisUtterance(text);
- utterance.rate=Number(settings.voiceSpeed);
- utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
- if(settings.voiceType!=="system"){
-  const indian=voices.filter(voice=>/india|hindi|en-in|hi-in/i.test(voice.lang+" "+voice.name));
-  const pattern=settings.voiceType==="female"?/female|woman|heera|priya|neerja/i:/male|man|ravi|amit|rahul/i;
-  const selected=indian.find(voice=>pattern.test(voice.name));
-  if(selected)utterance.voice=selected;
- }
- utterance.onerror=()=>showToast("Voice playback failed");
- window.speechSynthesis.speak(utterance);
+function initializeUser() {
+  if (!currentUser) return;
+
+  const email = currentUser.email || "ESUKA User";
+
+  $("profileName").textContent = email;
+  $("profileAvatar").textContent = email.charAt(0).toUpperCase();
+  $("settingsAccount").textContent = email;
+
+  loadData();
 }
 
-/* VOICE INPUT AND NEW MIC STATE */
-function setMicRecording(active){
- $("micBtn").classList.toggle("recording",active);
- $("micBtn").setAttribute("aria-label",active?"Stop voice input":"Start voice input");
- $("micBtn").title=active?"Stop voice input":"Voice input";
+/* =========================
+   STORAGE
+========================= */
+
+function chatStorageKey() {
+  return "esuka_chats_" + (currentUser?.id || "guest");
 }
 
-function startListening(){
- const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SpeechRecognition){showToast("Voice input not supported in this browser");return}
- if(listening){stopListening();return}
- recognition=new SpeechRecognition();
- recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
- recognition.interimResults=true;
- recognition.continuous=false;
+function settingsStorageKey() {
+  return "esuka_settings_" + (currentUser?.id || "guest");
+}
 
- recognition.onstart=()=>{
-  listening=true;
-  $("voicePanel").classList.add("show");
-  setMicRecording(true);
-  $("voiceStatus").textContent="Listening...";
- };
+function loadData() {
+  try {
+    settings = {
+      ...settings,
+      ...JSON.parse(
+        localStorage.getItem(settingsStorageKey()) || "{}"
+      )
+    };
+  } catch (error) {}
 
- recognition.onresult=event=>{
-  let transcript="";
-  for(let i=event.resultIndex;i<event.results.length;i++){
-   transcript+=event.results[i][0].transcript;
+  try {
+    savedChats = JSON.parse(
+      localStorage.getItem(chatStorageKey()) || "[]"
+    );
+
+    if (!Array.isArray(savedChats)) savedChats = [];
+  } catch (error) {
+    savedChats = [];
   }
-  $("prompt").value=transcript;
-  $("prompt").style.height="auto";
-  $("prompt").style.height=Math.min($("prompt").scrollHeight,130)+"px";
- };
 
- recognition.onerror=event=>{
-  showToast("Voice input: "+event.error);
- };
+  applySettings();
+  renderHistory();
+}
 
- recognition.onend=()=>{
-  listening=false;
+function saveSettings() {
+  settings = {
+    language: $("language").value,
+    responseStyle: $("responseStyle").value,
+    voiceEnabled: $("voiceToggle").classList.contains("on"),
+    voiceType: $("voiceType").value,
+    voiceSpeed: Number($("voiceSpeed").value),
+    theme: $("themeSelect").value,
+    fontSize: $("fontSize").value
+  };
+
+  localStorage.setItem(
+    settingsStorageKey(),
+    JSON.stringify(settings)
+  );
+
+  applySettings();
+  showToast("Preferences saved");
+}
+
+function applySettings() {
+  document.body.classList.remove("grey", "light");
+
+  if (settings.theme === "grey") {
+    document.body.classList.add("grey");
+  }
+
+  if (settings.theme === "light") {
+    document.body.classList.add("light");
+  }
+
+  document.documentElement.style.setProperty(
+    "--chat-font",
+    settings.fontSize + "px"
+  );
+
+  $("language").value = settings.language;
+  $("responseStyle").value = settings.responseStyle;
+  $("voiceType").value = settings.voiceType;
+  $("voiceSpeed").value = settings.voiceSpeed;
+
+  $("speedValue").textContent =
+    Number(settings.voiceSpeed).toFixed(1) + "x";
+
+  $("themeSelect").value = settings.theme;
+  $("fontSize").value = settings.fontSize;
+
+  $("voiceToggle").classList.toggle(
+    "on",
+    !!settings.voiceEnabled
+  );
+
+  $("voiceToggle").setAttribute(
+    "aria-pressed",
+    String(!!settings.voiceEnabled)
+  );
+}
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message) {
+  const toast = $("toast");
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2400);
+}
+
+/* =========================
+   CHAT HISTORY
+========================= */
+
+function saveChats() {
+  try {
+    localStorage.setItem(
+      chatStorageKey(),
+      JSON.stringify(savedChats.slice(0, 30))
+    );
+  } catch (error) {
+    showToast("Storage full");
+  }
+
+  renderHistory();
+}
+
+function saveCurrentChat() {
+  if (!currentHistory.length) return;
+
+  const first = currentHistory.find(
+    message => message.role === "user"
+  );
+
+  const item = {
+    id: currentChatId || String(Date.now()),
+    title: (first?.content || "New Chat").slice(0, 38),
+    history: currentHistory,
+    date: Date.now()
+  };
+
+  const index = savedChats.findIndex(
+    chat => chat.id === item.id
+  );
+
+  if (index >= 0) {
+    savedChats[index] = item;
+  } else {
+    savedChats.unshift(item);
+  }
+
+  currentChatId = item.id;
+  saveChats();
+}
+
+function renderHistory() {
+  $("historyList").innerHTML = "";
+
+  savedChats.slice(0, 20).forEach(chat => {
+    const button = document.createElement("div");
+    button.className = "history-item";
+
+    const icon = document.createElement("span");
+    icon.textContent = "◷";
+
+    const label = document.createElement("span");
+    label.textContent = chat.title || "Chat";
+
+    button.append(icon, label);
+    button.onclick = () => openChat(chat.id);
+
+    $("historyList").appendChild(button);
+  });
+}
+
+function openChat(id) {
+  const chat = savedChats.find(item => item.id === id);
+
+  if (!chat) return;
+
+  currentChatId = chat.id;
+
+  currentHistory = Array.isArray(chat.history)
+    ? chat.history.slice()
+    : [];
+
+  renderMessages();
+  closeSidebar();
+}
+
+function renderMessages() {
+  $("welcome").style.display =
+    currentHistory.length ? "none" : "block";
+
+  $("messages").innerHTML = "";
+
+  currentHistory.forEach(message => {
+    addMessage(message.role, message.content, false);
+  });
+
+  scrollBottom();
+}
+
+/* =========================
+   MESSAGES
+========================= */
+
+function addMessage(role, content, save = true) {
+  const row = document.createElement("div");
+
+  row.className =
+    "message " + (role === "user" ? "user" : "assistant");
+
+  const avatar = document.createElement("div");
+  avatar.className = "msg-avatar";
+  avatar.textContent = role === "user" ? "U" : "E";
+
+  const box = document.createElement("div");
+  box.className = "msg-content";
+
+  const name = document.createElement("div");
+  name.className = "msg-name";
+  name.textContent = role === "user" ? "You" : "ESUKA AI";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = content;
+
+  box.append(name, bubble);
+
+  if (role !== "user") {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const copy = document.createElement("button");
+    copy.className = "mini-btn";
+    copy.textContent = "Copy";
+    copy.onclick = () => copyText(content);
+
+    const listen = document.createElement("button");
+    listen.className = "mini-btn";
+    listen.textContent = "Listen";
+    listen.onclick = () => speakText(content, true);
+
+    const stop = document.createElement("button");
+    stop.className = "mini-btn";
+    stop.textContent = "Stop";
+    stop.onclick = stopSpeaking;
+
+    actions.append(copy, listen, stop);
+    box.appendChild(actions);
+  }
+
+  if (role === "user") {
+    row.append(box, avatar);
+  } else {
+    row.append(avatar, box);
+  }
+
+  $("messages").appendChild(row);
+
+  if (save) {
+    currentHistory.push({ role, content });
+
+    if (role === "user") {
+      $("welcome").style.display = "none";
+    }
+
+    saveCurrentChat();
+  }
+
+  scrollBottom();
+
+  return row;
+}
+
+function addImage(url) {
+  const last = $("messages").lastElementChild;
+
+  if (!last) return;
+
+  const box = last.querySelector(".msg-content");
+
+  if (!box) return;
+
+  const image = document.createElement("img");
+
+  image.className = "generated-image";
+  image.alt = "Image generated by ESUKA AI";
+  image.src = url;
+
+  image.onerror = () => {
+    image.remove();
+    showToast("Image could not be displayed");
+  };
+
+  box.appendChild(image);
+
+  const actions = document.createElement("div");
+  actions.className = "image-actions";
+
+  const download = document.createElement("button");
+  download.className = "mini-btn";
+  download.textContent = "↓ Download image";
+  download.onclick = () => downloadImage(url);
+
+  const open = document.createElement("button");
+  open.className = "mini-btn";
+  open.textContent = "Open image";
+  open.onclick = () => window.open(url, "_blank", "noopener");
+
+  actions.append(download, open);
+  box.appendChild(actions);
+
+  scrollBottom();
+}
+
+function downloadImage(url) {
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "esuka-ai-image-" + Date.now() + ".png";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function scrollBottom() {
+  $("chatArea").scrollTop = $("chatArea").scrollHeight;
+}
+
+/* =========================
+   LOADING ANIMATIONS
+========================= */
+
+function showTyping() {
+  const row = document.createElement("div");
+
+  row.className = "message assistant";
+  row.id = "typingRow";
+
+  row.innerHTML =
+    '<div class="msg-avatar">E</div>' +
+    '<div><div class="msg-name">ESUKA AI</div>' +
+    '<div class="msg-bubble">' +
+    '<div class="typing"><i></i><i></i><i></i></div>' +
+    '<div class="thinking-text">ESUKA is thinking...</div>' +
+    '</div></div>';
+
+  $("messages").appendChild(row);
+  scrollBottom();
+}
+
+function showImageProcessing() {
+  const row = document.createElement("div");
+
+  row.className = "message assistant";
+  row.id = "typingRow";
+
+  row.innerHTML =
+    '<div class="msg-avatar">E</div>' +
+    '<div class="msg-content"><div class="msg-name">ESUKA AI</div>' +
+    '<div class="image-processing">' +
+    '<div class="image-preview-skeleton"></div>' +
+    '<div class="image-processing-info">' +
+    '<div class="image-spinner"></div>' +
+    '<div><div class="image-processing-title">Creating your image</div>' +
+    '<div class="image-processing-sub">Preparing and rendering your image...</div>' +
+    '</div></div></div></div>';
+
+  $("messages").appendChild(row);
+  scrollBottom();
+}
+
+function removeTyping() {
+  $("typingRow")?.remove();
+}
+
+/* =========================
+   CHAT MANAGEMENT
+========================= */
+
+function newChat() {
+  stopSpeaking();
+  stopListening();
+
+  currentHistory = [];
+  currentChatId = null;
+
+  $("messages").innerHTML = "";
+  $("welcome").style.display = "block";
+
+  imageMode = false;
+  updateMode();
+
+  $("prompt").value = "";
+
+  closeSidebar();
+}
+
+function clearChat() {
+  if (!confirm("Clear all saved chat history for this account?")) {
+    return;
+  }
+
+  savedChats = [];
+  currentHistory = [];
+  currentChatId = null;
+
+  localStorage.removeItem(chatStorageKey());
+
+  $("messages").innerHTML = "";
+  $("welcome").style.display = "block";
+
+  renderHistory();
+  showToast("Chat history cleared");
+}
+
+/* =========================
+   IMAGE MODE
+========================= */
+
+function updateMode() {
+  $("modeLabel").classList.toggle("show", imageMode);
+  $("attachBtn").classList.toggle("active", imageMode);
+  $("sideImageBtn").classList.toggle("active", imageMode);
+}
+
+function toggleImageMode() {
+  imageMode = !imageMode;
+
+  updateMode();
+
+  showToast(
+    imageMode ? "Image mode ON" : "Image mode OFF"
+  );
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+function closeSidebar() {
+  $("sidebar").classList.remove("open");
+  $("backdrop").classList.remove("show");
+}
+
+function toggleSidebar() {
+  $("sidebar").classList.toggle("open");
+  $("backdrop").classList.toggle("show");
+}
+
+/* =========================
+   AI REQUEST
+========================= */
+
+function buildPreferenceMessage(text) {
+  return (
+    "[User preferences: Reply language: " +
+    settings.language +
+    "; Response style: " +
+    settings.responseStyle +
+    ". Follow these preferences naturally.]\n\nUser message: " +
+    text
+  );
+}
+
+function isImageRequest(text) {
+  const value = String(text || "").toLowerCase().trim();
+
+  if (
+    /\b(how|what|why|where|kaise|kyun)\b.*\b(make|create|generate|draw|bana)\b/i.test(value)
+  ) {
+    return false;
+  }
+
+  const imageWords =
+    /\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र)\b/i;
+
+  const createWords =
+    /\b(make|create|generate|draw|design|bana|banao|banado|bana do|taiyar karo)\b/i;
+
+  const directDraw =
+    /\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
+
+  return (
+    (imageWords.test(value) && createWords.test(value)) ||
+    directDraw.test(value)
+  );
+}
+
+/* SEND MESSAGE */
+
+async function sendMessage() {
+  const text = $("prompt").value.trim();
+
+  if (!text || busy) return;
+
+  $("prompt").value = "";
+  $("prompt").style.height = "auto";
+
+  addMessage("user", text);
+
+  const useImage = imageMode || isImageRequest(text);
+
+  busy = true;
+  $("sendBtn").disabled = true;
+
+  if (useImage) {
+    showImageProcessing();
+  } else {
+    showTyping();
+  }
+
+  try {
+    const payload = useImage
+      ? {
+          mode: "image",
+          message: text,
+          prompt: text
+        }
+      : {
+          message: buildPreferenceMessage(text),
+          history: currentHistory.slice(0, -1)
+        };
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      90000
+    );
+
+    let response;
+
+    try {
+      response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    const data = await response.json();
+
+    removeTyping();
+
+    if (!response.ok || data.success === false) {
+      throw new Error(
+        data.error || data.message || "Server error"
+      );
+    }
+
+    if (useImage) {
+      const image =
+        data.image ||
+        data.url ||
+        data.result?.image ||
+        data.result?.url ||
+        data.output;
+
+      if (typeof image !== "string" || !image) {
+        throw new Error(
+          "Image provider did not return an image"
+        );
+      }
+
+      let url = image;
+
+      if (
+        !image.startsWith("data:image/") &&
+        !image.startsWith("http")
+      ) {
+        url = "data:image/png;base64," + image;
+      }
+
+      addMessage("assistant", "Your image is ready.");
+      addImage(url);
+
+    } else {
+      const reply =
+        data.reply ||
+        data.response ||
+        data.text ||
+        data.message ||
+        data.result?.reply;
+
+      if (!reply) {
+        throw new Error("Empty response from AI");
+      }
+
+      addMessage("assistant", String(reply));
+
+      if (settings.voiceEnabled) {
+        speakText(String(reply), false);
+      }
+    }
+
+  } catch (error) {
+    removeTyping();
+
+    const message =
+      error.name === "AbortError"
+        ? "Request timed out. Please try again."
+        : error.message || "Unknown error";
+
+    addMessage(
+      "assistant",
+      "Sorry, kuch problem aa gayi: " + message
+    );
+
+  } finally {
+    busy = false;
+
+    $("sendBtn").disabled = false;
+
+    imageMode = false;
+    updateMode();
+
+    $("prompt").focus();
+  }
+}
+
+/* =========================
+   COPY
+========================= */
+
+function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast("Copied"))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+
+  textarea.value = text;
+
+  document.body.appendChild(textarea);
+
+  textarea.select();
+
+  try {
+    document.execCommand("copy");
+    showToast("Copied");
+  } catch (error) {
+    showToast("Copy not available");
+  }
+
+  textarea.remove();
+}
+
+/* =========================
+   AI VOICE OUTPUT
+========================= */
+
+function stopSpeaking() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function speakText(text, manual = false) {
+  if (!manual && !settings.voiceEnabled) return;
+
+  if (!("speechSynthesis" in window)) {
+    showToast("Voice not supported");
+    return;
+  }
+
+  stopSpeaking();
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.rate = Number(settings.voiceSpeed);
+
+  utterance.lang =
+    settings.language === "English" ? "en-IN" : "hi-IN";
+
+  if (settings.voiceType !== "system") {
+    const indian = voices.filter(voice =>
+      /india|hindi|en-in|hi-in/i.test(
+        voice.lang + " " + voice.name
+      )
+    );
+
+    const pattern =
+      settings.voiceType === "female"
+        ? /female|woman|heera|priya|neerja/i
+        : /male|man|ravi|amit|rahul/i;
+
+    const selected = indian.find(voice =>
+      pattern.test(voice.name)
+    );
+
+    if (selected) {
+      utterance.voice = selected;
+    }
+  }
+
+  utterance.onerror = () => {
+    showToast("Voice playback failed");
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+/* =========================
+   MICROPHONE
+========================= */
+
+function setMicRecording(active) {
+  $("micBtn").classList.toggle("recording", active);
+
+  $("micBtn").setAttribute(
+    "aria-label",
+    active ? "Stop voice input" : "Start voice input"
+  );
+
+  $("micBtn").title =
+    active ? "Stop voice input" : "Voice input";
+}
+
+function startListening() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    showToast("Voice input not supported in this browser");
+    return;
+  }
+
+  if (listening) {
+    stopListening();
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+
+  recognition.lang =
+    settings.language === "English" ? "en-IN" : "hi-IN";
+
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    listening = true;
+
+    $("voicePanel").classList.add("show");
+
+    setMicRecording(true);
+
+    $("voiceStatus").textContent = "Listening...";
+  };
+
+  recognition.onresult = event => {
+    let transcript = "";
+
+    for (
+      let i = event.resultIndex;
+      i < event.results.length;
+      i++
+    ) {
+      transcript += event.results[i][0].transcript;
+    }
+
+    $("prompt").value = transcript;
+
+    $("prompt").style.height = "auto";
+
+    $("prompt").style.height =
+      Math.min($("prompt").scrollHeight, 130) + "px";
+  };
+
+  recognition.onerror = event => {
+    showToast("Voice input: " + event.error);
+  };
+
+  recognition.onend = () => {
+    listening = false;
+
+    $("voicePanel").classList.remove("show");
+
+    setMicRecording(false);
+
+    recognition = null;
+  };
+
+  try {
+    recognition.start();
+  } catch (error) {
+    showToast("Microphone could not start");
+  }
+}
+
+function stopListening() {
+  if (recognition) {
+    try {
+      recognition.stop();
+    } catch (error) {}
+  }
+
+  listening = false;
+
   $("voicePanel").classList.remove("show");
+
   setMicRecording(false);
-  recognition=null;
- };
-
- try{recognition.start()}catch(error){showToast("Microphone could not start")}
 }
 
-function stopListening(){
- if(recognition){try{recognition.stop()}catch(error){}}
- listening=false;
- $("voicePanel").classList.remove("show");
- setMicRecording(false);
-}
-function toggleVoice(){if(listening)stopListening();else startListening()}
-
-function toggleVoiceSetting(){
- const enabled=$("voiceToggle").classList.toggle("on");
- $("voiceToggle").setAttribute("aria-pressed",String(enabled));
- settings.voiceEnabled=enabled;
- if(!enabled)stopSpeaking();
- showToast(enabled?"Automatic voice ON":"Automatic voice OFF");
+function toggleVoice() {
+  if (listening) {
+    stopListening();
+  } else {
+    startListening();
+  }
 }
 
-function resetSettings(){
- if(!confirm("Reset all preferences to default?"))return;
- settings={language:"Hinglish",responseStyle:"Friendly",voiceEnabled:false,voiceType:"female",voiceSpeed:1,theme:"black",fontSize:"14"};
- localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
- applySettings();stopSpeaking();showToast("Settings reset");
+/* =========================
+   SETTINGS
+========================= */
+
+function toggleVoiceSetting() {
+  const enabled =
+    $("voiceToggle").classList.toggle("on");
+
+  $("voiceToggle").setAttribute(
+    "aria-pressed",
+    String(enabled)
+  );
+
+  settings.voiceEnabled = enabled;
+
+  if (!enabled) {
+    stopSpeaking();
+  }
+
+  showToast(
+    enabled ? "Automatic voice ON" : "Automatic voice OFF"
+  );
 }
 
-function cycleTheme(){
- const themes=["black","grey","light"];
- settings.theme=themes[(themes.indexOf(settings.theme)+1)%3];
- localStorage.setItem(settingsStorageKey(),JSON.stringify(settings));
- applySettings();showToast("Theme: "+settings.theme);
+function resetSettings() {
+  if (!confirm("Reset all preferences to default?")) {
+    return;
+  }
+
+  settings = {
+    language: "Hinglish",
+    responseStyle: "Friendly",
+    voiceEnabled: false,
+    voiceType: "female",
+    voiceSpeed: 1,
+    theme: "black",
+    fontSize: "14"
+  };
+
+  localStorage.setItem(
+    settingsStorageKey(),
+    JSON.stringify(settings)
+  );
+
+  applySettings();
+
+  stopSpeaking();
+
+  showToast("Settings reset");
 }
 
-function openSettings(){$("settingsOverlay").classList.add("show")}
-function closeSettings(){$("settingsOverlay").classList.remove("show")}
+function cycleTheme() {
+  const themes = ["black", "grey", "light"];
 
-/* BUTTON EVENTS */
-$("newChatBtn").onclick=newChat;
-$("sideImageBtn").onclick=toggleImageMode;
-$("attachBtn").onclick=toggleImageMode;
-$("sideVoiceBtn").onclick=toggleVoice;
-$("micBtn").onclick=toggleVoice;
-$("stopVoiceBtn").onclick=stopListening;
-$("sendBtn").onclick=sendMessage;
-$("clearBtn").onclick=clearChat;
-$("historyBtn").onclick=()=>{renderHistory();showToast("Recent chats are in sidebar")};
-$("settingsBtn").onclick=openSettings;
-$("topSettingsBtn").onclick=openSettings;
-$("closeSettings").onclick=closeSettings;
-$("cancelSettings").onclick=closeSettings;
-$("saveSettings").onclick=()=>{saveSettings();closeSettings()};
-$("resetSettingsBtn").onclick=resetSettings;
-$("settingsClearBtn").onclick=clearChat;
-$("voiceToggle").onclick=toggleVoiceSetting;
+  settings.theme =
+    themes[(themes.indexOf(settings.theme) + 1) % 3];
 
-$("voiceSpeed").oninput=()=>{
- $("speedValue").textContent=Number($("voiceSpeed").value).toFixed(1)+"x";
+  localStorage.setItem(
+    settingsStorageKey(),
+    JSON.stringify(settings)
+  );
+
+  applySettings();
+
+  showToast("Theme: " + settings.theme);
+}
+
+function openSettings() {
+  $("settingsOverlay").classList.add("show");
+}
+
+function closeSettings() {
+  $("settingsOverlay").classList.remove("show");
+}
+
+/* =========================
+   BUTTON EVENTS
+========================= */
+
+$("newChatBtn").onclick = newChat;
+
+$("sideImageBtn").onclick = toggleImageMode;
+$("attachBtn").onclick = toggleImageMode;
+
+$("sideVoiceBtn").onclick = toggleVoice;
+$("micBtn").onclick = toggleVoice;
+
+$("stopVoiceBtn").onclick = stopListening;
+
+$("sendBtn").onclick = sendMessage;
+
+$("clearBtn").onclick = clearChat;
+
+$("historyBtn").onclick = () => {
+  renderHistory();
+  showToast("Recent chats are in sidebar");
 };
 
-$("themeBtn").onclick=cycleTheme;
-$("aboutBtn").onclick=()=>alert("ESUKA AI\nVersion 1.4\nYour AI Assistant");
-$("menuBtn").onclick=toggleSidebar;
-$("backdrop").onclick=closeSidebar;
+$("settingsBtn").onclick = openSettings;
+$("topSettingsBtn").onclick = openSettings;
 
-$("settingsOverlay").onclick=event=>{
- if(event.target===$("settingsOverlay"))closeSettings();
+$("closeSettings").onclick = closeSettings;
+$("cancelSettings").onclick = closeSettings;
+
+$("saveSettings").onclick = () => {
+  saveSettings();
+  closeSettings();
 };
 
-$("prompt").oninput=event=>{
- event.target.style.height="auto";
- event.target.style.height=Math.min(event.target.scrollHeight,130)+"px";
+$("resetSettingsBtn").onclick = resetSettings;
+$("settingsClearBtn").onclick = clearChat;
+
+$("voiceToggle").onclick = toggleVoiceSetting;
+
+$("voiceSpeed").oninput = () => {
+  $("speedValue").textContent =
+    Number($("voiceSpeed").value).toFixed(1) + "x";
 };
 
-$("prompt").onkeydown=event=>{
- if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendMessage()}
+$("themeBtn").onclick = cycleTheme;
+
+$("aboutBtn").onclick = () => {
+  alert("ESUKA AI\nVersion 1.4\nYour AI Assistant");
 };
 
-document.querySelectorAll(".suggestion").forEach(button=>{
- button.onclick=()=>{
-  $("prompt").value=button.dataset.prompt;
-  $("prompt").focus();
- };
+$("menuBtn").onclick = toggleSidebar;
+$("backdrop").onclick = closeSidebar;
+
+$("settingsOverlay").onclick = event => {
+  if (event.target === $("settingsOverlay")) {
+    closeSettings();
+  }
+};
+
+/* TEXT INPUT */
+
+$("prompt").oninput = event => {
+  event.target.style.height = "auto";
+
+  event.target.style.height =
+    Math.min(event.target.scrollHeight, 130) + "px";
+};
+
+$("prompt").onkeydown = event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+
+/* SUGGESTIONS */
+
+document.querySelectorAll(".suggestion").forEach(button => {
+  button.onclick = () => {
+    $("prompt").value = button.dataset.prompt;
+    $("prompt").focus();
+  };
 });
 
-document.addEventListener("keydown",event=>{
- if(event.key==="Escape"){closeSettings();closeSidebar()}
+/* ESCAPE KEY */
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeSettings();
+    closeSidebar();
+  }
 });
 </script>
-</body>
-</html>
