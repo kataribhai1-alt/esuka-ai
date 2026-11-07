@@ -266,12 +266,26 @@ async function initialize(){
  const {data,error}=await supabaseClient.auth.getSession();
 
  if(error){
-  showStatus(error.message);
+  showStatus("Session error: "+error.message);
   showAuth();
   return;
  }
 
- updateAuth(data.session);
+ if(data.session){
+  updateAuth(data.session);
+ }else{
+  const {data: refreshed,error: refreshError} =
+   await supabaseClient.auth.refreshSession();
+
+  if(refreshed?.session){
+   updateAuth(refreshed.session);
+  }else{
+   updateAuth(null);
+   if(refreshError){
+    showStatus("Login error: "+refreshError.message);
+   }
+  }
+ }
 }
 
 initialize();
