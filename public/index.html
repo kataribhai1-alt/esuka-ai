@@ -1594,13 +1594,20 @@ function startVoiceListening(){
  }
 }
 
-function scheduleVoiceListening(delay=500){
+function scheduleVoiceListening(delay=900){
  clearTimeout(voiceRestartTimer);
 
- if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
+ if(!voiceModeActive || voicePaused) return;
 
- voiceRestartTimer=setTimeout(()=>{
-  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking&&!busy){
+ voiceRestartTimer = setTimeout(()=>{
+  if(
+   voiceModeActive &&
+   !voicePaused &&
+   !voiceProcessing &&
+   !voiceSpeaking &&
+   !busy &&
+   !voiceRecognition
+  ){
    startVoiceListening();
   }
  },delay);
