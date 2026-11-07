@@ -1195,11 +1195,8 @@ async function sendMessage(voiceConversation=false,voiceText=""){
    if(!reply)throw new Error("Empty response from AI");
 
    answerToSpeak=String(reply);
-
-   /* Text appears immediately when server responds */
    addMessage("assistant",answerToSpeak);
 
-   /* Speak immediately; do not restart mic until speech ends */
    if(voiceConversation&&voiceModeActive&&!voicePaused){
     await speakText(answerToSpeak,false,true);
    }else if(!voiceConversation&&settings.voiceEnabled){
@@ -1228,7 +1225,7 @@ async function sendMessage(voiceConversation=false,voiceText=""){
    voiceSpeaking=false;
 
    if(voiceModeActive&&!voicePaused){
-    scheduleVoiceListening(350);
+    scheduleVoiceListening(500);
    }
   }
  }
@@ -1386,6 +1383,21 @@ function setVoiceState(state,title,caption){
  $("voiceCaption").textContent=caption||"";
 }
 
+/* iPhone audio warm-up */
+function unlockSpeechAudio(){
+ if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window))return;
+
+ try{
+  window.speechSynthesis.cancel();
+  const silent=new SpeechSynthesisUtterance(" ");
+  silent.volume=0;
+  silent.rate=1;
+  silent.lang="en-US";
+  silent.onend=()=>{};
+  window.speechSynthesis.speak(silent);
+ }catch(e){}
+}
+
 function openVoiceMode(){
  if(!currentSession){showAuth();return}
  if(voiceModeActive)return;
@@ -1400,6 +1412,9 @@ function openVoiceMode(){
  $("voiceMuteBtn").textContent="Ⅱ";
  $("voiceHint").textContent="Voice conversation is active";
 
+ /* Unlock audio from the user's tap on iPhone */
+ unlockSpeechAudio();
+
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
  if(!SpeechRecognition){
@@ -1413,6 +1428,7 @@ function openVoiceMode(){
  startVoiceListening();
 }
 
+/* UPDATED iPHONE VOICE RECOGNITION */
 function startVoiceListening(){
  if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
 
@@ -1420,48 +1436,81 @@ function startVoiceListening(){
  if(!SpeechRecognition)return;
 
  if(voiceRecognition){
-  try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
+  try{
+   voiceRecognition.onend=null;
+   voiceRecognition.stop();
+  }catch(e){}
   voiceRecognition=null;
  }
 
  const rec=new SpeechRecognition();
  voiceRecognition=rec;
+
  rec.lang=settings.language==="English"?"en-IN":"hi-IN";
  rec.interimResults=true;
  rec.continuous=false;
  rec.maxAlternatives=1;
 
- let finalTranscript="";
  let submitted=false;
+ let finalTranscript="";
+ let interimTranscript="";
+
+ function submitTranscript(){
+  if(submitted||!voiceModeActive||voicePaused)return;
+
+  const transcript=(finalTranscript+" "+interimTranscript).trim();
+  if(!transcript)return;
+
+  submitted=true;
+  voiceLastTranscript=transcript;
+
+  clearTimeout(voiceRestartTimer);
+
+  voiceProcessing=true;
+  voiceSpeaking=false;
+
+  if(voiceRecognition===rec)voiceRecognition=null;
+
+  try{
+   rec.onend=null;
+   rec.stop();
+  }catch(e){}
+
+  setVoiceState("thinking","Thinking...","ESUKA is preparing your reply.");
+  sendMessage(true,transcript);
+ }
 
  rec.onstart=()=>{
   if(!voiceModeActive||voicePaused)return;
+
   setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
  };
 
  rec.onresult=e=>{
-  let interim="";
+  finalTranscript="";
+  interimTranscript="";
 
-  for(let i=e.resultIndex;i<e.results.length;i++){
+  /* Rebuild the transcript from all results.
+     This prevents duplicate interim words on iPhone. */
+  for(let i=0;i<e.results.length;i++){
    const result=e.results[i];
-   if(result.isFinal)finalTranscript+=result[0].transcript+" ";
-   else interim+=result[0].transcript;
+   const words=result[0]?.transcript||"";
+
+   if(result.isFinal){
+    finalTranscript+=words+" ";
+   }else{
+    interimTranscript+=words+" ";
+   }
   }
 
-  const display=(finalTranscript+interim).trim();
-  if(display)$("voiceCaption").textContent=display;
+  const display=(finalTranscript+" "+interimTranscript).trim();
 
-  if(finalTranscript.trim()&&!submitted){
-   submitted=true;
-   const transcript=finalTranscript.trim();
-   voiceLastTranscript=transcript;
+  if(display){
+   $("voiceCaption").textContent=display;
+  }
 
-   /* Lock mic before sending request */
-   voiceProcessing=true;
-   clearTimeout(voiceRestartTimer);
-
-   try{rec.stop()}catch(e){}
-   sendMessage(true,transcript);
+  if(finalTranscript.trim()){
+   submitTranscript();
   }
  };
 
@@ -1469,7 +1518,12 @@ function startVoiceListening(){
   if(!voiceModeActive||voicePaused)return;
 
   if(e.error==="not-allowed"||e.error==="service-not-allowed"){
-   setVoiceState("thinking","Microphone permission needed","Allow microphone access in browser settings, then reopen Voice Mode.");
+   setVoiceState(
+    "thinking",
+    "Microphone permission needed",
+    "Allow microphone access in browser settings, then reopen Voice Mode."
+   );
+
    showToast("Microphone permission denied");
    voicePaused=true;
    $("voiceMuteBtn").textContent="▶";
@@ -1482,21 +1536,38 @@ function startVoiceListening(){
  rec.onend=()=>{
   if(voiceRecognition===rec)voiceRecognition=null;
 
-  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking&&!busy){
-   scheduleVoiceListening(450);
+  /* iOS sometimes ends recognition without isFinal.
+     Send the available interim transcript as a fallback. */
+  if(!submitted&&voiceModeActive&&!voicePaused){
+   const available=(finalTranscript+" "+interimTranscript).trim();
+
+   if(available){
+    submitTranscript();
+    return;
+   }
+  }
+
+  if(
+   voiceModeActive&&
+   !voicePaused&&
+   !voiceProcessing&&
+   !voiceSpeaking&&
+   !busy
+  ){
+   scheduleVoiceListening(650);
   }
  };
 
- try{rec.start()}
- catch(e){
+ try{
+  rec.start();
+ }catch(e){
   if(voiceModeActive&&!voicePaused){
-   scheduleVoiceListening(900);
+   scheduleVoiceListening(1000);
   }
  }
-
 }
 
-function scheduleVoiceListening(delay=450){
+function scheduleVoiceListening(delay=500){
  clearTimeout(voiceRestartTimer);
 
  if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
