@@ -340,8 +340,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  display:grid;place-items:center;
  border:1px solid #ffffff35;background:#ffffff12;color:white;
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
- font-size:20px;
 }
+.voice-glass-btn svg{width:20px;height:20px}
 .voice-middle{
  flex:1;width:100%;display:flex;flex-direction:column;
  align-items:center;justify-content:center;
@@ -358,19 +358,15 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  #a27bff 18%,#7042db 36%,#34206f 60%,#0c0919 100%);
  box-shadow:0 0 35px #986bffbb,0 0 90px #6738ff66,
  inset -15px -18px 35px #080514,inset 10px 9px 28px #ffffff75;
- animation:idleOrb 3.2s ease-in-out infinite;
-}
-@keyframes idleOrb{
- 0%,100%{transform:scale(.96);filter:brightness(.9)}
- 50%{transform:scale(1.04);filter:brightness(1.15)}
+ animation:smoothIdle 3.6s ease-in-out infinite;
 }
 .orb-ring{
  position:absolute;width:190px;height:190px;border-radius:50%;
- border:1px solid #a98aff55;animation:ringPulse 3s ease-out infinite;
+ border:1px solid #a98aff55;animation:ringPulse 5s ease-out infinite;
 }
-.orb-ring.r2{animation-delay:1.5s}
+.orb-ring.r2{animation-delay:2.5s}
 @keyframes ringPulse{
- 0%{transform:scale(.72);opacity:.8}
+ 0%{transform:scale(.72);opacity:.45}
  100%{transform:scale(1.45);opacity:0}
 }
 .orb-glow{
@@ -378,34 +374,42 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  background:radial-gradient(circle,#7447ff35 0%,transparent 70%);
  filter:blur(10px);
 }
-.voice-orb-stage.listening .voice-orb{
- animation:listenOrb 1.6s ease-in-out infinite;
+
+/* SMOOTH ORB ANIMATIONS */
+@keyframes smoothIdle{
+ 0%,100%{transform:scale(.98);filter:brightness(.96)}
+ 50%{transform:scale(1.025);filter:brightness(1.08)}
 }
-@keyframes listenOrb{
- 0%,100%{transform:scale(.96)}
- 50%{transform:scale(1.09)}
+.voice-orb-stage.listening .voice-orb{
+ animation:smoothListen 2.6s ease-in-out infinite;
+}
+@keyframes smoothListen{
+ 0%,100%{transform:scale(.985);filter:brightness(1)}
+ 50%{transform:scale(1.045);filter:brightness(1.12)}
 }
 .voice-orb-stage.thinking .voice-orb{
- animation:thinkOrb 2s linear infinite;
- background:conic-gradient(from 0deg,#e5d9ff,#6537db,#1b1642,#b78dff,#e5d9ff);
+ animation:smoothThink 2.8s ease-in-out infinite;
+ background:radial-gradient(circle at 32% 25%,#fff 0%,#d8c9ff 5%,#a27bff 18%,#7042db 36%,#34206f 60%,#0c0919 100%);
 }
-@keyframes thinkOrb{
- to{transform:rotate(360deg) scale(1.03);filter:hue-rotate(35deg)}
+@keyframes smoothThink{
+ 0%,100%{transform:scale(1);filter:brightness(1)}
+ 50%{transform:scale(1.035);filter:brightness(1.16)}
 }
 .voice-orb-stage.speaking .voice-orb{
- animation:speakOrb .48s ease-in-out infinite alternate;
+ animation:smoothSpeak .85s ease-in-out infinite alternate;
  box-shadow:0 0 50px #b38aff,0 0 130px #7546ffbb,
  inset -12px -12px 30px #080514,inset 8px 8px 30px #fff;
 }
-@keyframes speakOrb{
- from{transform:scale(.93);filter:brightness(1)}
- to{transform:scale(1.16);filter:brightness(1.4)}
+@keyframes smoothSpeak{
+ from{transform:scale(.985);filter:brightness(1.05)}
+ to{transform:scale(1.075);filter:brightness(1.22)}
 }
 .voice-orb-stage.speaking .orb-ring{
- animation:ringSpeak .75s ease-out infinite;
+ animation:ringSpeak 1.5s ease-out infinite;
  border-color:#c2a6ff99;
+ opacity:1;
 }
-.voice-orb-stage.speaking .orb-ring.r2{animation-delay:.35s}
+.voice-orb-stage.speaking .orb-ring.r2{animation-delay:.75s}
 @keyframes ringSpeak{
  0%{transform:scale(.72);opacity:.9}
  100%{transform:scale(1.7);opacity:0}
@@ -417,9 +421,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .voice-equalizer i{
  width:4px;height:8px;border-radius:8px;background:#d8c7ff;
 }
-.voice-orb-stage.speaking~.voice-equalizer{opacity:1}
-.voice-orb-stage.speaking~.voice-equalizer i{
- animation:equalize .4s ease-in-out infinite alternate;
+#voiceScreen.speaking .voice-equalizer{opacity:1}
+#voiceScreen.speaking .voice-equalizer i{
+ animation:equalize .45s ease-in-out infinite alternate;
 }
 .voice-equalizer i:nth-child(2n){animation-delay:.15s}
 .voice-equalizer i:nth-child(3n){animation-delay:.28s}
@@ -456,10 +460,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .voice-control{
  width:60px;height:60px;border-radius:50%;
  border:1px solid #ffffff40;background:#ffffff16;
- color:white;font-size:22px;display:grid;place-items:center;
+ color:white;display:grid;place-items:center;
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  box-shadow:0 8px 25px #0005;
 }
+.voice-control svg{width:23px;height:23px}
 .voice-control.active{background:#ffffff35;border-color:#fff}
 .voice-control.end{
  background:#ed424b;border-color:#ed424b;
@@ -587,12 +592,16 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <!-- FULLSCREEN VOICE INTERFACE -->
 <div id="voiceScreen">
  <div class="voice-top">
-  <button class="voice-glass-btn" id="voiceBackBtn" aria-label="Back">←</button>
+  <button class="voice-glass-btn" id="voiceBackBtn" aria-label="Back">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
   <div class="voice-top-title">
    <strong>ESUKA LIVE</strong>
    <small>VOICE CONVERSATION</small>
   </div>
-  <button class="voice-glass-btn" id="voiceCloseBtn" aria-label="End">✕</button>
+  <button class="voice-glass-btn" id="voiceCloseBtn" aria-label="End">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m18 6-12 12M6 6l12 12"/></svg>
+  </button>
  </div>
 
  <div class="voice-middle">
@@ -612,13 +621,20 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   <div class="voice-transcript" id="voiceTranscript"></div>
 
-  <button class="voice-activate" id="activateVoiceBtn">✦ Activate Voice AI</button>
+  <button class="voice-activate" id="activateVoiceBtn">
+   <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/></svg>
+   Activate Voice AI
+  </button>
  </div>
 
  <div>
   <div class="voice-controls">
-   <button class="voice-control" id="voiceMicBtn" aria-label="Microphone">🎙</button>
-   <button class="voice-control end" id="voiceEndBtn" aria-label="End conversation">■</button>
+   <button class="voice-control" id="voiceMicBtn" aria-label="Microphone">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg>
+   </button>
+   <button class="voice-control end" id="voiceEndBtn" aria-label="End conversation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+   </button>
   </div>
   <div class="voice-bottom-note">Tap the red button to end conversation</div>
  </div>
@@ -1327,8 +1343,16 @@ function openVoiceScreen(){
 
 function setVoiceState(state,title,subtitle){
  const stage=$("voiceOrbStage");
+ const screen=$("voiceScreen");
+
  stage.classList.remove("listening","thinking","speaking");
- if(state)stage.classList.add(state);
+ screen.classList.remove("listening","thinking","speaking");
+
+ if(state){
+  stage.classList.add(state);
+  screen.classList.add(state);
+ }
+
  $("voiceState").textContent=title;
  $("voiceSubtitle").textContent=subtitle;
 }
@@ -1466,7 +1490,7 @@ function stopVoiceConversation(){
   window.speechSynthesis.cancel();
  }
 
- $("voiceScreen").classList.remove("show");
+ $("voiceScreen").classList.remove("show","listening","thinking","speaking");
  $("activateVoiceBtn").style.display="block";
  $("voiceMicBtn").classList.remove("active");
  $("voiceTranscript").textContent="";
