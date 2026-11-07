@@ -1222,10 +1222,14 @@ async function sendMessage(voiceConversation=false,voiceText=""){
    imageMode=false;updateMode();$("prompt").focus();
   }else{
    voiceProcessing=false;
-   voiceSpeaking=false;
 
    if(voiceModeActive&&!voicePaused){
-    scheduleVoiceListening(500);
+    setTimeout(()=>{
+     voiceSpeaking=false;
+     scheduleVoiceListening(1200);
+    },500);
+   }else{
+    voiceSpeaking=false;
    }
   }
  }
