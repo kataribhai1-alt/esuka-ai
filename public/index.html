@@ -1264,17 +1264,35 @@ function speakText(text,manual=false,voiceConversation=false){
  }
 
  return new Promise(resolve=>{
+  let completed=false;
+  let watchdog=null;
+
+  const finish=(success=true)=>{
+   if(completed)return;
+   completed=true;
+   clearTimeout(watchdog);
+
+   if(voiceConversation){
+    voiceSpeaking=false;
+   }
+
+   resolve(success);
+  };
+
   try{
-   window.speechSynthesis.cancel();
+   const synth=window.speechSynthesis;
+
+   synth.cancel();
 
    const utterance=new SpeechSynthesisUtterance(String(text));
-   const voices=window.speechSynthesis.getVoices()||[];
+   const voices=synth.getVoices()||[];
 
    utterance.rate=Number(settings.voiceSpeed)||1;
    utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
 
    if(settings.voiceType!=="system"){
     const indianVoices=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
+
     const namePattern=settings.voiceType==="female"
      ?/female|woman|heera|priya|neerja|lekha/i
      :/male|man|ravi|amit|rahul/i;
@@ -1292,16 +1310,9 @@ function speakText(text,manual=false,voiceConversation=false){
      ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
      ||voices.find(v=>v.lang.toLowerCase().startsWith("en"))
      ||voices[0];
+
     if(selected)utterance.voice=selected;
    }
-
-   let completed=false;
-   const finish=()=>{
-    if(completed)return;
-    completed=true;
-    if(voiceConversation)voiceSpeaking=false;
-    resolve(true);
-   };
 
    utterance.onstart=()=>{
     if(voiceConversation&&voiceModeActive){
@@ -1311,31 +1322,29 @@ function speakText(text,manual=false,voiceConversation=false){
    };
 
    utterance.onend=()=>{
-    if(voiceConversation&&voiceModeActive){
-     voiceSpeaking=false;
-    }
-    finish();
+    finish(true);
    };
 
-   utterance.onerror=()=>{
-    if(voiceConversation&&voiceModeActive){
-     voiceSpeaking=false;
-     $("voiceCaption").textContent="Voice playback ended. Listening again...";
-    }else if(manual){
-     showToast("Voice playback failed");
-    }
-    finish();
+   utterance.onerror=(event)=>{
+    if(manual)showToast("Voice playback failed");
+    finish(false);
    };
 
-   window.speechSynthesis.speak(utterance);
+   watchdog=setTimeout(()=>{
+    try{
+     synth.cancel();
+    }catch(e){}
+    finish(false);
+   },Math.max(30000,String(text).length*250));
+
+   synth.resume();
+   synth.speak(utterance);
+
   }catch(error){
-   voiceSpeaking=false;
-   if(manual)showToast("Voice playback failed");
-   resolve(false);
+   finish(false);
   }
  });
 }
-
 /* NORMAL CHAT MIC - ONE SHOT ONLY */
 function startListening(){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
