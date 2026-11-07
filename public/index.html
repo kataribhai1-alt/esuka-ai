@@ -3,118 +3,462 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>ESUKA AI Login</title>
+<title>ESUKA AI</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;background:#080808;color:white;
- font-family:Arial,sans-serif;min-height:100vh;
- display:flex;align-items:center;justify-content:center;
- padding:20px
+body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+#authScreen{
+ min-height:100vh;display:flex;align-items:center;
+ justify-content:center;padding:20px
 }
-.login{
+.authBox{
  width:100%;max-width:390px;background:#111;
  border:1px solid #292929;border-radius:22px;
- padding:30px 24px;text-align:center
+ padding:28px 23px;text-align:center
 }
-.logo{font-size:32px;font-weight:800;letter-spacing:3px}
-.sub{color:#999;font-size:14px;margin:10px 0 28px}
-input,button{
- width:100%;padding:15px;border-radius:12px;
- margin:7px 0;font-size:15px
+.logo{font-size:32px;font-weight:900;letter-spacing:3px}
+.sub{color:#999;font-size:14px;margin:10px 0 25px}
+.authBox input{
+ width:100%;padding:15px;margin:7px 0;
+ background:#080808;border:1px solid #333;
+ color:white;border-radius:12px;outline:none
 }
-input{background:#080808;border:1px solid #333;color:white}
-button{border:0;font-weight:600;cursor:pointer}
-.primary{background:white;color:black}
-.secondary{background:#202020;color:white;border:1px solid #333}
-.note{color:#888;font-size:12px;margin-top:18px}
-#status{font-size:13px;color:#aaa;margin-top:12px}
+.btn{
+ width:100%;padding:15px;border:0;border-radius:12px;
+ margin:7px 0;font-weight:700
+}
+.white{background:#fff;color:#000}
+.dark{background:#222;color:#fff;border:1px solid #383838}
+#status{font-size:13px;color:#bbb;margin-top:12px;min-height:18px}
+
+#app{height:100dvh;display:flex;flex-direction:column}
+header{
+ height:62px;display:flex;align-items:center;
+ justify-content:space-between;padding:0 17px;
+ border-bottom:1px solid #252525;background:#101010
+}
+.brand{font-size:20px;font-weight:900;letter-spacing:1px}
+.headerBtns{display:flex;gap:9px}
+.smallBtn{
+ background:#222;color:white;border:1px solid #383838;
+ border-radius:9px;padding:9px 12px
+}
+#messages{
+ flex:1;overflow-y:auto;padding:18px 14px;
+ width:100%;max-width:850px;margin:auto
+}
+.welcome{text-align:center;margin:18vh auto 25px}
+.welcome h1{font-size:29px}
+.welcome p{color:#999}
+.message{margin:18px 0;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#222;border-radius:17px;padding:13px 16px;margin-left:auto;max-width:85%;width:fit-content}
+.ai{padding:8px 3px}
+.aiName{font-size:13px;color:#b69aff;margin-bottom:8px;font-weight:bold}
+.typing{color:#aaa;font-size:14px}
+#composerWrap{
+ padding:12px 13px 18px;border-top:1px solid #252525;
+ background:#101010
+}
+.composer{
+ max-width:850px;margin:auto;display:flex;gap:8px;
+ align-items:flex-end;background:#1b1b1b;
+ border:1px solid #383838;border-radius:18px;padding:9px
+}
+#prompt{
+ flex:1;resize:none;max-height:130px;min-height:40px;
+ background:transparent;border:0;color:white;
+ outline:none;padding:10px
+}
+.sendBtn,.micBtn{
+ width:42px;height:42px;border:0;border-radius:13px;
+ background:#fff;color:#000;font-size:18px
+}
+.micBtn{background:#292929;color:white}
+.footer{text-align:center;color:#777;font-size:11px;margin-top:9px}
+#voiceStatus{color:#aaa;text-align:center;font-size:12px;margin-top:5px}
 </style>
 </head>
+
 <body>
-<div class="login">
- <div class="logo">ESUKA AI</div>
- <div class="sub">Your AI. Your world.</div>
 
- <input id="email" type="email" placeholder="Email address">
- <input id="password" type="password" placeholder="Password">
+<!-- LOGIN SCREEN -->
+<section id="authScreen">
+ <div class="authBox">
+  <div class="logo">ESUKA AI</div>
+  <div class="sub">Your AI. Your world.</div>
 
- <button class="primary" onclick="signIn()">Login</button>
- <button class="secondary" onclick="signUp()">Create Account</button>
- <button class="secondary" onclick="googleLogin()">Continue with Google</button>
- <button class="secondary" onclick="appleLogin()">Continue with Apple</button>
+  <input id="email" type="email" placeholder="Email address" autocomplete="email">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
 
- <div id="status"></div>
- <div class="note">Secure authentication powered by Supabase</div>
-</div>
+  <button class="btn white" onclick="signIn()">Login</button>
+  <button class="btn dark" onclick="signUp()">Create Account</button>
+  <button class="btn dark" onclick="oauthLogin('google')">Continue with Google</button>
+  <button class="btn dark" onclick="oauthLogin('apple')">Continue with Apple</button>
+
+  <div id="status"></div>
+ </div>
+</section>
+
+<!-- CHAT SCREEN -->
+<section id="app" class="hidden">
+ <header>
+  <div class="brand">ESUKA AI</div>
+  <div class="headerBtns">
+   <button class="smallBtn" onclick="newChat()">＋ New</button>
+   <button class="smallBtn" onclick="logout()">Logout</button>
+  </div>
+ </header>
+
+ <main id="messages">
+  <div class="welcome" id="welcome">
+   <h1>Hey! Welcome to ESUKA AI ✨</h1>
+   <p>What would you like to explore today?</p>
+  </div>
+ </main>
+
+ <div id="composerWrap">
+  <div class="composer">
+   <button class="micBtn" onclick="startMic()" title="Voice input">🎙</button>
+   <textarea id="prompt" rows="1" placeholder="Message ESUKA AI..."
+    onkeydown="handleKey(event)"></textarea>
+   <button class="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+  <div id="voiceStatus"></div>
+  <div class="footer">ESUKA AI can make mistakes. Check important information.</div>
+ </div>
+</section>
 
 <script>
-const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
-const SUPABASE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
+"use strict";
 
-const supabaseClient=supabase.createClient(
- SUPABASE_URL,SUPABASE_KEY
+/* CONFIGURATION */
+
+const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
+const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJW1YCSw";
+const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
+
+const supabaseClient=window.supabase.createClient(
+ SUPABASE_URL,
+ SUPABASE_KEY,
+ {
+  auth:{
+   persistSession:true,
+   autoRefreshToken:true,
+   detectSessionInUrl:true
+  }
+ }
 );
 
-const statusBox=document.getElementById("status");
+let currentSession=null;
+let history=[];
+let busy=false;
+let recognition=null;
 
-function status(message){
- statusBox.textContent=message;
+const $=id=>document.getElementById(id);
+
+function showStatus(message){
+ $("status").textContent=message;
 }
 
+function showAuth(){
+ $("authScreen").classList.remove("hidden");
+ $("app").classList.add("hidden");
+}
+
+function showApp(){
+ $("authScreen").classList.add("hidden");
+ $("app").classList.remove("hidden");
+}
+
+/* AUTHENTICATION */
+
 async function signIn(){
- const email=document.getElementById("email").value.trim();
- const password=document.getElementById("password").value;
- if(!email||!password)return status("Email aur password enter karo.");
+ const email=$("email").value.trim();
+ const password=$("password").value;
+
+ if(!email||!password)return showStatus("Email aur password enter karo.");
+
+ showStatus("Logging in...");
 
  const {error}=await supabaseClient.auth.signInWithPassword({
   email,password
  });
- if(error)return status(error.message);
- status("Login successful!");
+
+ if(error)showStatus(error.message);
 }
 
 async function signUp(){
- const email=document.getElementById("email").value.trim();
- const password=document.getElementById("password").value;
- if(!email||!password)return status("Email aur password enter karo.");
- if(password.length<8)return status("Password kam se kam 8 characters ka rakho.");
+ const email=$("email").value.trim();
+ const password=$("password").value;
 
- const {error}=await supabaseClient.auth.signUp({
+ if(!email||!password)return showStatus("Email aur password enter karo.");
+ if(password.length<8)return showStatus("Password minimum 8 characters ka hona chahiye.");
+
+ showStatus("Creating account...");
+
+ const {data,error}=await supabaseClient.auth.signUp({
   email,password,
   options:{
-   emailRedirectTo:window.location.origin
+   emailRedirectTo:window.location.origin+window.location.pathname
   }
  });
- if(error)return status(error.message);
- status("Signup successful! Email confirmation check karo.");
+
+ if(error)return showStatus(error.message);
+
+ if(data.session){
+  showStatus("Account created successfully!");
+ }else{
+  showStatus("Account created! Email confirmation check karo.");
+ }
 }
 
-async function googleLogin(){
+async function oauthLogin(provider){
+ showStatus("Connecting to "+provider+"...");
+
  const {error}=await supabaseClient.auth.signInWithOAuth({
-  provider:"google",
-  options:{redirectTo:window.location.origin}
+  provider,
+  options:{
+   redirectTo:window.location.origin+window.location.pathname,
+   queryParams:provider==="google"?{prompt:"select_account"}:undefined
+  }
  });
- if(error)status(error.message);
+
+ if(error)showStatus(error.message);
 }
 
-async function appleLogin(){
- const {error}=await supabaseClient.auth.signInWithOAuth({
-  provider:"apple",
-  options:{redirectTo:window.location.origin}
- });
- if(error)status(error.message);
+async function logout(){
+ speechSynthesis.cancel();
+
+ const {error}=await supabaseClient.auth.signOut();
+ if(error){
+  alert(error.message);
+  return;
+ }
+
+ history=[];
+ showAuth();
+}
+
+function updateAuth(session){
+ currentSession=session;
+
+ if(session){
+  showApp();
+ }else{
+  showAuth();
+ }
 }
 
 supabaseClient.auth.onAuthStateChange((event,session)=>{
- if(session){
-  status("Logged in: "+session.user.email);
-  // Connect your existing ESUKA AI chat screen here.
- }
+ updateAuth(session);
 });
+
+async function initialize(){
+ const {data,error}=await supabaseClient.auth.getSession();
+
+ if(error){
+  showStatus(error.message);
+  showAuth();
+  return;
+ }
+
+ updateAuth(data.session);
+}
+
+initialize();
+
+/* CHAT */
+
+function addMessage(text,type){
+ const welcome=$("welcome");
+ if(welcome)welcome.remove();
+
+ const div=document.createElement("div");
+ div.className="message "+type;
+
+ if(type==="ai"){
+  const name=document.createElement("div");
+  name.className="aiName";
+  name.textContent="✦ ESUKA AI";
+
+  const content=document.createElement("div");
+  content.textContent=text;
+
+  div.append(name,content);
+ }else{
+  div.textContent=text;
+ }
+
+ $("messages").appendChild(div);
+ $("messages").scrollTop=$("messages").scrollHeight;
+
+ return div;
+}
+
+function newChat(){
+ history=[];
+ $("messages").innerHTML=
+ '<div class="welcome" id="welcome"><h1>Hey! Welcome to ESUKA AI ✨</h1><p>What would you like to explore today?</p></div>';
+ speechSynthesis.cancel();
+}
+
+function handleKey(e){
+ if(e.key==="Enter"&&!e.shiftKey){
+  e.preventDefault();
+  sendMessage();
+ }
+}
+
+async function sendMessage(){
+ if(busy)return;
+ if(!currentSession){
+  showAuth();
+  return;
+ }
+
+ const input=$("prompt");
+ const text=input.value.trim();
+
+ if(!text)return;
+
+ input.value="";
+ addMessage(text,"user");
+
+ const typing=addMessage("Thinking...","ai");
+ typing.classList.add("typing");
+
+ busy=true;
+
+ try{
+  const response=await fetch(API_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    message:text,
+    history:history
+   })
+  });
+
+  if(!response.ok){
+   throw new Error("Server error: "+response.status);
+  }
+
+  const data=await response.json();
+
+  const reply=
+   data.reply||
+   data.response||
+   data.text||
+   data.message||
+   data.result?.reply;
+
+  if(!reply)throw new Error("AI response empty hai.");
+
+  typing.classList.remove("typing");
+  typing.innerHTML="";
+
+  const name=document.createElement("div");
+  name.className="aiName";
+  name.textContent="✦ ESUKA AI";
+
+  const content=document.createElement("div");
+  typing.append(name,content);
+
+  await typeText(content,String(reply));
+
+  history.push(
+   {role:"user",content:text},
+   {role:"assistant",content:String(reply)}
+  );
+
+ }catch(error){
+  typing.classList.remove("typing");
+  typing.textContent="Sorry! "+error.message;
+ }finally{
+  busy=false;
+  $("messages").scrollTop=$("messages").scrollHeight;
+ }
+}
+
+function typeText(element,text){
+ return new Promise(resolve=>{
+  let i=0;
+  const step=()=>{
+   if(i<text.length){
+    element.textContent+=text.slice(i,i+3);
+    i+=3;
+    $("messages").scrollTop=$("messages").scrollHeight;
+    setTimeout(step,12);
+   }else resolve();
+  };
+  step();
+ });
+}
+
+/* VOICE INPUT */
+
+function startMic(){
+ const SpeechRecognition=
+  window.SpeechRecognition||window.webkitSpeechRecognition;
+
+ if(!SpeechRecognition){
+  $("voiceStatus").textContent="Voice input is not supported in this browser.";
+  return;
+ }
+
+ if(recognition){
+  recognition.stop();
+  recognition=null;
+  return;
+ }
+
+ recognition=new SpeechRecognition();
+ recognition.lang="hi-IN";
+ recognition.interimResults=false;
+ recognition.continuous=false;
+
+ $("voiceStatus").textContent="Listening...";
+
+ recognition.onresult=e=>{
+  $("prompt").value=e.results[0][0].transcript;
+  $("voiceStatus").textContent="Voice received.";
+  sendMessage();
+ };
+
+ recognition.onerror=e=>{
+  $("voiceStatus").textContent="Microphone error: "+e.error;
+ };
+
+ recognition.onend=()=>{
+  recognition=null;
+ };
+
+ recognition.start();
+}
+
+/* AI VOICE REPLY */
+
+function speakText(text){
+ if(!("speechSynthesis" in window))return;
+
+ speechSynthesis.cancel();
+
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.lang="hi-IN";
+ utterance.rate=1;
+ utterance.pitch=1;
+
+ speechSynthesis.speak(utterance);
+}
 </script>
 </body>
 </html>
