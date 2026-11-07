@@ -102,8 +102,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  border-right:1px solid var(--border);
  display:flex;flex-direction:column;padding:18px;
  z-index:30;transition:transform .25s;
+ overflow-y:auto;overflow-x:hidden;min-height:0;
+ -webkit-overflow-scrolling:touch;
+ overscroll-behavior:contain;
 }
-.brand{display:flex;align-items:center;gap:13px;margin-bottom:35px;padding:3px 8px}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:35px;padding:3px 8px;flex-shrink:0}
 .logo{
  width:48px;height:48px;border-radius:16px;border:2px solid #555;
  background:#242424;display:grid;place-items:center;
@@ -116,23 +119,26 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  width:100%;display:flex;align-items:center;gap:14px;
  padding:14px;border:1px solid transparent;background:transparent;
  border-radius:15px;color:var(--text);font-size:14px;font-weight:550;
- text-align:left;transition:.2s;margin-bottom:7px;
+ text-align:left;transition:.2s;margin-bottom:7px;flex-shrink:0;
 }
 .side-btn:hover,.side-btn.active{background:#303030;border-color:#414141}
 .side-btn svg{width:21px;height:21px;flex-shrink:0}
 .side-heading{
  color:var(--muted);font-size:11px;font-weight:700;
- letter-spacing:1px;margin:27px 0 12px 8px;
+ letter-spacing:1px;margin:27px 0 12px 8px;flex-shrink:0;
 }
-.history-list{overflow-y:auto;flex:1;min-height:0}
+.history-list{
+ overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:120px;
+ -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
 .history-item{
  display:flex;align-items:center;gap:10px;padding:12px 10px;
  border-radius:11px;color:var(--muted);font-size:13px;cursor:pointer;
- overflow:hidden;
+ overflow:hidden;flex-shrink:0;
 }
 .history-item:hover{background:var(--panel2);color:var(--text)}
 .history-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.side-bottom{border-top:1px solid var(--border);padding-top:14px;margin-top:12px}
+.side-bottom{border-top:1px solid var(--border);padding-top:14px;margin-top:12px;flex-shrink:0}
 .profile{display:flex;align-items:center;gap:11px;padding:10px 5px}
 .profile-avatar{
  width:39px;height:39px;border-radius:50%;background:#454545;
@@ -342,39 +348,20 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  animation:orbListen 1.7s ease-in-out infinite;
  box-shadow:0 0 50px #ffffff35,inset 0 0 30px #ffffff35;
 }
-.voice-screen.thinking .voice-orb{
- animation:orbThink 1s linear infinite;
-}
+.voice-screen.thinking .voice-orb{animation:orbThink 1s linear infinite}
 .voice-screen.speaking .voice-orb{
  animation:orbSpeak .7s ease-in-out infinite alternate;
  box-shadow:0 0 65px #ffffff55,inset 0 0 35px #ffffff44;
 }
-.voice-screen.listening .voice-orb-ring{
- animation:ringPulse 2s ease-out infinite;
-}
+.voice-screen.listening .voice-orb-ring{animation:ringPulse 2s ease-out infinite}
 .voice-screen.listening .voice-orb-ring:nth-child(2){animation-delay:.4s}
 .voice-screen.listening .voice-orb-ring:nth-child(3){animation-delay:.8s}
-.voice-screen.speaking .voice-orb-ring{
- animation:ringPulse .8s ease-out infinite;
-}
-@keyframes orbListen{
- 0%,100%{transform:scale(1)}
- 50%{transform:scale(1.08)}
-}
-@keyframes orbThink{
- to{transform:rotate(360deg)}
-}
-@keyframes orbSpeak{
- from{transform:scale(1)}
- to{transform:scale(1.13)}
-}
-@keyframes ringPulse{
- 0%{transform:scale(.8);opacity:.65}
- 100%{transform:scale(1.3);opacity:0}
-}
-.voice-state{
- font-size:19px;font-weight:650;text-align:center;
-}
+.voice-screen.speaking .voice-orb-ring{animation:ringPulse .8s ease-out infinite}
+@keyframes orbListen{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes orbThink{to{transform:rotate(360deg)}}
+@keyframes orbSpeak{from{transform:scale(1)}to{transform:scale(1.13)}}
+@keyframes ringPulse{0%{transform:scale(.8);opacity:.65}100%{transform:scale(1.3);opacity:0}}
+.voice-state{font-size:19px;font-weight:650;text-align:center}
 .voice-caption{
  margin-top:12px;font-size:13px;color:#999;
  text-align:center;max-width:310px;line-height:1.6;
@@ -457,7 +444,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 @keyframes pulse{50%{opacity:.4}}
 @keyframes wave{to{height:29px}}
 @media(max-width:760px){
- .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);width:280px}
+ .sidebar{
+  position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);
+  width:280px;overflow-y:auto;overflow-x:hidden;
+ }
  .sidebar.open{transform:translateX(0)}
  .mobile-backdrop.show{display:block;position:fixed;inset:0;background:#0009;z-index:25}
  .menu-btn{display:grid}
@@ -485,7 +475,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
 <body>
 
-<!-- LOGIN SCREEN -->
 <section class="auth-screen" id="authScreen">
  <div class="auth-box">
   <div class="auth-logo">E</div>
@@ -616,7 +605,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </main>
 </div>
 
-<!-- FULL SCREEN VOICE MODE -->
 <section class="voice-screen" id="voiceScreen" aria-label="ESUKA AI Voice Mode">
  <div class="voice-top">
   <button class="voice-close" id="voiceCloseBtn" aria-label="Close voice mode">×</button>
@@ -642,7 +630,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  </div>
 </section>
 
-<!-- SETTINGS -->
 <div class="overlay" id="settingsOverlay">
  <section class="settings">
   <div class="settings-head">
@@ -726,7 +713,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <script>
 "use strict";
 
-/* SUPABASE AUTH CONFIG */
+/* CONFIG */
 const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
 const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
 const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
@@ -865,8 +852,7 @@ async function forgotPassword(){
 
 async function logout(){
  if(!confirm("Are you sure you want to logout?"))return;
- closeVoiceMode();
- stopSpeaking();stopListening();
+ closeVoiceMode();stopSpeaking();stopListening();
  const {error}=await supabaseClient.auth.signOut();
  if(error){showToast(error.message);return}
  currentSession=null;currentHistory=[];currentChatId=null;
@@ -1147,23 +1133,27 @@ function isImageRequest(text){
  return (imageWords.test(s)&&createWords.test(s))||directDraw.test(s);
 }
 
-/* CHAT REQUEST - VOICE MODE REUSES SAME WORKER API */
+/* CHAT REQUEST */
 async function sendMessage(voiceConversation=false,voiceText=""){
  if(!currentSession){showAuth();return}
  const text=String(voiceText||$("prompt").value).trim();
  if(!text||busy)return;
+
  $("prompt").value="";$("prompt").style.height="auto";
  addMessage("user",text);
 
  const useImage=!voiceConversation&&(imageMode||isImageRequest(text));
  busy=true;$("sendBtn").disabled=true;
- if(useImage)showImageProcessing();
- else showTyping();
 
  if(voiceConversation){
   voiceProcessing=true;
-  setVoiceState("thinking","Thinking...","Your message is being processed.");
+  setVoiceState("thinking","Thinking...","ESUKA is preparing your reply.");
  }
+
+ if(useImage)showImageProcessing();
+ else showTyping();
+
+ let answerToSpeak="";
 
  try{
   const payload=useImage
@@ -1175,14 +1165,17 @@ async function sendMessage(voiceConversation=false,voiceText=""){
   let response;
   try{
    response=await fetch(API_URL,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(payload),signal:controller.signal
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload),
+    signal:controller.signal
    });
   }finally{clearTimeout(timeout)}
 
   let data;
   try{data=await response.json()}
   catch(e){throw new Error("Server returned an invalid response")}
+
   removeTyping();
 
   if(!response.ok||data.success===false){
@@ -1200,14 +1193,17 @@ async function sendMessage(voiceConversation=false,voiceText=""){
   }else{
    const reply=data.reply||data.response||data.text||data.message||data.result?.reply;
    if(!reply)throw new Error("Empty response from AI");
-   const answer=String(reply);
-   addMessage("assistant",answer);
 
-   if(voiceConversation&&voiceModeActive){
-    voiceProcessing=false;
-    speakText(answer,false,true);
-   }else if(settings.voiceEnabled){
-    speakText(answer,false,false);
+   answerToSpeak=String(reply);
+
+   /* Text appears immediately when server responds */
+   addMessage("assistant",answerToSpeak);
+
+   /* Speak immediately; do not restart mic until speech ends */
+   if(voiceConversation&&voiceModeActive&&!voicePaused){
+    await speakText(answerToSpeak,false,true);
+   }else if(!voiceConversation&&settings.voiceEnabled){
+    speakText(answerToSpeak,false,false);
    }
   }
  }catch(error){
@@ -1217,18 +1213,22 @@ async function sendMessage(voiceConversation=false,voiceText=""){
    :error.message||"Unknown error";
   const errorReply="Sorry, kuch problem aa gayi: "+message;
   addMessage("assistant",errorReply);
-  if(voiceConversation&&voiceModeActive){
-   voiceProcessing=false;
-   speakText(errorReply,false,true);
+
+  if(voiceConversation&&voiceModeActive&&!voicePaused){
+   await speakText(errorReply,false,true);
   }
  }finally{
-  busy=false;$("sendBtn").disabled=false;
+  busy=false;
+  $("sendBtn").disabled=false;
+
   if(!voiceConversation){
    imageMode=false;updateMode();$("prompt").focus();
   }else{
    voiceProcessing=false;
-   if(voiceModeActive&&!voiceSpeaking&&!voicePaused){
-    scheduleVoiceListening(700);
+   voiceSpeaking=false;
+
+   if(voiceModeActive&&!voicePaused){
+    scheduleVoiceListening(350);
    }
   }
  }
@@ -1254,60 +1254,85 @@ function stopSpeaking(){
 }
 
 function speakText(text,manual=false,voiceConversation=false){
- if(!manual&&!voiceConversation&&!settings.voiceEnabled)return;
- if(!("speechSynthesis" in window)){
-  showToast("Voice not supported in this browser");
-  if(voiceConversation&&voiceModeActive)scheduleVoiceListening(500);
-  return;
+ if(!manual&&!voiceConversation&&!settings.voiceEnabled)return Promise.resolve(false);
+
+ if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){
+  if(voiceConversation)showToast("Voice playback is not supported in this browser");
+  else if(manual)showToast("Voice not supported in this browser");
+  return Promise.resolve(false);
  }
 
- window.speechSynthesis.cancel();
- const voices=window.speechSynthesis.getVoices();
- const utterance=new SpeechSynthesisUtterance(text);
- utterance.rate=Number(settings.voiceSpeed)||1;
- utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
+ return new Promise(resolve=>{
+  try{
+   window.speechSynthesis.cancel();
 
- if(settings.voiceType!=="system"){
-  const indianVoices=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
-  const namePattern=settings.voiceType==="female"
-   ?/female|woman|heera|priya|neerja|lekha/i
-   :/male|man|ravi|amit|rahul/i;
-  const selected=indianVoices.find(v=>namePattern.test(v.name))
-   ||indianVoices.find(v=>v.lang.toLowerCase()==="hi-in")
-   ||indianVoices.find(v=>v.lang.toLowerCase()==="en-in")
-   ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
-   ||voices.find(v=>v.lang.toLowerCase().startsWith("en"));
-  if(selected)utterance.voice=selected;
- }else if(voices.length){
-  const selected=voices.find(v=>v.lang.toLowerCase()==="en-in"||v.lang.toLowerCase()==="hi-in")
-   ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
-   ||voices.find(v=>v.lang.toLowerCase().startsWith("en"));
-  if(selected)utterance.voice=selected;
- }
+   const utterance=new SpeechSynthesisUtterance(String(text));
+   const voices=window.speechSynthesis.getVoices()||[];
 
- utterance.onstart=()=>{
-  if(voiceConversation&&voiceModeActive){
-   voiceSpeaking=true;
-   setVoiceState("speaking","ESUKA is speaking...","Listen to my response.");
+   utterance.rate=Number(settings.voiceSpeed)||1;
+   utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
+
+   if(settings.voiceType!=="system"){
+    const indianVoices=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
+    const namePattern=settings.voiceType==="female"
+     ?/female|woman|heera|priya|neerja|lekha/i
+     :/male|man|ravi|amit|rahul/i;
+
+    const selected=indianVoices.find(v=>namePattern.test(v.name))
+     ||indianVoices.find(v=>v.lang.toLowerCase()==="hi-in")
+     ||indianVoices.find(v=>v.lang.toLowerCase()==="en-in")
+     ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
+     ||voices.find(v=>v.lang.toLowerCase().startsWith("en"))
+     ||voices[0];
+
+    if(selected)utterance.voice=selected;
+   }else if(voices.length){
+    const selected=voices.find(v=>v.lang.toLowerCase()==="en-in"||v.lang.toLowerCase()==="hi-in")
+     ||voices.find(v=>v.lang.toLowerCase().startsWith("hi"))
+     ||voices.find(v=>v.lang.toLowerCase().startsWith("en"))
+     ||voices[0];
+    if(selected)utterance.voice=selected;
+   }
+
+   let completed=false;
+   const finish=()=>{
+    if(completed)return;
+    completed=true;
+    if(voiceConversation)voiceSpeaking=false;
+    resolve(true);
+   };
+
+   utterance.onstart=()=>{
+    if(voiceConversation&&voiceModeActive){
+     voiceSpeaking=true;
+     setVoiceState("speaking","ESUKA is speaking...","Listen to my response.");
+    }
+   };
+
+   utterance.onend=()=>{
+    if(voiceConversation&&voiceModeActive){
+     voiceSpeaking=false;
+    }
+    finish();
+   };
+
+   utterance.onerror=()=>{
+    if(voiceConversation&&voiceModeActive){
+     voiceSpeaking=false;
+     $("voiceCaption").textContent="Voice playback ended. Listening again...";
+    }else if(manual){
+     showToast("Voice playback failed");
+    }
+    finish();
+   };
+
+   window.speechSynthesis.speak(utterance);
+  }catch(error){
+   voiceSpeaking=false;
+   if(manual)showToast("Voice playback failed");
+   resolve(false);
   }
- };
- utterance.onend=()=>{
-  voiceSpeaking=false;
-  if(voiceConversation&&voiceModeActive&&!voicePaused){
-   voiceProcessing=false;
-   scheduleVoiceListening(500);
-  }
- };
- utterance.onerror=()=>{
-  voiceSpeaking=false;
-  if(voiceConversation&&voiceModeActive&&!voicePaused){
-   voiceProcessing=false;
-   scheduleVoiceListening(700);
-  }else if(manual){
-   showToast("Voice playback failed");
-  }
- };
- window.speechSynthesis.speak(utterance);
+ });
 }
 
 /* NORMAL CHAT MIC - ONE SHOT ONLY */
@@ -1317,6 +1342,7 @@ function startListening(){
   showToast("Voice input not supported in this browser");return;
  }
  if(listening){stopListening();return}
+
  recognition=new SpeechRecognition();
  recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
  recognition.interimResults=true;
@@ -1369,22 +1395,27 @@ function openVoiceMode(){
  voiceProcessing=false;
  voiceSpeaking=false;
  voiceLastTranscript="";
+
  $("voiceScreen").classList.add("show");
  $("voiceMuteBtn").textContent="Ⅱ";
  $("voiceHint").textContent="Voice conversation is active";
 
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+
  if(!SpeechRecognition){
   setVoiceState("thinking","Voice unavailable","This browser does not support speech recognition. Try a supported browser.");
+  $("voiceHint").textContent="Speech recognition is unavailable";
   showToast("Speech recognition is not supported here");
   return;
  }
+
  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
  startVoiceListening();
 }
 
 function startVoiceListening(){
- if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking)return;
+ if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
+
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SpeechRecognition)return;
 
@@ -1399,30 +1430,36 @@ function startVoiceListening(){
  rec.interimResults=true;
  rec.continuous=false;
  rec.maxAlternatives=1;
+
  let finalTranscript="";
  let submitted=false;
 
  rec.onstart=()=>{
-  if(!voiceModeActive)return;
+  if(!voiceModeActive||voicePaused)return;
   setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
  };
 
  rec.onresult=e=>{
   let interim="";
+
   for(let i=e.resultIndex;i<e.results.length;i++){
    const result=e.results[i];
    if(result.isFinal)finalTranscript+=result[0].transcript+" ";
    else interim+=result[0].transcript;
   }
+
   const display=(finalTranscript+interim).trim();
-  if(display){
-   $("voiceCaption").textContent=display;
-  }
+  if(display)$("voiceCaption").textContent=display;
+
   if(finalTranscript.trim()&&!submitted){
    submitted=true;
    const transcript=finalTranscript.trim();
    voiceLastTranscript=transcript;
+
+   /* Lock mic before sending request */
    voiceProcessing=true;
+   clearTimeout(voiceRestartTimer);
+
    try{rec.stop()}catch(e){}
    sendMessage(true,transcript);
   }
@@ -1430,10 +1467,12 @@ function startVoiceListening(){
 
  rec.onerror=e=>{
   if(!voiceModeActive||voicePaused)return;
+
   if(e.error==="not-allowed"||e.error==="service-not-allowed"){
-   setVoiceState("thinking","Microphone permission needed","Allow microphone access in your browser settings, then reopen Voice Mode.");
+   setVoiceState("thinking","Microphone permission needed","Allow microphone access in browser settings, then reopen Voice Mode.");
    showToast("Microphone permission denied");
    voicePaused=true;
+   $("voiceMuteBtn").textContent="▶";
    $("voiceHint").textContent="Microphone permission is required";
   }else if(e.error!=="aborted"&&e.error!=="no-speech"){
    $("voiceCaption").textContent="Trying to listen again...";
@@ -1442,24 +1481,28 @@ function startVoiceListening(){
 
  rec.onend=()=>{
   if(voiceRecognition===rec)voiceRecognition=null;
-  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking){
-   scheduleVoiceListening(600);
+
+  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking&&!busy){
+   scheduleVoiceListening(450);
   }
  };
 
  try{rec.start()}
  catch(e){
   if(voiceModeActive&&!voicePaused){
-   scheduleVoiceListening(1000);
+   scheduleVoiceListening(900);
   }
  }
+
 }
 
-function scheduleVoiceListening(delay=600){
+function scheduleVoiceListening(delay=450){
  clearTimeout(voiceRestartTimer);
- if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking)return;
+
+ if(!voiceModeActive||voicePaused||voiceProcessing||voiceSpeaking||busy)return;
+
  voiceRestartTimer=setTimeout(()=>{
-  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking){
+  if(voiceModeActive&&!voicePaused&&!voiceProcessing&&!voiceSpeaking&&!busy){
    startVoiceListening();
   }
  },delay);
@@ -1467,23 +1510,32 @@ function scheduleVoiceListening(delay=600){
 
 function pauseVoiceMode(){
  if(!voiceModeActive)return;
+
  voicePaused=!voicePaused;
+
  if(voicePaused){
   clearTimeout(voiceRestartTimer);
+
   if(voiceRecognition){
    try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
    voiceRecognition=null;
   }
+
   stopSpeaking();
-  voiceProcessing=false;
   setVoiceState("thinking","Paused","Press play to continue the conversation.");
   $("voiceMuteBtn").textContent="▶";
   $("voiceHint").textContent="Conversation paused";
  }else{
   $("voiceMuteBtn").textContent="Ⅱ";
   $("voiceHint").textContent="Voice conversation is active";
-  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
-  startVoiceListening();
+
+  if(busy){
+   setVoiceState("thinking","Thinking...","ESUKA is finishing your reply.");
+  }else{
+   voiceProcessing=false;
+   setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
+   startVoiceListening();
+  }
  }
 }
 
@@ -1498,6 +1550,7 @@ function closeVoiceMode(){
   try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
   voiceRecognition=null;
  }
+
  stopSpeaking();
  $("voiceScreen").classList.remove("show","listening","thinking","speaking");
  $("voiceMuteBtn").textContent="Ⅱ";
