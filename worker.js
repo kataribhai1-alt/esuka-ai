@@ -1,4 +1,3 @@
-
 const ALLOWED_ORIGINS = [
   "https://esuka-ai-web.kataribhai1.workers.dev",
   "https://esuka-ai-web.pages.dev",
