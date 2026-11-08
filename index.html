@@ -1189,11 +1189,19 @@ function addImage(url, title = "Generated Image", promptText = ""){
  download.textContent="↓ Download image";
  download.addEventListener("click",()=>downloadImage(url));
  
- const open=document.createElement("button");open.className="mini-btn";
- open.textContent="Full View";
- open.addEventListener("click",()=>openEsukaGallery([currentItem], 0));
+ const openBtn=document.createElement("button");
+ openBtn.className="mini-btn";
+ openBtn.textContent="🖼 Gallery View";
+ openBtn.addEventListener("click", () => {
+  const allImages = Array.from(document.querySelectorAll(".generated-image")).map(el => ({
+    url: el.src,
+    title: "ESUKA AI Creation",
+    prompt: "AI Generated Visual"
+  }));
+  openEsukaGallery(allImages.length ? allImages : [currentItem], 0);
+ });
 
- actions.append(download,open);contentBox.appendChild(actions);scrollBottom();
+ actions.append(download,openBtn);contentBox.appendChild(actions);scrollBottom();
 }
 
 function downloadImage(url){
@@ -1749,8 +1757,13 @@ $("newChatBtn").addEventListener("click",newChat);
 $("sideImageBtn").addEventListener("click",toggleImageMode);
 $("attachBtn").addEventListener("click",toggleImageMode);
 
-/* TYPING BOX GALLERY BUTTON EVENT */
-document.getElementById("typingGalleryBtn").addEventListener("click", () => {
+/* TYPING BOX GALLERY BUTTON EVENT FIXED */
+const typeGalBtn = document.getElementById("typingGalleryBtn");
+if(typeGalBtn){
+ typeGalBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
   const allImages = Array.from(document.querySelectorAll(".generated-image")).map(el => ({
     url: el.src,
     title: "ESUKA AI Creation",
@@ -1763,7 +1776,8 @@ document.getElementById("typingGalleryBtn").addEventListener("click", () => {
   }
 
   openEsukaGallery(allImages, 0);
-});
+ });
+}
 
 $("sideVoiceBtn").addEventListener("click",openVoiceMode);
 $("micBtn").addEventListener("click",toggleVoice);
