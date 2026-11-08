@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESUKA AI | Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#080b14;color:#fff;
+ font-family:Arial,sans-serif;min-height:100vh;
+ display:grid;place-items:center;padding:20px
+}
+.panel{
+ width:100%;max-width:480px;background:#111827;
+ border:1px solid #263449;border-radius:20px;
+ padding:28px;text-align:center
+}
+h1{color:#8b9cff;margin-bottom:8px}
+p{color:#aab5c8;line-height:1.5}
+button{
+ width:100%;padding:14px;border:0;border-radius:10px;
+ background:#6578ff;color:white;font-size:16px;
+ font-weight:bold;margin-top:15px;cursor:pointer
+}
+button:hover{opacity:.9}
+#status{margin-top:20px;overflow-wrap:anywhere}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="panel">
+<h1>ESUKA AI</h1>
+<p>Secure Admin Dashboard</p>
 
+<div id="login">
+<p>Login with your authorized Google account.</p>
+<button id="googleBtn">Continue with Google</button>
+</div>
+
+<div id="dashboard" class="hidden">
+<h2>Welcome, Admin!</h2>
+<p id="email"></p>
+<p>Admin access verified successfully.</p>
+<button id="logoutBtn">Logout</button>
+</div>
+
+<div id="status">Checking login...</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
+const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
+
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const login=document.getElementById("login");
+const dashboard=document.getElementById("dashboard");
+const statusBox=document.getElementById("status");
+
+async function checkAdmin(){
+ statusBox.textContent="Checking account...";
+ login.classList.add("hidden");
+ dashboard.classList.add("hidden");
+
+ const {data:{session},error}=await db.auth.getSession();
+
+ if(error){
+  statusBox.textContent="Login check failed. Please refresh.";
+  login.classList.remove("hidden");
+  return;
+ }
+
+ if(!session){
+  statusBox.textContent="Please login with Google.";
+  login.classList.remove("hidden");
+  return;
+ }
+
+ const {data,error:adminError}=await db
+  .from("admin_users")
+  .select("user_id")
+  .eq("user_id",session.user.id)
+  .maybeSingle();
+
+ if(adminError){
+  statusBox.textContent="Admin verification failed: "+adminError.message;
+  return;
+ }
+
+ if(!data){
+  statusBox.textContent="Access denied. This account is not an admin.";
+  login.classList.remove("hidden");
+  return;
+ }
+
+ document.getElementById("email").textContent=session.user.email;
+ dashboard.classList.remove("hidden");
+ statusBox.textContent="Admin access active.";
+}
+
+document.getElementById("googleBtn").onclick=async()=>{
+ statusBox.textContent="Opening Google login...";
+ const {error}=await db.auth.signInWithOAuth({
+  provider:"google",
+  options:{
+   redirectTo:window.location.href
+  }
+ });
+ if(error) statusBox.textContent=error.message;
+};
+
+document.getElementById("logoutBtn").onclick=async()=>{
+ await db.auth.signOut();
+ await checkAdmin();
+};
+
+db.auth.onAuthStateChange(()=>{
+ checkAdmin();
+});
+
+checkAdmin();
+</script>
+</body>
+</html>
