@@ -6,24 +6,56 @@
 >
 
 <script>
-const galleryBtn = document.getElementById("attachBtn");
-const photoPicker = document.getElementById("photoPicker");
+(() => {
+  const galleryBtn = document.getElementById("attachBtn");
+  const photoPicker = document.getElementById("photoPicker");
+  const prompt = document.getElementById("prompt");
 
-if (galleryBtn && photoPicker) {
-  galleryBtn.textContent = "▧";
+  if (!galleryBtn || !photoPicker) return;
+
+  galleryBtn.type = "button";
   galleryBtn.title = "Gallery";
+  galleryBtn.setAttribute("aria-label", "Gallery");
 
-  galleryBtn.onclick = (e) => {
-    e.preventDefault();
+  galleryBtn.onclick = (event) => {
+    event.preventDefault();
     photoPicker.click();
   };
 
   photoPicker.onchange = () => {
-    const photo = photoPicker.files[0];
-    if (photo) {
-      console.log("Selected photo:", photo.name);
-      // Yahan selected photo ko chat mein attach karne ka code lagega.
+    const photo = photoPicker.files?.[0];
+    if (!photo) return;
+
+    if (!photo.type.startsWith("image/")) {
+      alert("Please select an image.");
+      photoPicker.value = "";
+      return;
     }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      window.esukaSelectedPhoto = {
+        file: photo,
+        dataUrl: reader.result
+      };
+
+      if (prompt) {
+        prompt.focus();
+        prompt.placeholder = "Photo selected. Ask something about it...";
+      }
+
+      document.dispatchEvent(
+        new CustomEvent("esuka:photo-selected", {
+          detail: {
+            file: photo,
+            dataUrl: reader.result
+          }
+        })
+      );
+    };
+
+    reader.readAsDataURL(photo);
   };
-}
+})();
 </script>
