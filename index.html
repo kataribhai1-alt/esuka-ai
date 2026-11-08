@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -232,6 +231,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  opacity:0;transform:translateY(12px) scale(.985);
  transition:opacity .65s ease,transform .65s ease;
  background:var(--panel2);
+ cursor:pointer;
 }
 .generated-image.revealed{opacity:1;transform:translateY(0) scale(1)}
 .image-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -444,6 +444,81 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  z-index:250;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;
 }
 .toast.show{opacity:1;bottom:110px}
+
+/* --- ESUKA AI GALLERY MODE STYLES --- */
+.esuka-gallery-overlay {
+ display: none;
+ position: fixed;
+ inset: 0;
+ background: rgba(10, 10, 15, 0.94);
+ backdrop-filter: blur(14px);
+ z-index: 999999;
+ align-items: center;
+ justify-content: center;
+ flex-direction: column;
+ color: #fff;
+ animation: fade .2s ease;
+}
+.esuka-gallery-overlay.active {
+ display: flex;
+}
+.esuka-gallery-close {
+ position: absolute;
+ top: 25px;
+ right: 30px;
+ width: 48px;
+ height: 48px;
+ border-radius: 50%;
+ background: rgba(255, 255, 255, 0.1);
+ border: 1px solid rgba(255, 255, 255, 0.15);
+ color: #fff;
+ font-size: 24px;
+ display: grid;
+ place-items: center;
+ cursor: pointer;
+ transition: background .2s;
+}
+.esuka-gallery-close:hover { background: rgba(255, 255, 255, 0.25); }
+.esuka-gallery-nav {
+ position: absolute;
+ top: 50%;
+ transform: translateY(-50%);
+ width: 52px;
+ height: 52px;
+ background: rgba(255, 255, 255, 0.08);
+ border: 1px solid rgba(255, 255, 255, 0.12);
+ color: #fff;
+ font-size: 20px;
+ border-radius: 50%;
+ display: grid;
+ place-items: center;
+ cursor: pointer;
+ transition: background .2s, transform .2s;
+ z-index: 10;
+}
+.esuka-gallery-nav:hover { background: rgba(255, 255, 255, 0.22); transform: translateY(-50%) scale(1.05); }
+.esuka-gallery-nav.prev { left: 25px; }
+.esuka-gallery-nav.next { right: 25px; }
+.esuka-gallery-body {
+ max-width: 85vw;
+ max-height: 80vh;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 18px;
+ text-align: center;
+}
+.esuka-gallery-media img {
+ max-width: 100%;
+ max-height: 65vh;
+ border-radius: 16px;
+ box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+ object-fit: contain;
+ border: 1px solid rgba(255,255,255,0.1);
+}
+.esuka-gallery-caption h3 { font-size: 1.15rem; font-weight: 650; margin-bottom: 6px; }
+.esuka-gallery-caption p { font-size: 0.9rem; color: #aaa; max-width: 600px; line-height: 1.5; }
+
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
@@ -717,6 +792,21 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- ESUKA AI GALLERY MODAL CONTAINER -->
+<div id="esukaGalleryModal" class="esuka-gallery-overlay">
+ <button class="esuka-gallery-close" onclick="closeEsukaGallery()" aria-label="Close Gallery">✕</button>
+ <button class="esuka-gallery-nav prev" onclick="navigateEsukaGallery(-1)" aria-label="Previous">❮</button>
+ <button class="esuka-gallery-nav next" onclick="navigateEsukaGallery(1)" aria-label="Next">❯</button>
+
+ <div class="esuka-gallery-body">
+  <div class="esuka-gallery-media" id="esukaGalleryMedia"></div>
+  <div class="esuka-gallery-caption">
+   <h3 id="esukaGalleryTitle">ESUKA AI Creation</h3>
+   <p id="esukaGalleryDesc">Generated artwork view</p>
+  </div>
+ </div>
+</div>
+
 <script>
 "use strict";
 
@@ -900,6 +990,37 @@ let voiceRecognition=null;
 let voiceRestartTimer=null;
 let voiceLastTranscript="";
 
+/* GALLERY MODULE STATE */
+let esukaGalleryItems = [];
+let esukaGalleryIndex = 0;
+
+function openEsukaGallery(items, index = 0) {
+ if (!items || !items.length) return;
+ esukaGalleryItems = items;
+ esukaGalleryIndex = index;
+ renderEsukaGalleryItem();
+ $("esukaGalleryModal").classList.add("active");
+}
+
+function closeEsukaGallery() {
+ $("esukaGalleryModal").classList.remove("active");
+}
+
+function navigateEsukaGallery(direction) {
+ esukaGalleryIndex += direction;
+ if (esukaGalleryIndex < 0) esukaGalleryIndex = esukaGalleryItems.length - 1;
+ if (esukaGalleryIndex >= esukaGalleryItems.length) esukaGalleryIndex = 0;
+ renderEsukaGalleryItem();
+}
+
+function renderEsukaGalleryItem() {
+ const current = esukaGalleryItems[esukaGalleryIndex];
+ if (!current) return;
+ $("esukaGalleryMedia").innerHTML = `<img src="${current.url}" alt="Gallery Item">`;
+ $("esukaGalleryTitle").textContent = current.title || "ESUKA AI Creation";
+ $("esukaGalleryDesc").textContent = current.prompt || "";
+}
+
 function loadData(){
  try{settings={...defaults,...JSON.parse(localStorage.getItem("esuka_settings")||"{}")}}
  catch(e){settings={...defaults}}
@@ -1032,28 +1153,42 @@ function addMessage(role,content,save=true){
  scrollBottom();return row;
 }
 
-function addImage(url){
+function addImage(url, title = "Generated Image", promptText = ""){
  const last=$("messages").lastElementChild;
  if(!last)return;
  const contentBox=last.querySelector(".msg-content");
  if(!contentBox)return;
+ 
  const img=document.createElement("img");
- img.className="generated-image";img.alt="Image generated by ESUKA AI";
+ img.className="generated-image";
+ img.alt=title;
  img.loading="eager";
+
+ const currentItem = { url, title, prompt: promptText };
+ 
+ img.onclick = () => {
+  const allImages = Array.from(document.querySelectorAll(".generated-image")).map(el => ({
+    url: el.src,
+    title: "ESUKA AI Art",
+    prompt: "AI Generated Visual"
+  }));
+  const clickedIdx = allImages.findIndex(i => i.url === url);
+  openEsukaGallery(allImages, clickedIdx >= 0 ? clickedIdx : 0);
+ };
+
  img.onload=()=>{requestAnimationFrame(()=>img.classList.add("revealed"));scrollBottom()};
  img.onerror=()=>{img.remove();showToast("Image could not be displayed")};
  img.src=url;contentBox.appendChild(img);
+ 
  const actions=document.createElement("div");actions.className="image-actions";
  const download=document.createElement("button");download.className="mini-btn";
  download.textContent="↓ Download image";
  download.addEventListener("click",()=>downloadImage(url));
+ 
  const open=document.createElement("button");open.className="mini-btn";
- open.textContent="Open image";
- open.addEventListener("click",()=>{
-  const win=window.open();
-  if(win)win.location.href=url;
-  else showToast("Pop-up blocked by browser");
- });
+ open.textContent="Full View";
+ open.addEventListener("click",()=>openEsukaGallery([currentItem], 0));
+
  actions.append(download,open);contentBox.appendChild(actions);scrollBottom();
 }
 
@@ -1288,7 +1423,6 @@ function speakText(text,manual=false,voiceConversation=false){
 
   try{
    const synth=window.speechSynthesis;
-
    synth.cancel();
 
    const utterance=new SpeechSynthesisUtterance(String(text));
@@ -1299,7 +1433,6 @@ function speakText(text,manual=false,voiceConversation=false){
 
    if(settings.voiceType!=="system"){
     const indianVoices=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
-
     const namePattern=settings.voiceType==="female"
      ?/female|woman|heera|priya|neerja|lekha/i
      :/male|man|ravi|amit|rahul/i;
@@ -1328,31 +1461,23 @@ function speakText(text,manual=false,voiceConversation=false){
     }
    };
 
-   utterance.onend=()=>{
-    finish(true);
-   };
-
-   utterance.onerror=(event)=>{
-    if(manual)showToast("Voice playback failed");
-    finish(false);
-   };
+   utterance.onend=()=>finish(true);
+   utterance.onerror=(event)=>finish(false);
 
    watchdog=setTimeout(()=>{
-    try{
-     synth.cancel();
-    }catch(e){}
+    try{synth.cancel()}catch(e){}
     finish(false);
    },Math.max(30000,String(text).length*250));
 
    synth.resume();
    synth.speak(utterance);
-
   }catch(error){
    finish(false);
   }
  });
 }
-/* NORMAL CHAT MIC - ONE SHOT ONLY */
+
+/* NORMAL CHAT MIC */
 function startListening(){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SpeechRecognition){
@@ -1403,17 +1528,12 @@ function setVoiceState(state,title,caption){
  $("voiceCaption").textContent=caption||"";
 }
 
-/* iPhone audio warm-up */
 function unlockSpeechAudio(){
  if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window))return;
-
  try{
   window.speechSynthesis.cancel();
   const silent=new SpeechSynthesisUtterance(" ");
-  silent.volume=0;
-  silent.rate=1;
-  silent.lang="en-US";
-  silent.onend=()=>{};
+  silent.volume=0;silent.rate=1;silent.lang="en-US";
   window.speechSynthesis.speak(silent);
  }catch(e){}
 }
@@ -1432,13 +1552,11 @@ function openVoiceMode(){
  $("voiceMuteBtn").textContent="Ⅱ";
  $("voiceHint").textContent="Voice conversation is active";
 
- /* Unlock audio from the user's tap on iPhone */
  unlockSpeechAudio();
 
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-
  if(!SpeechRecognition){
-  setVoiceState("thinking","Voice unavailable","This browser does not support speech recognition. Try a supported browser.");
+  setVoiceState("thinking","Voice unavailable","This browser does not support speech recognition.");
   $("voiceHint").textContent="Speech recognition is unavailable";
   showToast("Speech recognition is not supported here");
   return;
@@ -1448,20 +1566,11 @@ function openVoiceMode(){
  startVoiceListening();
 }
 
-/* UPDATED iPHONE VOICE RECOGNITION */
 function startVoiceListening(){
  if(!voiceModeActive || voicePaused || voiceProcessing || voiceSpeaking || busy) return;
 
  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
- if(!SpeechRecognition){
-  setVoiceState(
-   "thinking",
-   "Voice not supported",
-   "Please use Safari or Chrome with microphone permission."
-  );
-  return;
- }
+ if(!SpeechRecognition) return;
 
  if(voiceRecognition){
   try{
@@ -1488,9 +1597,7 @@ function startVoiceListening(){
 
  function submitVoice(){
   if(submitted || !voiceModeActive || voicePaused) return;
-
   const transcript = (finalTranscript + " " + interimTranscript).trim();
-
   if(!transcript) return;
 
   submitted = true;
@@ -1500,85 +1607,47 @@ function startVoiceListening(){
   voiceLastTranscript = transcript;
   voiceProcessing = true;
 
-  try{
-   rec.onend = null;
-   rec.stop();
-  }catch(e){}
-
+  try{rec.onend = null; rec.stop();}catch(e){}
   if(voiceRecognition === rec) voiceRecognition = null;
 
   $("voiceCaption").textContent = transcript;
-
-  setVoiceState(
-   "thinking",
-   "Thinking...",
-   "ESUKA AI is preparing a reply."
-  );
-
+  setVoiceState("thinking","Thinking...","ESUKA AI is preparing a reply.");
   sendMessage(true, transcript);
  }
 
  rec.onstart = ()=>{
   if(!voiceModeActive || voicePaused) return;
-
-  setVoiceState(
-   "listening",
-   "Listening...",
-   "Speak naturally. I'm listening."
-  );
+  setVoiceState("listening","Listening...","Speak naturally. I'm listening.");
  };
 
  rec.onresult = (e)=>{
   finalTranscript = "";
   interimTranscript = "";
-
   for(let i = 0; i < e.results.length; i++){
    const result = e.results[i];
    const words = result[0].transcript;
-
-   if(result.isFinal){
-    finalTranscript += words + " ";
-   }else{
-    interimTranscript += words + " ";
-   }
+   if(result.isFinal) finalTranscript += words + " ";
+   else interimTranscript += words + " ";
   }
 
   const display = (finalTranscript + interimTranscript).trim();
-
   if(display){
    $("voiceCaption").textContent = display;
-
    clearTimeout(silenceTimer);
-
-   silenceTimer = setTimeout(()=>{
-    submitVoice();
-   }, 1300);
+   silenceTimer = setTimeout(()=>submitVoice(), 1300);
   }
-
-  if(finalTranscript.trim()){
-   submitVoice();
-  }
+  if(finalTranscript.trim()) submitVoice();
  };
 
  rec.onerror = (e)=>{
   clearTimeout(silenceTimer);
-
   if(!voiceModeActive || voicePaused) return;
-
   if(e.error === "not-allowed" || e.error === "service-not-allowed"){
    voicePaused = true;
-
-   setVoiceState(
-    "thinking",
-    "Microphone permission needed",
-    "Allow microphone access in your browser settings."
-   );
-
+   setVoiceState("thinking","Microphone permission needed","Allow microphone access in settings.");
    showToast("Microphone permission denied");
-
    $("voiceMuteBtn").textContent = "▶";
-   $("voiceHint").textContent = "Microphone permission is required";
-
+   $("voiceHint").textContent = "Microphone permission required";
   }else if(e.error !== "aborted" && e.error !== "no-speech"){
    $("voiceCaption").textContent = "Trying to listen again...";
   }
@@ -1586,48 +1655,27 @@ function startVoiceListening(){
 
  rec.onend = ()=>{
   clearTimeout(silenceTimer);
-
-  if(voiceRecognition === rec){
-   voiceRecognition = null;
-  }
-
+  if(voiceRecognition === rec) voiceRecognition = null;
   if(submitted) return;
 
   const transcript = (finalTranscript + " " + interimTranscript).trim();
-
-  if(transcript){
-   submitVoice();
-   return;
-  }
+  if(transcript){ submitVoice(); return; }
 
   if(voiceModeActive && !voicePaused && !voiceProcessing && !voiceSpeaking && !busy){
    scheduleVoiceListening(600);
   }
  };
 
- try{
-  rec.start();
- }catch(e){
-  if(voiceModeActive && !voicePaused){
-   scheduleVoiceListening(1000);
-  }
+ try{ rec.start(); }catch(e){
+  if(voiceModeActive && !voicePaused) scheduleVoiceListening(1000);
  }
 }
 
 function scheduleVoiceListening(delay=900){
  clearTimeout(voiceRestartTimer);
-
  if(!voiceModeActive || voicePaused) return;
-
  voiceRestartTimer = setTimeout(()=>{
-  if(
-   voiceModeActive &&
-   !voicePaused &&
-   !voiceProcessing &&
-   !voiceSpeaking &&
-   !busy &&
-   !voiceRecognition
-  ){
+  if(voiceModeActive && !voicePaused && !voiceProcessing && !voiceSpeaking && !busy && !voiceRecognition){
    startVoiceListening();
   }
  },delay);
@@ -1635,17 +1683,10 @@ function scheduleVoiceListening(delay=900){
 
 function pauseVoiceMode(){
  if(!voiceModeActive)return;
-
  voicePaused=!voicePaused;
-
  if(voicePaused){
   clearTimeout(voiceRestartTimer);
-
-  if(voiceRecognition){
-   try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
-   voiceRecognition=null;
-  }
-
+  if(voiceRecognition){try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){} voiceRecognition=null;}
   stopSpeaking();
   setVoiceState("thinking","Paused","Press play to continue the conversation.");
   $("voiceMuteBtn").textContent="▶";
@@ -1653,7 +1694,6 @@ function pauseVoiceMode(){
  }else{
   $("voiceMuteBtn").textContent="Ⅱ";
   $("voiceHint").textContent="Voice conversation is active";
-
   if(busy){
    setVoiceState("thinking","Thinking...","ESUKA is finishing your reply.");
   }else{
@@ -1670,12 +1710,7 @@ function closeVoiceMode(){
  voiceProcessing=false;
  voiceSpeaking=false;
  clearTimeout(voiceRestartTimer);
-
- if(voiceRecognition){
-  try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){}
-  voiceRecognition=null;
- }
-
+ if(voiceRecognition){try{voiceRecognition.onend=null;voiceRecognition.stop()}catch(e){} voiceRecognition=null;}
  stopSpeaking();
  $("voiceScreen").classList.remove("show","listening","thinking","speaking");
  $("voiceMuteBtn").textContent="Ⅱ";
@@ -1761,12 +1796,16 @@ document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
   closeSettings();closeSidebar();
   if(voiceModeActive)closeVoiceMode();
+  closeEsukaGallery();
  }
+ if(e.key==="ArrowLeft" && $("esukaGalleryModal").classList.contains("active")) navigateEsukaGallery(-1);
+ if(e.key==="ArrowRight" && $("esukaGalleryModal").classList.contains("active")) navigateEsukaGallery(1);
 });
 
 /* START AUTH */
 initializeAuth();
 </script>
+
  <script>
 (function(){
   let photoData = "";
@@ -1774,7 +1813,6 @@ initializeAuth();
   let photoBusy = false;
 
   const composer = document.querySelector(".composer");
- console.log("ESUKA PHOTO FEATURE LOADED");
   if (!composer) return;
 
   const style = document.createElement("style");
@@ -1859,7 +1897,6 @@ initializeAuth();
         reject(new Error("Please select an image."));
         return;
       }
-
       const reader = new FileReader();
       reader.onerror = () => reject(new Error("Could not read this photo."));
       reader.onload = () => {
@@ -1900,10 +1937,7 @@ initializeAuth();
 
   async function sendPhotoMessage(){
     if(photoBusy || !photoData) return;
-    if(!currentSession){
-      showAuth();
-      return;
-    }
+    if(!currentSession){ showAuth(); return; }
 
     const promptText = $("prompt").value.trim();
     const question = promptText || (
@@ -1941,12 +1975,11 @@ initializeAuth();
       if(photoMode === "edit"){
         const result = data.image || data.url || data.output || data.result?.image;
         if(!result) throw new Error("The editing model did not return an image.");
-
         const imageUrl = result.startsWith("data:image/") || result.startsWith("http")
           ? result : "data:image/png;base64," + result;
 
         addMessage("assistant","Your edited photo is ready.");
-        addImage(imageUrl);
+        addImage(imageUrl, "Edited Photo", question);
       }else{
         const reply = data.answer || data.reply || data.response || data.text;
         if(!reply) throw new Error("The AI returned an empty answer.");
@@ -1956,15 +1989,13 @@ initializeAuth();
       clearPhoto();
     }catch(error){
       removeTyping();
-      addMessage("assistant","Sorry, photo request mein problem aayi: " +
-        (error.message || "Please try again."));
+      addMessage("assistant","Sorry, photo request mein problem aayi: " + (error.message || "Please try again."));
     }finally{
       photoBusy = false;
       $("sendBtn").disabled = false;
     }
   }
 
-  // Intercept Send only when a photo is attached.
   document.addEventListener("click",function(event){
     if(event.target.closest("#sendBtn") && photoData){
       event.preventDefault();
