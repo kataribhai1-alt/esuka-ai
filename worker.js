@@ -8,6 +8,8 @@ const ALLOWED_ORIGINS = [
 const GROQ_MODEL = "openai/gpt-oss-20b";
 const GEMINI_MODEL = "gemini-3.8-flash";
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const EDIT_MODEL = "@cf/runwayml/stable-diffusion-v1-5-img2img";
+const VISION_MODEL = "@cf/moondream/moondream3.1-9B-A2B";
 
 const SYSTEM_PROMPT = `
 You are ESUKA AI, a smart, friendly and helpful Indian AI assistant.
@@ -24,23 +26,15 @@ LANGUAGE:
 - English input = English.
 - Devanagari Hindi input = Devanagari Hindi.
 - Never force Devanagari when the user writes Roman Hindi.
-- Do not unnecessarily translate common English words.
 
 STYLE:
 - Sound like a normal, friendly Indian person.
 - Use simple, natural everyday language.
-- Avoid textbook Hindi and overly formal words.
-- Do not repeat the same opening phrase.
-- Do not overuse emojis.
 - Answer the actual question first.
 - Keep normal replies short and conversational.
 - Give details when asked.
 - For technical help, explain in simple steps.
-- Ask only one clarification question when needed.
 - Never make up facts or claim an action was completed when it was not.
-- Do not imitate or claim to be another AI assistant.
-
-Your goal is natural, helpful and context-aware conversation.
 `;
 
 function getCorsHeaders(origin) {
@@ -111,25 +105,21 @@ async function parseResponse(response) {
   return data;
 }
 
-// AUTOMATIC IMAGE REQUEST DETECTION
 function isImageRequest(message) {
-  const text = String(message || "")
-    .toLowerCase()
-    .trim();
+  const text = String(message || "").toLowerCase().trim();
 
   if (!text) return false;
 
-  // Questions about how image generation works
   const questionPattern =
-    /\b(how|what|why|where|kaise|kya|kyun|kis tarah)\b.*\b(make|create|generate|edit|bana|banaye|banau|generate kar)\b/i;
+    /\b(how|what|why|where|kaise|kya|kyun)\b.*\b(make|create|generate|edit|bana)\b/i;
 
   if (questionPattern.test(text)) return false;
 
   const imageWords =
-    /\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र|पोस्टर|वॉलपेपर)\b/i;
+    /\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र)\b/i;
 
   const creationWords =
-    /\b(make|create|generate|draw|design|create|bana|banao|banaao|banado|bana do|bana ke do|taiyar karo|dikhao|generate karo|generate kar do|create karo|draw karo)\b/i;
+    /\b(make|create|generate|draw|design|bana|banao|banaao|banado|bana do|taiyar karo|generate karo|create karo)\b/i;
 
   const directImagePhrase =
     /\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|boy|girl|person|mountain|nature|bird|dragon)\b/i;
@@ -140,25 +130,19 @@ function isImageRequest(message) {
   );
 }
 
-// FAST PRIMARY: GROQ
+// GROQ CHAT
 async function generateGroq(message, history, env) {
   if (!env.GROQ_API_KEY) {
     throw new Error("Groq API key missing");
   }
 
   const messages = [
-    {
-      role: "system",
-      content: SYSTEM_PROMPT
-    },
+    { role: "system", content: SYSTEM_PROMPT },
     ...getHistory(history).map(item => ({
       role: item.role === "model" ? "assistant" : "user",
       content: item.parts.map(part => part.text).join("\n")
     })),
-    {
-      role: "user",
-      content: message
-    }
+    { role: "user", content: message }
   ];
 
   const response = await fetch(
@@ -181,14 +165,12 @@ async function generateGroq(message, history, env) {
   const data = await parseResponse(response);
   const reply = data.choices?.[0]?.message?.content?.trim();
 
-  if (!reply) {
-    throw new Error("Groq returned an empty response");
-  }
+  if (!reply) throw new Error("Groq returned an empty response");
 
   return reply;
 }
 
-// BACKUP: GEMINI
+// GEMINI BACKUP
 async function generateGemini(message, history, env) {
   if (!env.GEMINI_API_KEY) {
     throw new Error("Gemini API key missing");
@@ -201,9 +183,7 @@ async function generateGemini(message, history, env) {
     encodeURIComponent(env.GEMINI_API_KEY),
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(25000),
       body: JSON.stringify({
         systemInstruction: {
@@ -211,10 +191,7 @@ async function generateGemini(message, history, env) {
         },
         contents: [
           ...getHistory(history),
-          {
-            role: "user",
-            parts: [{ text: message }]
-          }
+          { role: "user", parts: [{ text: message }] }
         ],
         generationConfig: {
           temperature: 0.65,
@@ -231,17 +208,11 @@ async function generateGemini(message, history, env) {
     .join("")
     .trim();
 
-  if (!reply) {
-    throw new Error(
-      "Gemini returned no text: " +
-      (data.promptFeedback?.blockReason || "Unknown reason")
-    );
-  }
+  if (!reply) throw new Error("Gemini returned no text");
 
   return reply;
 }
 
-// GROQ FIRST, GEMINI BACKUP
 async function generateChat(message, history, env) {
   try {
     return await generateGroq(message, history, env);
@@ -260,7 +231,7 @@ async function generateChat(message, history, env) {
   }
 }
 
-// IMAGE GENERATION
+// BASE64 HELPERS
 function toBase64(bytes) {
   let binary = "";
 
@@ -273,6 +244,52 @@ function toBase64(bytes) {
   return btoa(binary);
 }
 
+function imageDataToBytes(imageData) {
+  if (typeof imageData !== "string") {
+    throw new Error("Photo data is missing");
+  }
+
+  if (imageData.length > 7 * 1024 * 1024) {
+    throw new Error("Photo is too large. Please use a smaller image.");
+  }
+
+  const match = imageData.match(
+    /^data:image\/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=]+)$/i
+  );
+
+  if (!match) {
+    throw new Error("Use a JPG, PNG or WebP photo");
+  }
+
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return {
+    bytes,
+    mime: match[1].toLowerCase()
+  };
+}
+
+async function streamToDataUrl(result) {
+  if (result?.image) {
+    return "data:image/png;base64," + result.image;
+  }
+
+  if (result instanceof ReadableStream) {
+    const buffer = await new Response(result).arrayBuffer();
+
+    return "data:image/png;base64," +
+      toBase64(new Uint8Array(buffer));
+  }
+
+  throw new Error("AI returned no image");
+}
+
+// NORMAL IMAGE GENERATION
 async function generateImage(prompt, env) {
   if (!env.AI) {
     throw new Error("Cloudflare AI binding missing");
@@ -289,18 +306,58 @@ async function generateImage(prompt, env) {
     steps: 8
   });
 
-  if (result?.image) {
-    return "data:image/png;base64," + result.image;
+  return await streamToDataUrl(result);
+}
+
+// PHOTO ANALYSIS
+async function analyzePhoto(imageData, question, env) {
+  if (!env.AI) {
+    throw new Error("Cloudflare AI binding missing");
   }
 
-  if (result instanceof ReadableStream) {
-    const buffer = await new Response(result).arrayBuffer();
+  const { mime } = imageDataToBytes(imageData);
 
-    return "data:image/png;base64," +
-      toBase64(new Uint8Array(buffer));
+  const result = await env.AI.run(VISION_MODEL, {
+    task: "query",
+    image: imageData,
+    question: String(question || "Describe this photo").slice(0, 1000),
+    reasoning: false,
+    stream: false,
+    max_tokens: 500
+  });
+
+  const answer = result?.answer;
+
+  if (!answer) {
+    throw new Error("Photo analysis returned no answer");
   }
 
-  throw new Error("Image generation returned no image");
+  return answer;
+}
+
+// PROMPT-BASED PHOTO EDITING
+async function editPhoto(imageData, prompt, env) {
+  if (!env.AI) {
+    throw new Error("Cloudflare AI binding missing");
+  }
+
+  const cleanPrompt = String(prompt || "").trim();
+
+  if (!cleanPrompt) {
+    throw new Error("Please enter an editing prompt");
+  }
+
+  const { bytes } = imageDataToBytes(imageData);
+
+  const result = await env.AI.run(EDIT_MODEL, {
+    prompt: cleanPrompt.slice(0, 1500),
+    image: Array.from(bytes),
+    strength: 0.65,
+    num_steps: 10,
+    guidance: 7.5
+  });
+
+  return await streamToDataUrl(result);
 }
 
 // MAIN WORKER
@@ -333,13 +390,15 @@ export default {
         primaryModel: GROQ_MODEL,
         backupModel: GEMINI_MODEL,
         imageModel: IMAGE_MODEL,
+        editModel: EDIT_MODEL,
+        visionModel: VISION_MODEL,
         groqConfigured: Boolean(env.GROQ_API_KEY),
         geminiConfigured: Boolean(env.GEMINI_API_KEY),
         imageConfigured: Boolean(env.AI)
       }, 200, cors);
     }
 
-    // WEBSITE
+    // WEBSITE ASSETS
     if (request.method === "GET") {
       if (env.ASSETS) {
         return env.ASSETS.fetch(request);
@@ -367,18 +426,52 @@ export default {
 
     try {
       const body = await request.json();
+      const mode = String(body.mode || "chat");
       const message = String(body.message || "").trim();
 
-      if (!message && body.mode !== "image") {
+      // PHOTO ANALYSIS
+      if (mode === "analyze") {
+        const answer = await analyzePhoto(
+          body.image,
+          message || "Describe this photo",
+          env
+        );
+
+        return json({
+          success: true,
+          mode: "analyze",
+          reply: answer
+        }, 200, cors);
+      }
+
+      // PHOTO EDITING
+      if (mode === "edit") {
+        const prompt = String(body.prompt || message).trim();
+
+        const image = await editPhoto(
+          body.image,
+          prompt,
+          env
+        );
+
+        return json({
+          success: true,
+          mode: "edit",
+          image,
+          prompt
+        }, 200, cors);
+      }
+
+      // NORMAL CHAT OR IMAGE GENERATION
+      if (!message && mode !== "image") {
         return json({
           success: false,
           error: "Message is required"
         }, 400, cors);
       }
 
-      // MANUAL OR AUTOMATIC IMAGE MODE
       const useImage =
-        body.mode === "image" ||
+        mode === "image" ||
         isImageRequest(message);
 
       if (useImage) {
@@ -396,7 +489,6 @@ export default {
         }, 200, cors);
       }
 
-      // NORMAL CHAT MODE
       const reply = await generateChat(
         message,
         body.history || [],
