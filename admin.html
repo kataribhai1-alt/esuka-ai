@@ -8,19 +8,38 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080b14;color:white;font-family:Arial,sans-serif;padding:18px}
+body{
+ margin:0;background:#080b14;color:white;
+ font-family:Arial,sans-serif;padding:18px
+}
 .container{max-width:950px;margin:30px auto}
-.panel{background:#111827;border:1px solid #263449;border-radius:16px;padding:22px;margin-bottom:18px}
+.panel{
+ background:#111827;border:1px solid #263449;
+ border-radius:16px;padding:22px;margin-bottom:18px
+}
 h1{color:#8b9cff}
-p{color:#aab5c8}
-button{padding:12px 16px;border:0;border-radius:9px;background:#6578ff;color:white;font-weight:bold;cursor:pointer;margin:5px}
-input{width:100%;padding:14px;background:#080b14;border:1px solid #35445c;border-radius:9px;color:white;margin:12px 0}
+p{color:#aab5c8;line-height:1.5}
+button{
+ padding:12px 16px;border:0;border-radius:9px;
+ background:#6578ff;color:white;font-weight:bold;
+ cursor:pointer;margin:5px
+}
+button:disabled{opacity:.4;cursor:not-allowed}
+input{
+ width:100%;padding:14px;background:#080b14;
+ border:1px solid #35445c;border-radius:9px;
+ color:white;margin:12px 0
+}
 .stat{font-size:36px;font-weight:bold;color:#8b9cff}
-.user{padding:15px 0;border-bottom:1px solid #293448;overflow-wrap:anywhere}
+.user{
+ padding:15px 0;border-bottom:1px solid #293448;
+ overflow-wrap:anywhere
+}
 .user:last-child{border:0}
 .small{font-size:12px;color:#91a0b8}
 .hidden{display:none}
 .actions{display:flex;flex-wrap:wrap;gap:6px}
+#status,#statsStatus,#userStatus{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -43,205 +62,312 @@ input{width:100%;padding:14px;background:#080b14;border:1px solid #35445c;border
 <button id="logoutBtn">Logout</button>
 </div>
 </div>
-<div id="status">Checking account...</div>
+
+<p id="status">Checking account...</p>
 </div>
 
 <div id="statsPanel" class="panel hidden">
 <h2>Dashboard Statistics</h2>
 <p>Total Registered Users</p>
 <div class="stat" id="totalUsers">--</div>
-<p id="statsStatus">Loading...</p>
+<p id="statsStatus">Waiting...</p>
 </div>
 
 <div id="usersPanel" class="panel hidden">
 <h2>User Management</h2>
-<input id="searchInput" type="search" placeholder="Search users by email">
+<input id="searchInput" type="search"
+placeholder="Search users by email">
+
 <button id="searchBtn">Search</button>
 <button id="clearBtn">Clear Search</button>
-<p id="userStatus">Loading users...</p>
+
+<p id="userStatus">Waiting...</p>
 <div id="usersList"></div>
+
 <div class="actions">
-<button id="prevBtn">Previous</button>
+<button id="prevBtn" disabled>Previous</button>
 <span id="pageLabel">Page 1</span>
-<button id="nextBtn">Next</button>
+<button id="nextBtn" disabled>Next</button>
 </div>
 </div>
 
 </div>
 
 <script>
-const SUPABASE_URL="https://tdpiviiihjaiizltoegt.supabase.co";
-const SUPABASE_KEY="sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_URL =
+"https://tdpiviiihjaiizltoegt.supabase.co";
 
-const $=id=>document.getElementById(id);
-let currentPage=1;
-let currentSearch="";
-let hasMore=false;
-let checking=false;
+const SUPABASE_KEY =
+"sb_publishable_yJjz9rjnsvMV6bW6DGKi2g_bJWY1CSw";
 
-function show(element,visible){
- $(element).classList.toggle("hidden",!visible);
+const db = window.supabase.createClient(
+ SUPABASE_URL,SUPABASE_KEY
+);
+
+const $ = id => document.getElementById(id);
+
+let currentPage = 1;
+let currentSearch = "";
+let hasMore = false;
+let checking = false;
+let loading = false;
+
+function show(id,visible){
+ $(id).classList.toggle("hidden",!visible);
 }
 
 function addText(parent,tag,value,className){
- const el=document.createElement(tag);
- el.textContent=value;
- if(className)el.className=className;
+ const el = document.createElement(tag);
+ el.textContent = value;
+ if(className) el.className = className;
  parent.appendChild(el);
  return el;
 }
 
-async function loadUsers(){
- $("userStatus").textContent="Loading users...";
+async function loadDashboard(){
+
+ if(loading) return;
+ loading = true;
+
+ $("statsStatus").textContent =
+ "Loading dashboard statistics...";
+
+ $("userStatus").textContent =
+ "Loading users...";
+
  $("usersList").replaceChildren();
 
- const {data,error}=await db.functions.invoke("admin-stats",{
-  body:{search:currentSearch,page:currentPage}
- });
+ $("totalUsers").textContent = "--";
 
- if(error){
-  $("userStatus").textContent="Error: "+error.message;
-  return;
+ try{
+
+  const result = await Promise.race([
+   db.functions.invoke("admin-stats",{
+    body:{
+     search:currentSearch,
+     page:currentPage
+    }
+   }),
+   new Promise((_,reject)=>
+    setTimeout(()=>reject(
+     new Error("Request timed out. Please refresh.")
+    ),20000)
+   )
+  ]);
+
+  const {data,error} = result;
+
+  if(error) throw error;
+
+  if(!data || !data.success){
+   throw new Error(
+    data?.error || "Could not load dashboard."
+   );
+  }
+
+  const users = data.users || [];
+
+  if(data.totalUsers !== undefined &&
+     data.totalUsers !== null){
+   $("totalUsers").textContent = data.totalUsers;
+   $("statsStatus").textContent =
+    "Statistics loaded successfully.";
+  }else{
+   $("totalUsers").textContent = "--";
+   $("statsStatus").textContent =
+    "User list loaded. Total count is not provided by the server yet.";
+  }
+
+  $("userStatus").textContent =
+   users.length + " users shown on this page.";
+
+  $("pageLabel").textContent =
+   "Page " + currentPage;
+
+  hasMore = Boolean(data.hasMore);
+
+  $("prevBtn").disabled = currentPage <= 1;
+  $("nextBtn").disabled = !hasMore;
+
+  if(users.length === 0){
+   addText($("usersList"),"p","No users found.");
+  }
+
+  users.forEach(user=>{
+
+   const card = document.createElement("div");
+   card.className = "user";
+
+   addText(
+    card,"strong",
+    user.email || "Email unavailable"
+   );
+
+   addText(
+    card,"div",
+    "Created: " +
+    (user.created_at
+     ? new Date(user.created_at).toLocaleString()
+     : "Unknown"),
+    "small"
+   );
+
+   addText(
+    card,"div",
+    "Last login: " +
+    (user.last_sign_in_at
+     ? new Date(user.last_sign_in_at).toLocaleString()
+     : "Not available"),
+    "small"
+   );
+
+   $("usersList").appendChild(card);
+  });
+
+ }catch(error){
+
+  $("statsStatus").textContent =
+   "Statistics error: " + error.message;
+
+  $("userStatus").textContent =
+   "User loading error: " + error.message;
+
+ }finally{
+  loading = false;
  }
-
- if(!data || !data.success){
-  $("userStatus").textContent=data?.error || "Could not load users.";
-  return;
- }
-
- $("totalUsers").textContent=
-  data.totalUsers ?? "--";
-
- const users=data.users || [];
- hasMore=Boolean(data.hasMore);
-
- $("userStatus").textContent=
-  users.length+" users shown on this page.";
-
- $("pageLabel").textContent="Page "+currentPage;
- $("prevBtn").disabled=currentPage<=1;
- $("nextBtn").disabled=!hasMore;
-
- if(users.length===0){
-  addText($("usersList"),"p","No users found.");
-  return;
- }
-
- users.forEach(user=>{
-  const card=document.createElement("div");
-  card.className="user";
-
-  addText(card,"strong",user.email || "Email unavailable");
-  addText(card,"div","Created: "+
-   (user.created_at ? new Date(user.created_at).toLocaleString() : "Unknown"),"small");
-  addText(card,"div","Last login: "+
-   (user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "Not available"),"small");
-
-  $("usersList").appendChild(card);
- });
 }
 
 async function checkAdmin(){
- if(checking)return;
- checking=true;
+
+ if(checking) return;
+ checking = true;
+
  show("login",false);
  show("dashboard",false);
  show("statsPanel",false);
  show("usersPanel",false);
- $("status").textContent="Checking account...";
+
+ $("status").textContent = "Checking account...";
 
  try{
-  const {data:{session},error}=await db.auth.getSession();
-  if(error)throw error;
+
+  const {data,error} = await db.auth.getSession();
+
+  if(error) throw error;
+
+  const session = data.session;
 
   if(!session){
-   $("status").textContent="Please login with Google.";
+   $("status").textContent =
+    "Please login with Google.";
    show("login",true);
    return;
   }
 
-  const {data,error:adminError}=await db
+  const {data:admin,error:adminError} = await db
    .from("admin_users")
    .select("user_id")
    .eq("user_id",session.user.id)
    .maybeSingle();
 
-  if(adminError)throw adminError;
+  if(adminError) throw adminError;
 
-  if(!data){
-   $("status").textContent="Access denied. Not an admin account.";
+  if(!admin){
+   $("status").textContent =
+    "Access denied. Not an admin account.";
    show("login",true);
    return;
   }
 
-  $("email").textContent=session.user.email || "";
-  $("status").textContent="Admin access verified successfully.";
+  $("email").textContent =
+   session.user.email || "";
+
+  $("status").textContent =
+   "Admin access verified successfully.";
 
   show("dashboard",true);
   show("statsPanel",true);
   show("usersPanel",true);
 
-  currentPage=1;
-  await loadUsers();
+  currentPage = 1;
+
+  await loadDashboard();
 
  }catch(error){
-  $("status").textContent="Error: "+error.message;
+
+  $("status").textContent =
+   "Error: " + error.message;
+
   show("login",true);
+
  }finally{
-  checking=false;
+  checking = false;
  }
 }
 
-$("googleBtn").onclick=async()=>{
- $("status").textContent="Opening Google login...";
- const {error}=await db.auth.signInWithOAuth({
+$("googleBtn").onclick = async()=>{
+
+ $("status").textContent =
+  "Opening Google login...";
+
+ const {error} = await db.auth.signInWithOAuth({
   provider:"google",
-  options:{redirectTo:window.location.href}
+  options:{
+   redirectTo:window.location.href
+  }
  });
- if(error)$("status").textContent=error.message;
+
+ if(error){
+  $("status").textContent = error.message;
+ }
 };
 
-$("refreshBtn").onclick=loadUsers;
+$("refreshBtn").onclick = ()=>{
+ currentPage = 1;
+ loadDashboard();
+};
 
-$("logoutBtn").onclick=async()=>{
+$("logoutBtn").onclick = async()=>{
  await db.auth.signOut();
  await checkAdmin();
 };
 
-$("searchBtn").onclick=()=>{
- currentSearch=$("searchInput").value.trim();
- currentPage=1;
- loadUsers();
+$("searchBtn").onclick = ()=>{
+ currentSearch = $("searchInput").value.trim();
+ currentPage = 1;
+ loadDashboard();
 };
 
 $("searchInput").addEventListener("keydown",event=>{
- if(event.key==="Enter")$("searchBtn").click();
+ if(event.key === "Enter"){
+  $("searchBtn").click();
+ }
 });
 
-$("clearBtn").onclick=()=>{
- $("searchInput").value="";
- currentSearch="";
- currentPage=1;
- loadUsers();
+$("clearBtn").onclick = ()=>{
+ $("searchInput").value = "";
+ currentSearch = "";
+ currentPage = 1;
+ loadDashboard();
 };
 
-$("prevBtn").onclick=()=>{
- if(currentPage>1){
+$("prevBtn").onclick = ()=>{
+ if(currentPage > 1){
   currentPage--;
-  loadUsers();
+  loadDashboard();
  }
 };
 
-$("nextBtn").onclick=()=>{
+$("nextBtn").onclick = ()=>{
  if(hasMore){
   currentPage++;
-  loadUsers();
+  loadDashboard();
  }
 };
 
-db.auth.onAuthStateChange(event=>{
- if(event==="SIGNED_IN" || event==="SIGNED_OUT"){
+db.auth.onAuthStateChange((event)=>{
+ if(event === "SIGNED_IN" ||
+    event === "SIGNED_OUT"){
   setTimeout(checkAdmin,0);
  }
 });
