@@ -193,6 +193,26 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 @keyframes scanner{0%{top:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:100%;opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* PHOTO ATTACHMENT */
+.photo-attach-preview{
+ display:none;align-items:center;gap:10px;margin:0 0 9px 7px;
+ padding:8px 10px;border:1px solid var(--border);border-radius:13px;
+ background:var(--panel);width:max-content;max-width:100%;
+}
+.photo-attach-preview.show{display:flex}
+.photo-attach-preview img{
+ width:48px;height:48px;object-fit:cover;border-radius:9px;
+ border:1px solid var(--border);
+}
+.photo-attach-info{font-size:11px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-remove-btn{
+ width:28px;height:28px;border:1px solid var(--border);border-radius:50%;
+ background:var(--panel2);font-size:16px;line-height:1;
+}
+.message-photo{
+ display:block;max-width:min(100%,300px);max-height:260px;object-fit:contain;
+ border-radius:12px;margin-top:9px;border:1px solid var(--border);
+}
 /* INPUT */
 .composer-wrap{padding:10px 18px 17px;background:var(--bg)}
 .composer{max-width:850px;margin:auto}
@@ -203,13 +223,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
  border:1px solid var(--border);border-radius:25px;background:var(--input);
 }
 .input-box:focus-within{border-color:#777}
-.photo-attach-preview{display:none;align-items:center;gap:10px;max-width:850px;margin:0 auto 9px;padding:9px 12px;background:var(--panel);border:1px solid var(--border);border-radius:15px}
-.photo-attach-preview.show{display:flex}
-.photo-attach-preview img{width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
-.photo-attach-info{min-width:0;flex:1;font-size:12px;color:var(--muted)}
-.photo-attach-info strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
-.photo-remove-btn{border:1px solid var(--border);background:var(--panel2);border-radius:10px;padding:8px 11px;font-size:12px}
-.message-photo{display:block;width:100%;max-width:260px;max-height:260px;object-fit:contain;border-radius:12px;margin:0 0 9px;border:1px solid var(--border)}
 #prompt{
  flex:1;min-width:0;max-height:130px;min-height:40px;resize:none;
  border:0;outline:0;background:transparent;color:var(--text);
@@ -394,10 +407,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     <h1>Welcome to ESUKA AI</h1>
     <p>Ask anything... I'm here to help you!</p>
     <div class="suggestions">
-     <button class="suggestion" data-prompt="Explain something simply"><span class="s-icon">âœ§</span><strong>Explain something simply</strong><small>Understand any topic easily</small></button>
+     <button class="suggestion" data-prompt="Explain something simply"><span class="s-icon">✧</span><strong>Explain something simply</strong><small>Understand any topic easily</small></button>
      <button class="suggestion" data-prompt="Help me write some code"><span class="s-icon">&lt;/&gt;</span><strong>Write code for me</strong><small>Build and understand code</small></button>
-     <button class="suggestion" data-prompt="Give me some creative ideas"><span class="s-icon">â™§</span><strong>Give me ideas</strong><small>Explore something new</small></button>
-     <button class="suggestion" data-prompt="Summarize this topic for me"><span class="s-icon">â–¤</span><strong>Summarize this</strong><small>Get the key points</small></button>
+     <button class="suggestion" data-prompt="Give me some creative ideas"><span class="s-icon">♧</span><strong>Give me ideas</strong><small>Explore something new</small></button>
+     <button class="suggestion" data-prompt="Summarize this topic for me"><span class="s-icon">▤</span><strong>Summarize this</strong><small>Get the key points</small></button>
     </div>
    </div>
    <div class="messages" id="messages"></div>
@@ -411,12 +424,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
    <button class="mini-btn" id="stopVoiceBtn">Stop listening</button>
   </div>
   <div class="composer">
-   <div class="photo-attach-preview" id="photoAttachPreview">
-    <img id="photoAttachThumb" alt="Selected photo preview">
-    <div class="photo-attach-info"><strong>Photo attached</strong><span id="photoAttachName">Ready to send to ESUKA AI</span></div>
-    <button class="photo-remove-btn" id="removePhotoBtn" type="button">Remove</button>
+   <input type="file" id="photoPicker" accept="image/*" hidden>
+   <div class="photo-attach-preview" id="photoPreview">
+    <img id="photoPreviewImage" alt="Selected photo preview">
+    <span class="photo-attach-info" id="photoPreviewName">Photo selected</span>
+    <button class="photo-remove-btn" id="removePhotoBtn" type="button" aria-label="Remove photo">×</button>
    </div>
-   <input id="photoPicker" type="file" accept="image/*" hidden>
    <div class="input-box">
     <button class="action-btn" id="attachBtn" type="button" title="Gallery" aria-label="Choose photo">
      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
@@ -439,8 +452,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div class="overlay" id="settingsOverlay">
  <section class="settings">
   <div class="settings-head">
-   <div><h2>âš™ Settings</h2><p>Make ESUKA AI work your way</p></div>
-   <button class="icon-btn" id="closeSettings" aria-label="Close settings">âœ•</button>
+   <div><h2>⚙ Settings</h2><p>Make ESUKA AI work your way</p></div>
+   <button class="icon-btn" id="closeSettings" aria-label="Close settings">✕</button>
   </div>
   <div class="setting-group">
    <div class="setting-title">PERSONALIZATION</div>
@@ -504,8 +517,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   <div class="setting-group">
    <div class="setting-title">ABOUT</div>
    <div class="setting-row">
-    <div><div class="setting-label">ESUKA AI</div><div class="setting-desc">Version 1.1 Â· Made by Katari</div></div>
-    <span style="font-size:20px">â“˜</span>
+    <div><div class="setting-label">ESUKA AI</div><div class="setting-desc">Version 1.1 · Made by Katari</div></div>
+    <span style="font-size:20px">ⓘ</span>
    </div>
   </div>
   <div class="settings-footer">
@@ -535,6 +548,7 @@ const defaults={
 
 let settings={...defaults};
 let selectedPhotoDataUrl=null;
+let selectedPhotoName='';
 let busy=false;
 let currentHistory=[];
 let savedChats=[];
@@ -638,7 +652,7 @@ function renderHistory(){
   const b=document.createElement("div");
   b.className="history-item";
   const icon=document.createElement("span");
-  icon.textContent="â—·";
+  icon.textContent="◷";
   const label=document.createElement("span");
   label.textContent=chat.title||"Chat";
   b.append(icon,label);
@@ -659,11 +673,11 @@ function openChat(id){
 function renderMessages(){
  $("welcome").style.display=currentHistory.length?"none":"block";
  $("messages").innerHTML="";
- currentHistory.forEach(m=>addMessage(m.role,m.content,false,m.image||null));
+ currentHistory.forEach(m=>addMessage(m.role,m.content,false,m.photo||null));
  scrollBottom();
 }
 
-function addMessage(role,content,save=true,imageUrl=null){
+function addMessage(role,content,save=true,photoData=null){
  const row=document.createElement("div");
  row.className="message "+(role==="user"?"user":"assistant");
 
@@ -680,15 +694,16 @@ function addMessage(role,content,save=true,imageUrl=null){
 
  const bubble=document.createElement("div");
  bubble.className="msg-bubble";
- if(role==="user"&&imageUrl){
+ bubble.textContent=content;
+ contentBox.append(name,bubble);
+
+ if(role==="user" && photoData){
   const photo=document.createElement("img");
   photo.className="message-photo";
-  photo.alt="Attached photo";
-  photo.src=imageUrl;
-  bubble.appendChild(photo);
+  photo.alt="Photo attached to message";
+  photo.src=arguments[3];
+  contentBox.appendChild(photo);
  }
- if(content)bubble.appendChild(document.createTextNode(content));
- contentBox.append(name,bubble);
 
  if(role!=="user"){
   const actions=document.createElement("div");
@@ -719,9 +734,7 @@ function addMessage(role,content,save=true,imageUrl=null){
  $("messages").appendChild(row);
 
  if(save){
-  const entry={role,content};
-  if(role==="user"&&imageUrl)entry.image=imageUrl;
-  currentHistory.push(entry);
+  currentHistory.push({role,content,...(role==="user"&&photoData?{photo:photoData}:{})});
   if(role==="user")$("welcome").style.display="none";
   saveCurrentChat();
  }
@@ -758,7 +771,7 @@ function addImage(url){
 
  const download=document.createElement("button");
  download.className="mini-btn";
- download.textContent="â†“ Download image";
+ download.textContent="↓ Download image";
  download.addEventListener("click",()=>downloadImage(url));
 
  const open=document.createElement("button");
@@ -869,39 +882,38 @@ function clearChat(){
  localStorage.removeItem("esuka_chats");
  $("messages").innerHTML="";
  $("welcome").style.display="block";
+ clearSelectedPhoto();
  renderHistory();
  showToast("Chat history cleared");
 }
 
 function clearSelectedPhoto(){
  selectedPhotoDataUrl=null;
+ selectedPhotoName="";
  $("photoPicker").value="";
- $("photoAttachThumb").removeAttribute("src");
- $("photoAttachName").textContent="Ready to send to ESUKA AI";
- $("photoAttachPreview").classList.remove("show");
+ $("photoPreview").classList.remove("show");
+ $("photoPreviewImage").removeAttribute("src");
+ $("photoPreviewName").textContent="";
 }
 
 function compressPhoto(file){
  return new Promise((resolve,reject)=>{
-  if(!file||!file.type||!file.type.startsWith("image/")){
-   reject(new Error("Please choose a valid image"));return;
-  }
   const reader=new FileReader();
   reader.onerror=()=>reject(new Error("Photo could not be read"));
   reader.onload=()=>{
-   const img=new Image();
-   img.onerror=()=>reject(new Error("Photo could not be opened"));
-   img.onload=()=>{
-    const scale=Math.min(1,1280/Math.max(img.width,img.height));
+   const image=new Image();
+   image.onerror=()=>reject(new Error("Invalid image file"));
+   image.onload=()=>{
+    const maxSide=1280;
+    const scale=Math.min(1,maxSide/Math.max(image.width,image.height));
     const canvas=document.createElement("canvas");
-    canvas.width=Math.max(1,Math.round(img.width*scale));
-    canvas.height=Math.max(1,Math.round(img.height*scale));
+    canvas.width=Math.max(1,Math.round(image.width*scale));
+    canvas.height=Math.max(1,Math.round(image.height*scale));
     const ctx=canvas.getContext("2d");
-    if(!ctx){reject(new Error("Photo processing is not supported"));return;}
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    ctx.drawImage(image,0,0,canvas.width,canvas.height);
     resolve(canvas.toDataURL("image/jpeg",0.78));
    };
-   img.src=reader.result;
+   image.src=reader.result;
   };
   reader.readAsDataURL(file);
  });
@@ -909,12 +921,20 @@ function compressPhoto(file){
 
 async function choosePhoto(file){
  if(!file)return;
- if(file.size>15*1024*1024){showToast("Please choose a photo smaller than 15 MB");return;}
+ if(!file.type.startsWith("image/")){
+  showToast("Please choose an image");
+  return;
+ }
+ if(file.size>15*1024*1024){
+  showToast("Photo must be smaller than 15 MB");
+  return;
+ }
  try{
   selectedPhotoDataUrl=await compressPhoto(file);
-  $("photoAttachThumb").src=selectedPhotoDataUrl;
-  $("photoAttachName").textContent=file.name||"Photo ready";
-  $("photoAttachPreview").classList.add("show");
+  selectedPhotoName=file.name||"Selected photo";
+  $("photoPreviewImage").src=selectedPhotoDataUrl;
+  $("photoPreviewName").textContent=selectedPhotoName;
+  $("photoPreview").classList.add("show");
   showToast("Photo attached");
  }catch(error){
   clearSelectedPhoto();
@@ -944,7 +964,7 @@ function isImageRequest(text){
 
  if(/\b(how|what|why|where|kaise|kyun|kis tarah)\b.*\b(make|create|generate|draw|bana|banaye|banau)\b/i.test(s))return false;
 
- const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|à¤«à¥‹à¤Ÿà¥‹|à¤¤à¤¸à¥à¤µà¥€à¤°|à¤šà¤¿à¤¤à¥à¤°|à¤ªà¥‹à¤¸à¥à¤Ÿà¤°|à¤µà¥‰à¤²à¤ªà¥‡à¤ªà¤°)\b/i;
+ const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र|पोस्टर|वॉलपेपर)\b/i;
  const createWords=/\b(make|create|generate|draw|design|bana|banao|banado|banaao|banaaye|bana do|bana ke do|taiyar karo|generate karo|generate kar do|create karo|draw karo)\b/i;
  const directDraw=/\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
 
@@ -952,46 +972,64 @@ function isImageRequest(text){
 }
 
 async function sendMessage(){
- const typedText=$("prompt").value.trim();
+ const text=$("prompt").value.trim();
  const photoToSend=selectedPhotoDataUrl;
- const text=typedText||(photoToSend?"Please describe and analyze this photo.":"");
  if((!text&&!photoToSend)||busy)return;
 
+ const userText=text||(photoToSend?"Please describe and analyze this photo.":"");
  $("prompt").value="";
  $("prompt").style.height="auto";
- addMessage("user",text,true,photoToSend);
+ addMessage("user",userText,true,photoToSend);
  clearSelectedPhoto();
 
- const usePhoto=!!photoToSend;
- const useImage=!usePhoto&&isImageRequest(text);
+ const useImage=!photoToSend&&isImageRequest(userText);
  busy=true;
  $("sendBtn").disabled=true;
+
  if(useImage)showImageProcessing();
  else showTyping();
 
  try{
-  let payload;
-  if(usePhoto)payload={mode:"analyze",image:photoToSend,message:buildPreferenceMessage(text)};
-  else if(useImage)payload={mode:"image",message:text,prompt:text};
-  else payload={message:buildPreferenceMessage(text),history:currentHistory.slice(0,-1)};
+  const payload=photoToSend
+   ?{mode:"analyze",image:photoToSend,message:buildPreferenceMessage(userText)}
+   :useImage
+    ?{mode:"image",message:userText,prompt:userText}
+    :{message:buildPreferenceMessage(userText),history:currentHistory.slice(0,-1)};
 
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),90000);
+
   let response;
   try{
-   response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:controller.signal});
-  }finally{clearTimeout(timeout);}
+   response=await fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload),
+    signal:controller.signal
+   });
+  }finally{
+   clearTimeout(timeout);
+  }
 
   let data;
-  try{data=await response.json();}
-  catch(e){throw new Error("Server returned an invalid response");}
+  try{data=await response.json()}
+  catch(e){throw new Error("Server returned an invalid response")}
+
   removeTyping();
-  if(!response.ok||data.success===false)throw new Error(data.error||data.message||"Server error");
+
+  if(!response.ok||data.success===false){
+   throw new Error(data.error||data.message||"Server error");
+  }
 
   if(useImage){
    const image=data.image||data.url||data.result?.image||data.result?.url||data.output;
-   if(typeof image!=="string"||!image)throw new Error("Image provider did not return an image");
-   const imageURL=image.startsWith("data:image/")||image.startsWith("http")?image:"data:image/png;base64,"+image;
+   if(typeof image!=="string"||!image){
+    throw new Error("Image provider did not return an image");
+   }
+   let imageURL=image;
+   if(!image.startsWith("data:image/")&&!image.startsWith("http")){
+    imageURL="data:image/png;base64,"+image;
+   }
    addMessage("assistant","Your image is ready.");
    addImage(imageURL);
   }else{
@@ -1000,9 +1038,12 @@ async function sendMessage(){
    addMessage("assistant",String(reply));
    if(settings.voiceEnabled)speakText(String(reply),false);
   }
+
  }catch(error){
   removeTyping();
-  const message=error.name==="AbortError"?"Request timed out. Please try again.":error.message||"Unknown error";
+  const message=error.name==="AbortError"
+   ?"Request timed out. Please try again."
+   :error.message||"Unknown error";
   addMessage("assistant","Sorry, kuch problem aa gayi: "+message);
  }finally{
   busy=false;
@@ -1153,11 +1194,8 @@ function cycleTheme(){
 
 /* BUTTON EVENTS */
 $("newChatBtn").addEventListener("click",newChat);
-$("attachBtn").addEventListener("click",()=>$("photoPicker").click());
-$("photoPicker").addEventListener("change",e=>{
- const file=e.target.files&&e.target.files[0];
- if(file)choosePhoto(file);
-});
+$("attachBtn").addEventListener("click",()=> $("photoPicker").click());
+$("photoPicker").addEventListener("change",e=>choosePhoto(e.target.files?.[0]));
 $("removePhotoBtn").addEventListener("click",clearSelectedPhoto);
 $("sideVoiceBtn").addEventListener("click",toggleVoice);
 $("micBtn").addEventListener("click",toggleVoice);
