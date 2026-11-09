@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -228,7 +229,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   <div class="setting-row"><div><div class="setting-label">Clear Chat History</div><div class="setting-desc">Delete saved conversations</div></div><button class="secondary-btn" id="settingsClearBtn">Clear</button></div>
   <div class="setting-row"><div><div class="setting-label">Reset Settings</div><div class="setting-desc">Restore default preferences</div></div><button class="secondary-btn" id="resetSettingsBtn">Reset</button></div>
  </div>
- <div class="setting-group"><div class="setting-title">ABOUT</div><div class="setting-row"><div><div class="setting-label">ESUKA AI</div><div class="setting-desc">Version 1.1 · Made by Katari</div></div><span style="font-size:20px">ⓘ</span></div></div>
+ <div class="setting-group"><div class="setting-title">ABOUT</div><div class="setting-row"><div><div class="setting-label">ESUKA AI</div><div class="setting-desc">Version 1.2 · Made by Katari</div></div><span style="font-size:20px">ⓘ</span></div></div>
  <div class="settings-footer"><button class="secondary-btn" id="cancelSettings">Close</button><button class="primary-btn" id="saveSettings">Save Preferences</button></div>
 </section>
 </div>
@@ -236,10 +237,21 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
 <script>
 "use strict";
+
 const API_URL="https://esuka-ai-web.kataribhai1.workers.dev/";
-const SETTINGS_VERSION="2";
+const SETTINGS_VERSION="3";
 const $=id=>document.getElementById(id);
-const defaults={language:"Hinglish",responseStyle:"Friendly",voiceEnabled:false,voiceType:"female",voiceSpeed:1,theme:"black",fontSize:"14"};
+
+const defaults={
+ language:"Hinglish",
+ responseStyle:"Friendly",
+ voiceEnabled:false,
+ voiceType:"female",
+ voiceSpeed:1,
+ theme:"black",
+ fontSize:"14"
+};
+
 let settings={...defaults};
 let selectedPhotoDataUrl=null;
 let selectedPhotoName="";
@@ -250,396 +262,1024 @@ let recognition=null;
 let listening=false;
 let currentChatId=null;
 
-function loadData(){
- try{settings={...defaults,...JSON.parse(localStorage.getItem("esuka_settings")||"{}")}}catch(e){settings={...defaults}}
+function safeStorageGet(key,fallback){
  try{
-  if(localStorage.getItem("esuka_settings_version")!==SETTINGS_VERSION){
-   settings.voiceEnabled=false;
-   localStorage.setItem("esuka_settings_version",SETTINGS_VERSION);
-   localStorage.setItem("esuka_settings",JSON.stringify(settings));
-  }
- }catch(e){settings.voiceEnabled=false}
- try{savedChats=JSON.parse(localStorage.getItem("esuka_chats")||"[]");if(!Array.isArray(savedChats))savedChats=[]}catch(e){savedChats=[]}
- applySettings();renderHistory();
+  const value=localStorage.getItem(key);
+  return value===null?fallback:value;
+ }catch(e){return fallback}
 }
+
+function safeStorageSet(key,value){
+ try{localStorage.setItem(key,value);return true}
+ catch(e){return false}
+}
+
+function loadData(){
+ try{
+  settings={...defaults,...JSON.parse(safeStorageGet("esuka_settings","{}"))};
+ }catch(e){settings={...defaults}}
+
+ if(!["Hinglish","Hindi","English"].includes(settings.language))settings.language=defaults.language;
+ if(!["Friendly","Professional","Short","Detailed","Simple"].includes(settings.responseStyle))settings.responseStyle=defaults.responseStyle;
+ if(!["black","grey","light"].includes(settings.theme))settings.theme=defaults.theme;
+ if(!["female","male","system"].includes(settings.voiceType))settings.voiceType=defaults.voiceType;
+
+ try{
+  savedChats=JSON.parse(safeStorageGet("esuka_chats","[]"));
+  if(!Array.isArray(savedChats))savedChats=[];
+ }catch(e){savedChats=[]}
+
+ applySettings();
+ renderHistory();
+}
+
 function saveSettings(){
- settings={language:$("language").value,responseStyle:$("responseStyle").value,voiceEnabled:$("voiceToggle").classList.contains("on"),voiceType:$("voiceType").value,voiceSpeed:Number($("voiceSpeed").value),theme:$("themeSelect").value,fontSize:$("fontSize").value};
- localStorage.setItem("esuka_settings",JSON.stringify(settings));
- localStorage.setItem("esuka_settings_version",SETTINGS_VERSION);
- applySettings();showToast("Preferences saved");
+ settings={
+  language:$("language").value,
+  responseStyle:$("responseStyle").value,
+  voiceEnabled:$("voiceToggle").classList.contains("on"),
+  voiceType:$("voiceType").value,
+  voiceSpeed:Number($("voiceSpeed").value),
+  theme:$("themeSelect").value,
+  fontSize:$("fontSize").value
+ };
+
+ safeStorageSet("esuka_settings",JSON.stringify(settings));
+ safeStorageSet("esuka_settings_version",SETTINGS_VERSION);
+ applySettings();
+ showToast("Preferences saved");
 }
+
 function applySettings(){
  document.body.classList.remove("grey","light");
  if(settings.theme==="grey")document.body.classList.add("grey");
  if(settings.theme==="light")document.body.classList.add("light");
+
  document.documentElement.style.setProperty("--chat-font",settings.fontSize+"px");
- $("language").value=settings.language;$("responseStyle").value=settings.responseStyle;
- $("voiceType").value=settings.voiceType;$("voiceSpeed").value=settings.voiceSpeed;
+
+ $("language").value=settings.language;
+ $("responseStyle").value=settings.responseStyle;
+ $("voiceType").value=settings.voiceType;
+ $("voiceSpeed").value=settings.voiceSpeed;
  $("speedValue").textContent=Number(settings.voiceSpeed).toFixed(1)+"x";
- $("themeSelect").value=settings.theme;$("fontSize").value=settings.fontSize;
+ $("themeSelect").value=settings.theme;
+ $("fontSize").value=settings.fontSize;
+
  $("voiceToggle").classList.toggle("on",!!settings.voiceEnabled);
  $("voiceToggle").setAttribute("aria-pressed",String(!!settings.voiceEnabled));
 }
+
 function openSettings(){$("settingsOverlay").classList.add("show")}
 function closeSettings(){$("settingsOverlay").classList.remove("show")}
+
 function showToast(message){
- const t=$("toast");t.textContent=message;t.classList.add("show");
- clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove("show"),2400);
+ const t=$("toast");
+ t.textContent=message;
+ t.classList.add("show");
+ clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>t.classList.remove("show"),2400);
 }
+
 function saveChats(){
- try{localStorage.setItem("esuka_chats",JSON.stringify(savedChats.slice(0,30)))}catch(e){showToast("Storage full: old chats may need clearing")}
+ try{
+  localStorage.setItem("esuka_chats",JSON.stringify(savedChats.slice(0,30)));
+ }catch(e){showToast("Storage full: old chats may need clearing")}
  renderHistory();
 }
+
 function saveCurrentChat(){
  if(!currentHistory.length)return;
+
  const first=currentHistory.find(m=>m.role==="user");
- const item={id:currentChatId||String(Date.now()),title:(first?.content||"New Chat").slice(0,38),history:currentHistory,date:Date.now()};
+ const item={
+  id:currentChatId||String(Date.now()),
+  title:(first?.content||"New Chat").slice(0,38),
+  history:currentHistory,
+  date:Date.now()
+ };
+
  const index=savedChats.findIndex(c=>c.id===item.id);
- if(index>=0)savedChats[index]=item;else savedChats.unshift(item);
- currentChatId=item.id;saveChats();
+ if(index>=0)savedChats[index]=item;
+ else savedChats.unshift(item);
+
+ currentChatId=item.id;
+ saveChats();
 }
+
 function renderHistory(){
  $("historyList").innerHTML="";
+
  savedChats.slice(0,20).forEach(chat=>{
-  const b=document.createElement("div");b.className="history-item";
-  const icon=document.createElement("span");icon.textContent="◷";
-  const label=document.createElement("span");label.textContent=chat.title||"Chat";
-  b.append(icon,label);b.addEventListener("click",()=>openChat(chat.id));
+  const b=document.createElement("div");
+  b.className="history-item";
+
+  const icon=document.createElement("span");
+  icon.textContent="◷";
+
+  const label=document.createElement("span");
+  label.textContent=chat.title||"Chat";
+
+  b.append(icon,label);
+  b.addEventListener("click",()=>openChat(chat.id));
   $("historyList").appendChild(b);
  });
 }
+
 function openChat(id){
- const chat=savedChats.find(c=>c.id===id);if(!chat)return;
- currentChatId=chat.id;currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
- renderMessages();closeSidebar();
+ const chat=savedChats.find(c=>c.id===id);
+ if(!chat)return;
+
+ currentChatId=chat.id;
+ currentHistory=Array.isArray(chat.history)?chat.history.slice():[];
+ renderMessages();
+ closeSidebar();
 }
+
 function renderMessages(){
  $("welcome").style.display=currentHistory.length?"none":"block";
  $("messages").innerHTML="";
- currentHistory.forEach(m=>addMessage(m.role,m.content,false,m.photo||null));
+
+ currentHistory.forEach(m=>{
+  addMessage(m.role,m.content,false,m.photo||null);
+ });
+
  scrollBottom();
 }
+
 function addMessage(role,content,save=true,photoData=null){
- const row=document.createElement("div");row.className="message "+(role==="user"?"user":"assistant");
- const avatar=document.createElement("div");avatar.className="msg-avatar";avatar.textContent=role==="user"?"U":"E";
- const contentBox=document.createElement("div");contentBox.className="msg-content";
- const name=document.createElement("div");name.className="msg-name";name.textContent=role==="user"?"You":"ESUKA AI";
- const bubble=document.createElement("div");bubble.className="msg-bubble";bubble.textContent=content;
+ const row=document.createElement("div");
+ row.className="message "+(role==="user"?"user":"assistant");
+
+ const avatar=document.createElement("div");
+ avatar.className="msg-avatar";
+ avatar.textContent=role==="user"?"U":"E";
+
+ const contentBox=document.createElement("div");
+ contentBox.className="msg-content";
+
+ const name=document.createElement("div");
+ name.className="msg-name";
+ name.textContent=role==="user"?"You":"ESUKA AI";
+
+ const bubble=document.createElement("div");
+ bubble.className="msg-bubble";
+ bubble.textContent=String(content??"");
+
  contentBox.append(name,bubble);
+
  if(role==="user"&&photoData){
-  const photo=document.createElement("img");photo.className="message-photo";
-  photo.alt="Photo attached to message";photo.src=photoData;contentBox.appendChild(photo);
+  const photo=document.createElement("img");
+  photo.className="message-photo";
+  photo.alt="Photo attached to message";
+  photo.src=photoData;
+  contentBox.appendChild(photo);
  }
+
  if(role!=="user"){
-  const actions=document.createElement("div");actions.className="msg-actions";
-  const copy=document.createElement("button");copy.className="mini-btn";copy.textContent="Copy";copy.addEventListener("click",()=>copyText(content));
-  const listenBtn=document.createElement("button");listenBtn.className="mini-btn";listenBtn.textContent="Listen";listenBtn.addEventListener("click",()=>speakText(content,true));
-  const stop=document.createElement("button");stop.className="mini-btn";stop.textContent="Stop";stop.addEventListener("click",stopSpeaking);
-  actions.append(copy,listenBtn,stop);contentBox.appendChild(actions);
+  const actions=document.createElement("div");
+  actions.className="msg-actions";
+
+  const copy=document.createElement("button");
+  copy.className="mini-btn";
+  copy.textContent="Copy";
+  copy.addEventListener("click",()=>copyText(String(content)));
+
+  const listenBtn=document.createElement("button");
+  listenBtn.className="mini-btn";
+  listenBtn.textContent="Listen";
+  listenBtn.addEventListener("click",()=>speakText(String(content),true));
+
+  const stop=document.createElement("button");
+  stop.className="mini-btn";
+  stop.textContent="Stop";
+  stop.addEventListener("click",stopSpeaking);
+
+  actions.append(copy,listenBtn,stop);
+  contentBox.appendChild(actions);
  }
- if(role==="user")row.append(contentBox,avatar);else row.append(avatar,contentBox);
+
+ if(role==="user")row.append(contentBox,avatar);
+ else row.append(avatar,contentBox);
+
  $("messages").appendChild(row);
+
  if(save){
-  currentHistory.push({role,content,...(role==="user"&&photoData?{photo:photoData}:{})});
+  currentHistory.push({
+   role,
+   content:String(content??""),
+   ...(role==="user"&&photoData?{photo:photoData}:{})
+  });
+
   if(role==="user")$("welcome").style.display="none";
   saveCurrentChat();
  }
- scrollBottom();return row;
+
+ scrollBottom();
+ return row;
 }
+
 function addImage(url){
- const last=$("messages").lastElementChild;if(!last)return;
- const contentBox=last.querySelector(".msg-content");if(!contentBox)return;
- const img=document.createElement("img");img.className="generated-image";img.alt="Image generated by ESUKA AI";img.loading="eager";
- img.onload=()=>{requestAnimationFrame(()=>img.classList.add("revealed"));scrollBottom()};
- img.onerror=()=>{img.remove();showToast("Image could not be displayed")};
- img.src=url;contentBox.appendChild(img);
- const actions=document.createElement("div");actions.className="image-actions";
- const download=document.createElement("button");download.className="mini-btn";download.textContent="↓ Download image";download.addEventListener("click",()=>downloadImage(url));
- const open=document.createElement("button");open.className="mini-btn";open.textContent="Open image";
- open.addEventListener("click",()=>{const win=window.open();if(win)win.location.href=url;else showToast("Pop-up blocked by browser")});
- actions.append(download,open);contentBox.appendChild(actions);scrollBottom();
+ const last=$("messages").lastElementChild;
+ if(!last)return;
+
+ const contentBox=last.querySelector(".msg-content");
+ if(!contentBox)return;
+
+ const img=document.createElement("img");
+ img.className="generated-image";
+ img.alt="Image generated by ESUKA AI";
+ img.loading="eager";
+
+ img.onload=()=>{
+  requestAnimationFrame(()=>img.classList.add("revealed"));
+  scrollBottom();
+ };
+
+ img.onerror=()=>{
+  img.remove();
+  showToast("Image could not be displayed");
+ };
+
+ img.src=url;
+ contentBox.appendChild(img);
+
+ const actions=document.createElement("div");
+ actions.className="image-actions";
+
+ const download=document.createElement("button");
+ download.className="mini-btn";
+ download.textContent="↓ Download image";
+ download.addEventListener("click",()=>downloadImage(url));
+
+ const open=document.createElement("button");
+ open.className="mini-btn";
+ open.textContent="Open image";
+ open.addEventListener("click",()=>{
+  const win=window.open();
+  if(win)win.location.href=url;
+  else showToast("Pop-up blocked by browser");
+ });
+
+ actions.append(download,open);
+ contentBox.appendChild(actions);
+ scrollBottom();
 }
+
 function downloadImage(url){
- try{const a=document.createElement("a");a.href=url;a.download="esuka-ai-image-"+Date.now()+".png";a.style.display="none";document.body.appendChild(a);a.click();a.remove();showToast("Download started")}
- catch(e){showToast("Download not available in this browser")}
+ try{
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="esuka-ai-image-"+Date.now()+".png";
+  a.style.display="none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast("Download started");
+ }catch(e){
+  showToast("Download not available in this browser");
+ }
 }
-function scrollBottom(){$("chatArea").scrollTop=$("chatArea").scrollHeight}
+
+function scrollBottom(){
+ $("chatArea").scrollTop=$("chatArea").scrollHeight;
+}
+
 function showTyping(){
- const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
+ const row=document.createElement("div");
+ row.className="message assistant";
+ row.id="typingRow";
  row.innerHTML='<div class="msg-avatar">E</div><div><div class="msg-name">ESUKA AI</div><div class="msg-bubble"><div class="typing"><i></i><i></i><i></i></div><div class="thinking-text">ESUKA is thinking...</div></div></div>';
- $("messages").appendChild(row);scrollBottom();
+ $("messages").appendChild(row);
+ scrollBottom();
 }
+
 function showImageProcessing(){
- const row=document.createElement("div");row.className="message assistant";row.id="typingRow";
- const avatar=document.createElement("div");avatar.className="msg-avatar";avatar.textContent="E";
- const box=document.createElement("div");box.className="msg-content";
- const name=document.createElement("div");name.className="msg-name";name.textContent="ESUKA AI";
- const panel=document.createElement("div");panel.className="image-processing";
- const skeleton=document.createElement("div");skeleton.className="image-preview-skeleton";
- const info=document.createElement("div");info.className="image-processing-info";
- const spinner=document.createElement("div");spinner.className="image-spinner";
+ const row=document.createElement("div");
+ row.className="message assistant";
+ row.id="typingRow";
+
+ const avatar=document.createElement("div");
+ avatar.className="msg-avatar";
+ avatar.textContent="E";
+
+ const box=document.createElement("div");
+ box.className="msg-content";
+
+ const name=document.createElement("div");
+ name.className="msg-name";
+ name.textContent="ESUKA AI";
+
+ const panel=document.createElement("div");
+ panel.className="image-processing";
+
+ const skeleton=document.createElement("div");
+ skeleton.className="image-preview-skeleton";
+
+ const info=document.createElement("div");
+ info.className="image-processing-info";
+
+ const spinner=document.createElement("div");
+ spinner.className="image-spinner";
+
  const words=document.createElement("div");
- const title=document.createElement("div");title.className="image-processing-title";title.textContent="Creating your image";
- const sub=document.createElement("div");sub.className="image-processing-sub";sub.textContent="Preparing details and rendering your image...";
- words.append(title,sub);info.append(spinner,words);panel.append(skeleton,info);box.append(name,panel);row.append(avatar,box);
- $("messages").appendChild(row);scrollBottom();
+
+ const title=document.createElement("div");
+ title.className="image-processing-title";
+ title.textContent="Creating your image";
+
+ const sub=document.createElement("div");
+ sub.className="image-processing-sub";
+ sub.textContent="Preparing details and rendering your image...";
+
+ words.append(title,sub);
+ info.append(spinner,words);
+ panel.append(skeleton,info);
+ box.append(name,panel);
+ row.append(avatar,box);
+
+ $("messages").appendChild(row);
+ scrollBottom();
 }
-function removeTyping(){$("typingRow")?.remove()}
+
+function removeTyping(){
+ $("typingRow")?.remove();
+}
+
 function newChat(){
- stopSpeaking();stopListening();currentHistory=[];currentChatId=null;
- $("messages").innerHTML="";$("welcome").style.display="block";
- clearSelectedPhoto();$("prompt").value="";closeSidebar();
+ stopSpeaking();
+ stopListening();
+ currentHistory=[];
+ currentChatId=null;
+ $("messages").innerHTML="";
+ $("welcome").style.display="block";
+ clearSelectedPhoto();
+ $("prompt").value="";
+ closeSidebar();
 }
+
 function clearChat(){
  if(!confirm("Clear all saved chat history?"))return;
- savedChats=[];currentHistory=[];currentChatId=null;
- localStorage.removeItem("esuka_chats");$("messages").innerHTML="";
- $("welcome").style.display="block";clearSelectedPhoto();renderHistory();showToast("Chat history cleared");
+
+ savedChats=[];
+ currentHistory=[];
+ currentChatId=null;
+
+ try{localStorage.removeItem("esuka_chats")}catch(e){}
+
+ $("messages").innerHTML="";
+ $("welcome").style.display="block";
+ clearSelectedPhoto();
+ renderHistory();
+ showToast("Chat history cleared");
 }
+
 function clearSelectedPhoto(){
- selectedPhotoDataUrl=null;selectedPhotoName="";
- $("photoPicker").value="";$("photoPreview").classList.remove("show");
- $("photoPreviewImage").removeAttribute("src");$("photoPreviewName").textContent="";
+ selectedPhotoDataUrl=null;
+ selectedPhotoName="";
+ $("photoPicker").value="";
+ $("photoPreview").classList.remove("show");
+ $("photoPreviewImage").removeAttribute("src");
+ $("photoPreviewName").textContent="";
 }
+
 function compressPhoto(file){
  return new Promise((resolve,reject)=>{
   const reader=new FileReader();
+
   reader.onerror=()=>reject(new Error("Photo could not be read"));
+
   reader.onload=()=>{
    const image=new Image();
+
    image.onerror=()=>reject(new Error("Invalid image file"));
+
    image.onload=()=>{
     const maxSide=1280;
     const scale=Math.min(1,maxSide/Math.max(image.width,image.height));
+
     const canvas=document.createElement("canvas");
     canvas.width=Math.max(1,Math.round(image.width*scale));
     canvas.height=Math.max(1,Math.round(image.height*scale));
+
     const ctx=canvas.getContext("2d");
-    if(!ctx){reject(new Error("Photo processing is not supported"));return}
+
+    if(!ctx){
+     reject(new Error("Photo processing is not supported"));
+     return;
+    }
+
     ctx.drawImage(image,0,0,canvas.width,canvas.height);
     resolve(canvas.toDataURL("image/jpeg",0.78));
    };
+
    image.src=reader.result;
   };
+
   reader.readAsDataURL(file);
  });
 }
+
 async function choosePhoto(file){
  if(!file)return;
- if(!file.type.startsWith("image/")){showToast("Please choose an image");return}
- if(file.size>15*1024*1024){showToast("Photo must be smaller than 15 MB");return}
+
+ if(!file.type.startsWith("image/")){
+  showToast("Please choose an image");
+  return;
+ }
+
+ if(file.size>15*1024*1024){
+  showToast("Photo must be smaller than 15 MB");
+  return;
+ }
+
  try{
   selectedPhotoDataUrl=await compressPhoto(file);
   selectedPhotoName=file.name||"Selected photo";
+
   $("photoPreviewImage").src=selectedPhotoDataUrl;
   $("photoPreviewName").textContent=selectedPhotoName;
-  $("photoPreview").classList.add("show");showToast("Photo attached");
- }catch(error){clearSelectedPhoto();showToast(error.message||"Could not attach photo")}
+  $("photoPreview").classList.add("show");
+
+  showToast("Photo attached");
+ }catch(error){
+  clearSelectedPhoto();
+  showToast(error.message||"Could not attach photo");
+ }
 }
-function closeSidebar(){$("sidebar").classList.remove("open");$("backdrop").classList.remove("show")}
-function toggleSidebar(){$("sidebar").classList.toggle("open");$("backdrop").classList.toggle("show")}
-function buildPreferenceMessage(text){
- return "[User preferences: Reply language: "+settings.language+
- "; Response style: "+settings.responseStyle+
- ". Follow these preferences naturally.]\n\nUser message: "+text;
+
+function closeSidebar(){
+ $("sidebar").classList.remove("open");
+ $("backdrop").classList.remove("show");
 }
+
+function toggleSidebar(){
+ $("sidebar").classList.toggle("open");
+ $("backdrop").classList.toggle("show");
+}
+
+/* LANGUAGE AND PREFERENCE HELPERS */
+
+function detectLanguage(text){
+ const value=String(text||"").trim();
+
+ if(!value)return settings.language;
+
+ if(/[\u0900-\u097F]/.test(value))return "Hindi";
+
+ const latin=value.toLowerCase();
+
+ const romanHindiWords=/\b(kya|kaise|kyu|kyun|hai|hain|ho|hu|hun|tha|thi|the|mera|meri|mere|tum|aap|apka|apni|mujhe|mujh|ham|hum|hame|hamko|batao|btao|karo|karna|krna|chahiye|nahi|nahin|nyy|haan|ha|acha|achha|theek|thik|bhai|yaar|wala|wali|ka|ki|ke|mein|me|se|ko|aur|lekin|kyunki|abhi|pura|poora|script|bhejo|do|de|dunga|dunga|raha|rha|sakta|sakti|sakte)\b/i;
+
+ if(romanHindiWords.test(latin))return "Hinglish";
+
+ if(/^[a-z0-9\s.,!?'"():;_-]+$/i.test(value))return "English";
+
+ return settings.language;
+}
+
+function getPreferencePayload(text){
+ return {
+  language:settings.language,
+  responseStyle:settings.responseStyle,
+  detectedLanguage:detectLanguage(text),
+  automaticLanguage:true
+ };
+}
+
 function isImageRequest(text){
- const s=String(text||"").toLowerCase().trim();if(!s)return false;
+ const s=String(text||"").toLowerCase().trim();
+ if(!s)return false;
+
  if(/\b(how|what|why|where|kaise|kyun|kis tarah)\b.*\b(make|create|generate|draw|bana|banaye|banau)\b/i.test(s))return false;
+
  const imageWords=/\b(photo|image|picture|pic|portrait|wallpaper|poster|logo|drawing|illustration|artwork|thumbnail|tasveer|फोटो|तस्वीर|चित्र|पोस्टर|वॉलपेपर)\b/i;
+
  const createWords=/\b(make|create|generate|draw|design|bana|banao|banado|banaao|banaaye|bana do|bana ke do|taiyar karo|generate karo|generate kar do|create karo|draw karo)\b/i;
+
  const directDraw=/\b(draw|paint|illustrate)\b.*\b(tiger|lion|cat|dog|car|mountain|bird|dragon|house|tree|flower)\b/i;
+
  return(imageWords.test(s)&&createWords.test(s))||directDraw.test(s);
 }
+
+function isPhotoEditRequest(text){
+ const s=String(text||"").toLowerCase().trim();
+
+ return /\b(edit|modify|change|replace|remove|add|enhance|retouch|recolor|background|backgrounds|badal|badlo|hatao|hatana|jodo|jodna|sudhar|sudharna|theek|kar do|bana do|editing|फोटो एडिट|बैकग्राउंड बदल|हटा दो|जोड़ दो)\b/i.test(s);
+}
+
+function getErrorMessage(error){
+ const lang=detectLanguage($("prompt").value||currentHistory[currentHistory.length-1]?.content||"");
+
+ let message=error?.message||"Unknown error";
+
+ if(error?.name==="AbortError"){
+  message=lang==="English"?"Request timed out. Please try again.":"Request ka response aane mein zyada time lag gaya. Dobara try karo.";
+ }
+
+ if(lang==="English")return "Sorry, something went wrong: "+message;
+ if(lang==="Hindi")return "माफ़ कीजिए, कुछ समस्या आ गई: "+message;
+ return "Sorry, kuch problem aa gayi: "+message;
+}
+
+/* RESPONSE HELPERS */
+
+function getReplyFromData(data){
+ if(typeof data==="string")return data;
+
+ const candidates=[
+  data?.reply,
+  data?.response,
+  data?.text,
+  data?.message,
+  data?.answer,
+  data?.result?.reply,
+  data?.result?.response,
+  data?.result?.text,
+  data?.result?.answer,
+  data?.data?.reply,
+  data?.data?.response,
+  data?.data?.text
+ ];
+
+ for(const value of candidates){
+  if(typeof value==="string"&&value.trim())return value.trim();
+ }
+
+ return "";
+}
+
+function getImageFromData(data){
+ const candidates=[
+  data?.image,
+  data?.url,
+  data?.imageUrl,
+  data?.result?.image,
+  data?.result?.url,
+  data?.result?.imageUrl,
+  data?.output?.image,
+  data?.output?.url,
+  data?.data?.image,
+  data?.data?.url,
+  data?.output
+ ];
+
+ for(const value of candidates){
+  if(typeof value==="string"&&value.trim())return value.trim();
+
+  if(value&&typeof value==="object"){
+   if(typeof value.url==="string")return value.url;
+   if(typeof value.data==="string")return value.data;
+   if(typeof value.base64==="string")return value.base64;
+  }
+ }
+
+ return "";
+}
+
+function normalizeImageUrl(image){
+ if(!image)return "";
+
+ if(image.startsWith("data:image/")||/^https?:\/\//i.test(image))return image;
+
+ return "data:image/png;base64,"+image;
+}
+
+async function sendApiRequest(payload,timeoutMs=120000){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+
+ try{
+  const response=await fetch(API_URL,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(payload),
+   signal:controller.signal
+  });
+
+  let data;
+
+  try{
+   data=await response.json();
+  }catch(e){
+   throw new Error("Server returned an invalid response");
+  }
+
+  if(!response.ok||data?.success===false){
+   throw new Error(data?.error||data?.message||("Server error ("+response.status+")"));
+  }
+
+  return data;
+ }finally{
+  clearTimeout(timeout);
+ }
+}
+
+/* MAIN CHAT FUNCTION */
 
 async function sendMessage(){
  const text=$("prompt").value.trim();
  const photoToSend=selectedPhotoDataUrl;
+
  if((!text&&!photoToSend)||busy)return;
 
  const userText=text||(photoToSend?"Please describe and analyze this photo.":"");
- $("prompt").value="";$("prompt").style.height="auto";
+ const preferences=getPreferencePayload(userText);
+
+ $("prompt").value="";
+ $("prompt").style.height="auto";
+
  addMessage("user",userText,true,photoToSend);
  clearSelectedPhoto();
 
  const useImage=!photoToSend&&isImageRequest(userText);
- busy=true;$("sendBtn").disabled=true;
- if(useImage)showImageProcessing();else showTyping();
+ const useEdit=!!photoToSend&&isPhotoEditRequest(userText);
+
+ busy=true;
+ $("sendBtn").disabled=true;
+
+ if(useImage||useEdit)showImageProcessing();
+ else showTyping();
 
  try{
-  // IMPORTANT FIX: Photo analysis gets the original question directly.
-  const payload=photoToSend
-   ?{mode:"analyze",image:photoToSend,message:userText}
-   :useImage
-    ?{mode:"image",message:userText,prompt:userText}
-    :{message:buildPreferenceMessage(userText),history:currentHistory.slice(0,-1)};
+  let payload;
 
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),90000);
-  let response;
-  try{
-   response=await fetch(API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(payload),
-    signal:controller.signal
-   });
-  }finally{clearTimeout(timeout)}
+  if(photoToSend&&useEdit){
+   payload={
+    mode:"edit",
+    image:photoToSend,
+    prompt:userText,
+    message:userText,
+    preferences
+   };
+  }else if(photoToSend){
+   payload={
+    mode:"analyze",
+    image:photoToSend,
+    message:userText,
+    preferences
+   };
+  }else if(useImage){
+   payload={
+    mode:"image",
+    message:userText,
+    prompt:userText,
+    preferences
+   };
+  }else{
+   payload={
+    message:userText,
+    history:currentHistory.slice(0,-1),
+    preferences
+   };
+  }
 
-  let data;
-  try{data=await response.json()}
-  catch(e){throw new Error("Server returned an invalid response")}
+  const data=await sendApiRequest(payload,120000);
 
   removeTyping();
-  if(!response.ok||data.success===false)throw new Error(data.error||data.message||"Server error");
 
-  if(useImage){
-   const image=data.image||data.url||data.result?.image||data.result?.url||data.output;
-   if(typeof image!=="string"||!image)throw new Error("Image provider did not return an image");
-   let imageURL=image;
-   if(!image.startsWith("data:image/")&&!image.startsWith("http"))imageURL="data:image/png;base64,"+image;
-   addMessage("assistant","Your image is ready.");addImage(imageURL);
+  if(useImage||useEdit){
+   const image=getImageFromData(data);
+
+   if(!image){
+    const possibleReply=getReplyFromData(data);
+    if(possibleReply){
+     addMessage("assistant",possibleReply);
+     return;
+    }
+    throw new Error("Image provider did not return an image");
+   }
+
+   const imageURL=normalizeImageUrl(image);
+   addMessage("assistant",useEdit?"Your edited image is ready.":"Your image is ready.");
+   addImage(imageURL);
   }else{
-   const reply=data.reply||data.response||data.text||data.message||data.result?.reply;
-   if(!reply)throw new Error("Empty response from AI");
-   addMessage("assistant",String(reply));
-   if(settings.voiceEnabled)speakText(String(reply),false);
+   const reply=getReplyFromData(data);
+
+   if(!reply){
+    throw new Error("Empty response from AI");
+   }
+
+   addMessage("assistant",reply);
+
+   if(settings.voiceEnabled)speakText(reply,false);
   }
+
  }catch(error){
   removeTyping();
-  const message=error.name==="AbortError"?"Request timed out. Please try again.":error.message||"Unknown error";
-  addMessage("assistant","Sorry, kuch problem aa gayi: "+message);
+
+  const errorText=getErrorMessage(error);
+  addMessage("assistant",errorText);
+
  }finally{
-  busy=false;$("sendBtn").disabled=false;$("prompt").focus();
+  busy=false;
+  $("sendBtn").disabled=false;
+  $("prompt").focus();
  }
 }
+
+/* COPY */
+
 function copyText(text){
  if(navigator.clipboard?.writeText){
-  navigator.clipboard.writeText(text).then(()=>showToast("Copied")).catch(()=>fallbackCopy(text));
- }else fallbackCopy(text);
+  navigator.clipboard.writeText(text)
+   .then(()=>showToast("Copied"))
+   .catch(()=>fallbackCopy(text));
+ }else{
+  fallbackCopy(text);
+ }
 }
+
 function fallbackCopy(text){
- const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();
- try{document.execCommand("copy");showToast("Copied")}catch(e){showToast("Copy not available")}
+ const t=document.createElement("textarea");
+ t.value=text;
+ t.style.position="fixed";
+ t.style.opacity="0";
+ document.body.appendChild(t);
+ t.select();
+
+ try{
+  document.execCommand("copy");
+  showToast("Copied");
+ }catch(e){
+  showToast("Copy not available");
+ }
+
  t.remove();
 }
-function stopSpeaking(){if("speechSynthesis"in window)window.speechSynthesis.cancel()}
+
+/* VOICE OUTPUT */
+
+function getSpeechLanguage(text){
+ const value=String(text||"");
+
+ if(/[\u0900-\u097F]/.test(value))return "hi-IN";
+
+ const detected=detectLanguage(value);
+
+ if(detected==="English")return "en-IN";
+
+ if(detected==="Hindi")return "hi-IN";
+
+ return "hi-IN";
+}
+
+function getBestVoice(voices,language,type){
+ const langPrefix=language.toLowerCase().split("-")[0];
+
+ const matching=voices.filter(v=>v.lang.toLowerCase().startsWith(langPrefix));
+
+ if(type==="system"){
+  return matching[0]||voices[0]||null;
+ }
+
+ const femalePattern=/female|woman|heera|priya|neerja|lekha|samantha|zira/i;
+ const malePattern=/male|man|ravi|amit|rahul|daniel|david/i;
+
+ const preferredPattern=type==="female"?femalePattern:malePattern;
+
+ return matching.find(v=>preferredPattern.test(v.name))
+  ||matching.find(v=>/india|indian/i.test(v.name))
+  ||matching[0]
+  ||voices.find(v=>v.lang.toLowerCase().startsWith("en"))
+  ||voices[0]
+  ||null;
+}
+
+function stopSpeaking(){
+ if("speechSynthesis"in window){
+  window.speechSynthesis.cancel();
+ }
+}
+
 function speakText(text,manual=false){
  if(!manual&&!settings.voiceEnabled)return;
- if(!("speechSynthesis"in window)){showToast("Voice not supported in this browser");return}
- stopSpeaking();
- const voices=window.speechSynthesis.getVoices();
- const utterance=new SpeechSynthesisUtterance(text);
- utterance.rate=Number(settings.voiceSpeed);
- utterance.lang=settings.language==="English"?"en-IN":"hi-IN";
- if(settings.voiceType!=="system"){
-  const indianVoices=voices.filter(v=>/india|hindi|en-in|hi-in/i.test(v.lang+" "+v.name));
-  const namePattern=settings.voiceType==="female"?/female|woman|heera|priya|neerja|lekha/i:/male|man|ravi|amit|rahul/i;
-  const selected=indianVoices.find(v=>namePattern.test(v.name));
-  if(!selected){showToast("Selected voice is not available on this device");return}
-  utterance.voice=selected;
- }else if(voices.length){
-  const selected=voices.find(v=>v.lang.toLowerCase()==="en-in"||v.lang.toLowerCase()==="hi-in");
-  if(selected)utterance.voice=selected;
+
+ if(!("speechSynthesis"in window)){
+  showToast("Voice not supported in this browser");
+  return;
  }
- utterance.onerror=()=>showToast("Voice playback failed");
+
+ stopSpeaking();
+
+ const utterance=new SpeechSynthesisUtterance(String(text));
+ const language=getSpeechLanguage(text);
+ const voices=window.speechSynthesis.getVoices();
+
+ utterance.lang=language;
+ utterance.rate=Number(settings.voiceSpeed)||1;
+
+ const selected=getBestVoice(voices,language,settings.voiceType);
+
+ if(selected){
+  utterance.voice=selected;
+  utterance.lang=selected.lang||language;
+ }
+
+ utterance.onerror=event=>{
+  if(event.error!=="canceled"&&event.error!=="interrupted"){
+   showToast("Voice playback failed");
+  }
+ };
+
  window.speechSynthesis.speak(utterance);
 }
+
+/* VOICE INPUT */
+
 function startListening(){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SpeechRecognition){showToast("Voice input not supported in this browser");return}
- if(listening){stopListening();return}
+
+ if(!SpeechRecognition){
+  showToast("Voice input not supported in this browser");
+  return;
+ }
+
+ if(listening){
+  stopListening();
+  return;
+ }
+
  recognition=new SpeechRecognition();
+
  recognition.lang=settings.language==="English"?"en-IN":"hi-IN";
- recognition.interimResults=true;recognition.continuous=false;
+ recognition.interimResults=true;
+ recognition.continuous=false;
+
  recognition.onstart=()=>{
-  listening=true;$("voicePanel").classList.add("show");
-  $("voiceStatus").textContent="Listening... Speak now";$("micBtn").classList.add("active");
+  listening=true;
+  $("voicePanel").classList.add("show");
+  $("voiceStatus").textContent="Listening... Speak now";
+  $("micBtn").classList.add("active");
  };
+
  recognition.onresult=e=>{
   let transcript="";
-  for(let i=e.resultIndex;i<e.results.length;i++)transcript+=e.results[i][0].transcript;
+
+  for(let i=e.resultIndex;i<e.results.length;i++){
+   transcript+=e.results[i][0].transcript;
+  }
+
   $("prompt").value=transcript;
+  $("prompt").dispatchEvent(new Event("input"));
  };
- recognition.onerror=e=>showToast("Voice input: "+e.error);
+
+ recognition.onerror=e=>{
+  showToast("Voice input: "+e.error);
+ };
+
  recognition.onend=()=>{
-  listening=false;$("voicePanel").classList.remove("show");$("micBtn").classList.remove("active");
+  listening=false;
+  $("voicePanel").classList.remove("show");
+  $("micBtn").classList.remove("active");
  };
- try{recognition.start()}catch(e){showToast("Microphone could not start")}
+
+ try{
+  recognition.start();
+ }catch(e){
+  showToast("Microphone could not start");
+ }
 }
+
 function stopListening(){
- if(recognition){try{recognition.stop()}catch(e){}}
- listening=false;$("voicePanel").classList.remove("show");$("micBtn").classList.remove("active");
+ if(recognition){
+  try{recognition.stop()}catch(e){}
+ }
+
+ listening=false;
+ $("voicePanel").classList.remove("show");
+ $("micBtn").classList.remove("active");
 }
-function toggleVoice(){if(listening)stopListening();else startListening()}
+
+function toggleVoice(){
+ if(listening)stopListening();
+ else startListening();
+}
+
 function toggleVoiceSetting(){
  const enabled=$("voiceToggle").classList.toggle("on");
+
  $("voiceToggle").setAttribute("aria-pressed",String(enabled));
+
  if(!enabled)stopSpeaking();
+
  showToast(enabled?"Automatic voice ON":"Automatic voice OFF");
 }
+
+/* SETTINGS */
+
 function resetSettings(){
  if(!confirm("Reset all preferences to default?"))return;
- settings={...defaults};localStorage.setItem("esuka_settings",JSON.stringify(settings));
- localStorage.setItem("esuka_settings_version",SETTINGS_VERSION);
- applySettings();stopSpeaking();showToast("Settings reset");
+
+ settings={...defaults};
+
+ safeStorageSet("esuka_settings",JSON.stringify(settings));
+ safeStorageSet("esuka_settings_version",SETTINGS_VERSION);
+
+ applySettings();
+ stopSpeaking();
+ showToast("Settings reset");
 }
+
 function cycleTheme(){
  const themes=["black","grey","light"];
  const index=themes.indexOf(settings.theme);
+
  settings.theme=themes[(index+1)%themes.length];
- localStorage.setItem("esuka_settings",JSON.stringify(settings));
- applySettings();showToast("Theme: "+settings.theme);
+
+ safeStorageSet("esuka_settings",JSON.stringify(settings));
+
+ applySettings();
+ showToast("Theme: "+settings.theme);
 }
 
 /* BUTTON EVENTS */
+
 $("newChatBtn").addEventListener("click",newChat);
-$("attachBtn").addEventListener("click",()=>$("photoPicker").click());
-$("photoPicker").addEventListener("change",e=>choosePhoto(e.target.files?.[0]));
+
+$("attachBtn").addEventListener("click",()=>{
+ $("photoPicker").click();
+});
+
+$("photoPicker").addEventListener("change",e=>{
+ choosePhoto(e.target.files?.[0]);
+});
+
 $("removePhotoBtn").addEventListener("click",clearSelectedPhoto);
+
 $("sideVoiceBtn").addEventListener("click",toggleVoice);
 $("micBtn").addEventListener("click",toggleVoice);
 $("stopVoiceBtn").addEventListener("click",stopListening);
+
 $("sendBtn").addEventListener("click",sendMessage);
 $("clearBtn").addEventListener("click",clearChat);
+
 $("historyBtn").addEventListener("click",()=>{
- renderHistory();showToast("Your recent chats are shown in the sidebar");
+ renderHistory();
+ showToast("Your recent chats are shown in the sidebar");
 });
+
 $("settingsBtn").addEventListener("click",openSettings);
 $("topSettingsBtn").addEventListener("click",openSettings);
 $("closeSettings").addEventListener("click",closeSettings);
 $("cancelSettings").addEventListener("click",closeSettings);
-$("saveSettings").addEventListener("click",()=>{saveSettings();closeSettings()});
+
+$("saveSettings").addEventListener("click",()=>{
+ saveSettings();
+ closeSettings();
+});
+
 $("resetSettingsBtn").addEventListener("click",resetSettings);
 $("settingsClearBtn").addEventListener("click",clearChat);
 $("voiceToggle").addEventListener("click",toggleVoiceSetting);
+
 $("voiceSpeed").addEventListener("input",()=>{
  $("speedValue").textContent=Number($("voiceSpeed").value).toFixed(1)+"x";
 });
+
 $("themeBtn").addEventListener("click",cycleTheme);
+
 $("aboutBtn").addEventListener("click",()=>{
- alert("ESUKA AI\nVersion 1.1\nYour AI Assistant\nMade by Katari");
+ alert("ESUKA AI\nVersion 1.2\nYour AI Assistant\nMade by Katari");
 });
+
 $("menuBtn").addEventListener("click",toggleSidebar);
 $("backdrop").addEventListener("click",closeSidebar);
+
 $("settingsOverlay").addEventListener("click",e=>{
  if(e.target===$("settingsOverlay"))closeSettings();
 });
+
 $("prompt").addEventListener("input",e=>{
  e.target.style.height="auto";
  e.target.style.height=Math.min(e.target.scrollHeight,130)+"px";
 });
+
 $("prompt").addEventListener("keydown",e=>{
- if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}
+ if(e.key==="Enter"&&!e.shiftKey){
+  e.preventDefault();
+  sendMessage();
+ }
 });
+
 document.querySelectorAll(".suggestion").forEach(btn=>{
  btn.addEventListener("click",()=>{
-  $("prompt").value=btn.dataset.prompt;$("prompt").focus();
+  $("prompt").value=btn.dataset.prompt;
+  $("prompt").focus();
+  $("prompt").dispatchEvent(new Event("input"));
  });
 });
+
 document.addEventListener("keydown",e=>{
- if(e.key==="Escape"){closeSettings();closeSidebar()}
+ if(e.key==="Escape"){
+  closeSettings();
+  closeSidebar();
+ }
 });
+
+if("speechSynthesis"in window){
+ window.speechSynthesis.getVoices();
+}
+
 loadData();
 </script>
 </body>
