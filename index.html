@@ -5,74 +5,259 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="theme-color" content="#080808">
 <title>ESUKA AI</title>
+
 <style>
-:root{color-scheme:dark;--bg:#080808;--panel:#111;--card:#191919;--text:#f5f5f5;--muted:#999;--border:#303030;--user:#303030}
+:root{
+color-scheme:dark;
+--bg:#080808;
+--panel:#111;
+--card:#191919;
+--text:#f5f5f5;
+--muted:#999;
+--border:#303030;
+--user:#303030;
+}
 *{box-sizing:border-box}
-body{margin:0;height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-body.light{color-scheme:light;--bg:#eee;--panel:#fff;--card:#f7f7f7;--text:#171717;--muted:#666;--border:#d2d2d2;--user:#ddd}
+body{
+margin:0;
+height:100dvh;
+overflow:hidden;
+background:var(--bg);
+color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+body.light{
+color-scheme:light;
+--bg:#eee;
+--panel:#fff;
+--card:#f7f7f7;
+--text:#171717;
+--muted:#666;
+--border:#d2d2d2;
+--user:#ddd;
+}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer;color:inherit}
 .app{height:100dvh;display:flex}
-.sidebar{width:270px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);padding:18px;display:flex;flex-direction:column}
+.sidebar{
+width:270px;
+flex-shrink:0;
+background:var(--panel);
+border-right:1px solid var(--border);
+padding:18px;
+display:flex;
+flex-direction:column;
+}
 .brand{font-weight:850;font-size:20px;margin:8px 7px 28px}
-.brand small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:4px}
-.sidebtn,.iconbtn,.suggestion,.mini{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:12px;color:var(--text)}
+.brand small{
+display:block;
+color:var(--muted);
+font-size:11px;
+font-weight:400;
+margin-top:4px;
+}
+.sidebtn,.iconbtn,.suggestion,.mini{
+border:1px solid var(--border);
+background:var(--card);
+border-radius:12px;
+padding:12px;
+color:var(--text);
+}
 .sidebtn{width:100%;text-align:left;margin-bottom:8px}
 .sidebtn:hover,.suggestion:hover,.iconbtn:hover{filter:brightness(1.2)}
-.historytitle{font-size:10px;color:var(--muted);letter-spacing:1.3px;margin:25px 7px 10px}
+.historytitle{
+font-size:10px;
+color:var(--muted);
+letter-spacing:1.3px;
+margin:25px 7px 10px;
+}
 .history{overflow:auto;flex:1}
-.historyitem{padding:10px;border-radius:9px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.historyitem{
+padding:10px;
+border-radius:9px;
+font-size:13px;
+color:var(--muted);
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+cursor:pointer;
+}
 .historyitem:hover{background:var(--card);color:var(--text)}
 .main{min-width:0;flex:1;display:flex;flex-direction:column}
-.top{height:64px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.top{
+height:64px;
+flex-shrink:0;
+border-bottom:1px solid var(--border);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+}
 .topright{display:flex;gap:8px}
 .iconbtn{width:42px;height:42px;padding:0}
 .chat{flex:1;overflow:auto;padding:24px 16px}
 .inner{max-width:850px;margin:auto}
 .welcome{text-align:center;padding:10vh 10px 30px}
-.orb{width:85px;height:85px;border:7px solid #333;border-radius:50%;display:grid;place-items:center;margin:0 auto 24px;font-size:42px;font-weight:900}
+.orb{
+width:85px;
+height:85px;
+border:7px solid #333;
+border-radius:50%;
+display:grid;
+place-items:center;
+margin:0 auto 24px;
+font-size:42px;
+font-weight:900;
+}
 .welcome h1{font-size:clamp(26px,5vw,38px);margin:0}
 .welcome p{color:var(--muted);font-size:14px}
-.suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:600px;margin:30px auto}
+.suggestions{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+max-width:600px;
+margin:30px auto;
+}
 .suggestion{text-align:left;min-height:80px}
 .suggestion b{display:block;font-size:13px;margin-bottom:6px}
 .suggestion small{color:var(--muted);font-size:11px}
 .messages{display:flex;flex-direction:column;gap:22px;padding-bottom:20px}
 .message{display:flex;gap:10px;max-width:100%;animation:up .2s}
 .message.user{justify-content:flex-end}
-.avatar{width:34px;height:34px;flex-shrink:0;border-radius:11px;background:#333;display:grid;place-items:center;font-weight:800}
+.avatar{
+width:34px;
+height:34px;
+flex-shrink:0;
+border-radius:11px;
+background:#333;
+display:grid;
+place-items:center;
+font-weight:800;
+}
 .content{max-width:min(85%,700px);min-width:0}
 .name{font-size:11px;color:var(--muted);margin:2px 0 7px}
-.bubble{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;font-size:14px;background:var(--card);border:1px solid var(--border);padding:13px 15px;border-radius:5px 16px 16px 16px}
+.bubble{
+white-space:pre-wrap;
+overflow-wrap:anywhere;
+line-height:1.7;
+font-size:14px;
+background:var(--card);
+border:1px solid var(--border);
+padding:13px 15px;
+border-radius:5px 16px 16px 16px;
+}
 .user .bubble{background:var(--user);border-radius:16px 5px 16px 16px}
 .actions{display:flex;gap:7px;margin-top:7px}
 .mini{font-size:11px;padding:7px 10px}
 .typing{color:var(--muted);font-size:12px;padding:12px}
 .composerwrap{padding:12px 16px 16px}
 .composer{max-width:850px;margin:auto}
-.inputbox{display:flex;align-items:flex-end;gap:8px;border:1px solid var(--border);background:var(--panel);border-radius:22px;padding:9px}
-#prompt{flex:1;min-width:0;max-height:150px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:10px 5px;font-size:14px;line-height:1.5}
+.inputbox{
+display:flex;
+align-items:flex-end;
+gap:8px;
+border:1px solid var(--border);
+background:var(--panel);
+border-radius:22px;
+padding:9px;
+}
+#prompt{
+flex:1;
+min-width:0;
+max-height:150px;
+resize:none;
+border:0;
+outline:0;
+background:transparent;
+color:var(--text);
+padding:10px 5px;
+font-size:14px;
+line-height:1.5;
+}
 #prompt::placeholder{color:var(--muted)}
-.send{width:43px;height:43px;border:0;border-radius:50%;background:#eee;color:#111;font-weight:900}
+.send{
+width:43px;
+height:43px;
+border:0;
+border-radius:50%;
+background:#eee;
+color:#111;
+font-weight:900;
+}
 .send:disabled{opacity:.4}
 .note{text-align:center;color:var(--muted);font-size:10px;margin-top:9px}
-.overlay{display:none;position:fixed;inset:0;background:#000b;z-index:5;align-items:center;justify-content:center;padding:14px}
+.overlay{
+display:none;
+position:fixed;
+inset:0;
+background:#000b;
+z-index:5;
+align-items:center;
+justify-content:center;
+padding:14px;
+}
 .overlay.show{display:flex}
-.settings{width:100%;max-width:560px;max-height:90dvh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:20px}
+.settings{
+width:100%;
+max-width:560px;
+max-height:90dvh;
+overflow:auto;
+background:var(--panel);
+border:1px solid var(--border);
+border-radius:20px;
+padding:20px;
+}
 .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .head h2{font-size:20px;margin:0}
 .field{margin:15px 0}
 .field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px}
 .field p{font-size:11px;color:var(--muted);margin:0 0 8px}
-.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:13px}
+.field input,.field select,.field textarea{
+width:100%;
+padding:11px;
+border:1px solid var(--border);
+border-radius:10px;
+background:var(--card);
+color:var(--text);
+font-size:13px;
+}
 .field textarea{min-height:110px;resize:vertical}
 .row{display:flex;gap:8px}
 .row>*{flex:1}
-.save{padding:12px 16px;border:0;border-radius:11px;background:#eee;color:#111;font-weight:750}
-.secondary{padding:11px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card)}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);padding:10px 15px;border-radius:10px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:10}
+.save{
+padding:12px 16px;
+border:0;
+border-radius:11px;
+background:#eee;
+color:#111;
+font-weight:750;
+}
+.secondary{
+padding:11px 14px;
+border:1px solid var(--border);
+border-radius:11px;
+background:var(--card);
+}
+.toast{
+position:fixed;
+bottom:90px;
+left:50%;
+transform:translateX(-50%);
+background:var(--panel);
+border:1px solid var(--border);
+padding:10px 15px;
+border-radius:10px;
+font-size:12px;
+opacity:0;
+pointer-events:none;
+transition:.2s;
+z-index:10;
+}
 .toast.show{opacity:1}
-@keyframes up{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes up{
+from{opacity:0;transform:translateY(7px)}
+to{opacity:1;transform:none}
+}
 @media(max-width:720px){
 .sidebar{display:none}
 .top{padding:0 12px}
@@ -83,24 +268,38 @@ button{cursor:pointer;color:inherit}
 .suggestion{padding:12px}
 .content{max-width:88%}
 }
-@media(max-width:380px){.suggestions{grid-template-columns:1fr}}
+@media(max-width:380px){
+.suggestions{grid-template-columns:1fr}
+}
 </style>
 </head>
-<body>
 
+<body>
 <div class="app">
+
 <aside class="sidebar">
-<div class="brand">ESUKA AI<small>Your AI Assistant · Direct Groq</small></div>
+<div class="brand">ESUKA AI
+<small>Your AI Assistant · Groq</small>
+</div>
+
 <button class="sidebtn" id="newChat">＋ New chat</button>
 <button class="sidebtn" id="openSettings">⚙ Settings / API key</button>
+
 <div class="historytitle">RECENT CHATS</div>
 <div class="history" id="history"></div>
-<p style="font-size:11px;color:var(--muted);line-height:1.5">Your chats are saved in this browser only.</p>
+
+<p style="font-size:11px;color:var(--muted);line-height:1.5">
+Your chats are saved in this browser only.
+</p>
 </aside>
 
 <main class="main">
+
 <header class="top">
-<div><b>ESUKA AI</b> <span style="font-size:11px;color:var(--muted)">● Direct API</span></div>
+<div>
+<b>ESUKA AI</b>
+<span style="font-size:11px;color:var(--muted)">● Online</span>
+</div>
 <div class="topright">
 <button class="iconbtn" id="theme" title="Change theme">◐</button>
 <button class="iconbtn" id="settingsTop" title="Settings">⚙</button>
@@ -109,17 +308,35 @@ button{cursor:pointer;color:inherit}
 
 <section class="chat" id="chat">
 <div class="inner">
+
 <div class="welcome" id="welcome">
 <div class="orb">E</div>
 <h1>Welcome to ESUKA AI</h1>
 <p>Ask anything. I'm here to help.</p>
+
 <div class="suggestions">
-<button class="suggestion" data-prompt="Explain a difficult topic in simple words."><b>✧ Explain simply</b><small>Understand a topic step by step</small></button>
-<button class="suggestion" data-prompt="Help me write and understand some code."><b>&lt;/&gt; Write code</b><small>Build and debug code</small></button>
-<button class="suggestion" data-prompt="Give me five creative project ideas."><b>♧ Get ideas</b><small>Explore something new</small></button>
-<button class="suggestion" data-prompt="Summarize the key points about artificial intelligence."><b>▤ Summarize</b><small>Get the important points</small></button>
+<button class="suggestion" data-prompt="Explain a difficult topic in simple words.">
+<b>✧ Explain simply</b>
+<small>Understand a topic step by step</small>
+</button>
+
+<button class="suggestion" data-prompt="Help me write and understand some code.">
+<b>&lt;/&gt; Write code</b>
+<small>Build and debug code</small>
+</button>
+
+<button class="suggestion" data-prompt="Give me five creative project ideas.">
+<b>♧ Get ideas</b>
+<small>Explore something new</small>
+</button>
+
+<button class="suggestion" data-prompt="Summarize the key points about artificial intelligence.">
+<b>▤ Summarize</b>
+<small>Get the important points</small>
+</button>
 </div>
 </div>
+
 <div class="messages" id="messages"></div>
 </div>
 </section>
@@ -130,14 +347,18 @@ button{cursor:pointer;color:inherit}
 <textarea id="prompt" rows="1" placeholder="Message ESUKA AI..." aria-label="Message"></textarea>
 <button class="send" id="send">↑</button>
 </div>
-<div class="note">AI can make mistakes. Verify important information. API key is kept in memory for this tab only.</div>
+<div class="note">
+AI can make mistakes. Verify important information.
 </div>
 </div>
+</div>
+
 </main>
 </div>
 
 <div class="overlay" id="settingsOverlay">
 <section class="settings">
+
 <div class="head">
 <h2>⚙ ESUKA Settings</h2>
 <button class="secondary" id="closeSettings">✕</button>
@@ -145,17 +366,15 @@ button{cursor:pointer;color:inherit}
 
 <div class="field">
 <label for="apiKey">Groq API key</label>
-<p>Enter your own key. It is not saved to localStorage; it remains in this tab's memory until refresh/close.</p>
-<input id="apiKey" type="password" autocomplete="off" placeholder="gsk_..." />
+<p>Enter your Groq key. It stays in this tab's memory and is not saved to browser storage.</p>
+<input id="apiKey" type="password" autocomplete="off" placeholder="gsk_...">
 </div>
 
 <div class="field">
 <label for="model">Groq model</label>
 <select id="model">
-<option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-<option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-<option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
 <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+<option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
 <option value="qwen/qwen3-32b">qwen/qwen3-32b</option>
 </select>
 </div>
@@ -183,17 +402,17 @@ button{cursor:pointer;color:inherit}
 
 <div class="field">
 <label for="systemPrompt">Custom system instructions</label>
-<p>Personalize tone and behavior. These instructions do not override provider rules or safety requirements.</p>
-<textarea id="systemPrompt">You are ESUKA AI, a clear, capable assistant with a witty, savage Hinglish personality. Answer the user's actual question directly. Be accurate, admit uncertainty, and never invent facts. Explain technical topics step by step when useful. Match the user's language and casual tone.
+<p>Customize ESUKA AI's personality and response style.</p>
+<textarea id="systemPrompt">You are ESUKA AI, a helpful, witty and confident assistant. Answer the user's actual question directly. Be accurate, admit uncertainty, and never invent facts. Explain technical topics step by step when useful. Match the user's language and casual tone.
 
 SAVAGE ROAST MODE:
-- If the user insults or abuses you, respond with a sharp, funny, confident comeback instead of being overly formal.
-- Match the intensity with clever sarcasm, playful roasting, and mild-to-strong non-discriminatory slang where appropriate.
-- Keep comebacks short, natural, varied, and in the user's language.
+- If the user insults or abuses you, respond with a sharp, funny and confident comeback instead of being overly formal.
+- Match the intensity with clever sarcasm, playful roasting and non-discriminatory slang where appropriate.
+- Keep comebacks short, natural and varied.
 - Do not start insulting the user without being provoked.
-- Do not use slurs, discriminatory abuse, sexual insults, threats, or attacks on someone's family, caste, religion, identity, or appearance.
-- If the user seems genuinely upset, distressed, or asks for serious help, stop roasting and respond respectfully.
-- Roasting is for banter only; do not let it interfere with answering legitimate questions or following safety requirements.</textarea>
+- Do not use discriminatory slurs, sexual insults, threats, or attacks on someone's family, caste, religion, identity or appearance.
+- If the user seems genuinely upset or asks for serious help, stop roasting and respond respectfully.
+- Roasting is for banter only. Do not let it interfere with answering legitimate questions or following safety requirements.</textarea>
 </div>
 
 <div class="row">
@@ -201,7 +420,10 @@ SAVAGE ROAST MODE:
 <button class="save" id="saveSettings">Save settings</button>
 </div>
 
-<p style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:15px">Security: a browser-only app cannot keep an API key secret from its user or from anyone who can inspect the browser. Do not publish a personal key in a public website. For a public app, use a protected backend and server-side environment variable.</p>
+<p style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:15px">
+Security warning: a browser-only app cannot keep an API key secret from people who can inspect the browser. Do not publish your personal API key in public code. Use a protected backend for a public app.
+</p>
+
 </section>
 </div>
 
@@ -210,36 +432,49 @@ SAVAGE ROAST MODE:
 <script>
 "use strict";
 
-const $=id=>document.getElementById(id);
-const ENDPOINT="https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_PROMPT=$("systemPrompt").value;
+const $ = id => document.getElementById(id);
 
-let apiKey="";
-let model="llama-3.3-70b-versatile";
-let language="Auto-detect";
-let style="Friendly";
-let systemPrompt=DEFAULT_PROMPT;
-let history=[];
-let chats=[];
-let busy=false;
-let activeId=null;
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-function toast(s){
-const t=$("toast");
-t.textContent=s;
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
+
+const DEFAULT_PROMPT = $("systemPrompt").value;
+
+let apiKey = "";
+let model = DEFAULT_MODEL;
+let language = "Auto-detect";
+let style = "Friendly";
+let systemPrompt = DEFAULT_PROMPT;
+
+let history = [];
+let chats = [];
+let busy = false;
+let activeId = null;
+
+function toast(message){
+const t = $("toast");
+t.textContent = message;
 t.classList.add("show");
 clearTimeout(toast.timer);
-toast.timer=setTimeout(()=>t.classList.remove("show"),2500);
+toast.timer = setTimeout(()=>{
+t.classList.remove("show");
+},2500);
 }
 
-function safeGet(k,f){
-try{return localStorage.getItem(k)??f}
-catch{return f}
+function safeGet(key,fallback){
+try{
+return localStorage.getItem(key) ?? fallback;
+}catch{
+return fallback;
+}
 }
 
-function safeSet(k,v){
-try{localStorage.setItem(k,v)}
-catch{toast("Browser storage is unavailable")}
+function safeSet(key,value){
+try{
+localStorage.setItem(key,value);
+}catch{
+toast("Browser storage unavailable");
+}
 }
 
 function saveChats(){
@@ -249,100 +484,130 @@ renderHistory();
 
 function saveChat(){
 if(!history.length)return;
-const first=history.find(x=>x.role==="user");
-const id=activeId||String(Date.now());
-activeId=id;
-const item={
+
+const first = history.find(x=>x.role==="user");
+const id = activeId || String(Date.now());
+
+activeId = id;
+
+const item = {
 id,
-title:(first?.content||"New chat").slice(0,42),
-history,
+title:(first?.content || "New chat").slice(0,42),
+history:history,
 date:Date.now()
 };
-const i=chats.findIndex(x=>x.id===id);
-if(i>=0)chats[i]=item;
-else chats.unshift(item);
+
+const index = chats.findIndex(x=>x.id===id);
+
+if(index>=0){
+chats[index] = item;
+}else{
+chats.unshift(item);
+}
+
 saveChats();
 }
 
 function renderHistory(){
 $("history").replaceChildren();
+
 chats.slice(0,25).forEach(c=>{
-const d=document.createElement("div");
-d.className="historyitem";
-d.textContent="◷ "+c.title;
-d.onclick=()=>{
-activeId=c.id;
-history=Array.isArray(c.history)?c.history.slice():[];
+const d = document.createElement("div");
+d.className = "historyitem";
+d.textContent = "◷ " + c.title;
+
+d.onclick = ()=>{
+activeId = c.id;
+history = Array.isArray(c.history) ? c.history.slice() : [];
 renderMessages();
 };
+
 $("history").append(d);
 });
 }
 
 function renderMessages(){
 $("messages").replaceChildren();
-$("welcome").style.display=history.length?"none":"block";
-history.forEach(m=>drawMessage(m.role,m.content,false));
+
+$("welcome").style.display = history.length ? "none" : "block";
+
+history.forEach(m=>{
+drawMessage(m.role,m.content,false);
+});
+
 scrollBottom();
 }
 
 function drawMessage(role,text,save=true){
-const row=document.createElement("div");
-row.className="message "+(role==="user"?"user":"assistant");
+const row = document.createElement("div");
 
-const av=document.createElement("div");
-av.className="avatar";
-av.textContent=role==="user"?"U":"E";
+row.className = "message " + (role==="user" ? "user" : "assistant");
 
-const box=document.createElement("div");
-box.className="content";
+const avatar = document.createElement("div");
+avatar.className = "avatar";
+avatar.textContent = role==="user" ? "U" : "E";
 
-const name=document.createElement("div");
-name.className="name";
-name.textContent=role==="user"?"You":"ESUKA AI";
+const box = document.createElement("div");
+box.className = "content";
 
-const bubble=document.createElement("div");
-bubble.className="bubble";
-bubble.textContent=String(text??"");
+const name = document.createElement("div");
+name.className = "name";
+name.textContent = role==="user" ? "You" : "ESUKA AI";
+
+const bubble = document.createElement("div");
+bubble.className = "bubble";
+bubble.textContent = String(text ?? "");
 
 box.append(name,bubble);
 
 if(role==="assistant"){
-const actions=document.createElement("div");
-actions.className="actions";
 
-const copy=document.createElement("button");
-copy.className="mini";
-copy.textContent="Copy";
-copy.onclick=()=>{
+const actions = document.createElement("div");
+actions.className = "actions";
+
+const copy = document.createElement("button");
+copy.className = "mini";
+copy.textContent = "Copy";
+
+copy.onclick = ()=>{
 if(navigator.clipboard?.writeText){
 navigator.clipboard.writeText(String(text))
 .then(()=>toast("Copied"))
 .catch(()=>toast("Copy unavailable"));
-}else toast("Copy unavailable");
+}else{
+toast("Copy unavailable");
+}
 };
 
-const listen=document.createElement("button");
-listen.className="mini";
-listen.textContent="Listen";
-listen.onclick=()=>{
-if(!("speechSynthesis" in window))return toast("Voice is not supported");
+const listen = document.createElement("button");
+listen.className = "mini";
+listen.textContent = "Listen";
+
+listen.onclick = ()=>{
+if(!("speechSynthesis" in window)){
+toast("Voice is not supported");
+return;
+}
 speechSynthesis.cancel();
-speechSynthesis.speak(new SpeechSynthesisUtterance(String(text)));
+speechSynthesis.speak(
+new SpeechSynthesisUtterance(String(text))
+);
 };
 
 actions.append(copy,listen);
 box.append(actions);
 }
 
-if(role==="user")row.append(box,av);
-else row.append(av,box);
+if(role==="user"){
+row.append(box,avatar);
+}else{
+row.append(avatar,box);
+}
 
 $("messages").append(row);
 
 if(save){
 history.push({role,content:String(text)});
-if(role==="user")$("welcome").style.display="none";
 saveChat();
 }
 
@@ -351,15 +616,16 @@ return row;
 }
 
 function scrollBottom(){
-$("chat").scrollTop=$("chat").scrollHeight;
+$("chat").scrollTop = $("chat").scrollHeight;
 }
 
-function systemInstruction(){
-const lang=language==="Auto-detect"
-?"Reply in the language used by the user."
-:`Reply in ${language}.`;
+function makeSystemPrompt(){
 
-const styles={
+const lang = language==="Auto-detect"
+? "Reply in the language used by the user."
+: `Reply in ${language}.`;
+
+const styles = {
 Friendly:"Use a friendly, natural tone.",
 Professional:"Use a professional tone.",
 Short:"Be concise and prioritize the answer.",
@@ -367,58 +633,71 @@ Detailed:"Give a thorough, well-structured explanation.",
 Simple:"Use simple words and explain jargon."
 };
 
-return `${systemPrompt}\n\n${lang}\n${styles[style]||""}`;
+return `${systemPrompt}
+
+${lang}
+${styles[style] || ""}`;
 }
 
 function showTyping(){
-const d=document.createElement("div");
-d.id="typing";
-d.className="typing";
-d.textContent="ESUKA AI is thinking…";
+const d = document.createElement("div");
+d.id = "typing";
+d.className = "typing";
+d.textContent = "ESUKA AI is thinking…";
 $("messages").append(d);
 scrollBottom();
 }
 
 async function sendMessage(){
-const text=$("prompt").value.trim();
 
-if(!text||busy)return;
+const text = $("prompt").value.trim();
+
+if(!text || busy)return;
 
 if(!apiKey){
 openSettings();
-toast("Add your Groq API key first");
+toast("Enter your Groq API key first");
 return;
 }
 
-history.push({role:"user",content:text});
+history.push({
+role:"user",
+content:text
+});
+
 drawMessage("user",text,false);
 
-$("welcome").style.display="none";
-$("prompt").value="";
-$("prompt").style.height="auto";
+$("welcome").style.display = "none";
+$("prompt").value = "";
+$("prompt").style.height = "auto";
 
-busy=true;
-$("send").disabled=true;
+busy = true;
+$("send").disabled = true;
+
 showTyping();
 
 try{
-const messages=[
-{role:"system",content:systemInstruction()},
+
+const messages = [
+{
+role:"system",
+content:makeSystemPrompt()
+},
 ...history.slice(-24).map(m=>({
 role:m.role,
 content:m.content
 }))
 ];
 
-const res=await fetch(ENDPOINT,{
+const response = await fetch(API_URL,{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer "+apiKey
+"Authorization":"Bearer " + apiKey
 },
 body:JSON.stringify({
-model,
-messages,
+model:model,
+messages:messages,
 temperature:0.7,
 max_completion_tokens:2048
 })
@@ -427,19 +706,19 @@ max_completion_tokens:2048
 let data;
 
 try{
-data=await res.json();
+data = await response.json();
 }catch{
 throw new Error("Groq returned an unreadable response");
 }
 
-if(!res.ok){
-const detail=data?.error?.message||`HTTP ${res.status}`;
+if(!response.ok){
+const detail = data?.error?.message || `HTTP ${response.status}`;
 throw new Error(detail);
 }
 
-const answer=data?.choices?.[0]?.message?.content;
+const answer = data?.choices?.[0]?.message?.content;
 
-if(typeof answer!=="string"||!answer.trim()){
+if(typeof answer !== "string" || !answer.trim()){
 throw new Error("The model returned an empty answer");
 }
 
@@ -451,33 +730,39 @@ content:answer.trim()
 });
 
 drawMessage("assistant",answer.trim(),false);
+
 saveChat();
 
-}catch(e){
+}catch(error){
+
 $("typing")?.remove();
 
-const msg=e?.message||"Unknown error";
+const message = error?.message || "Unknown error";
 
 drawMessage(
 "assistant",
-"Request failed: "+msg+
-"\n\nCheck your API key, model availability, network, and Groq account limits.",
+"Request failed: " + message +
+"\n\nCheck your Groq API key, selected model, internet connection and account limits.",
 true
 );
 
 }finally{
-busy=false;
-$("send").disabled=false;
+
+busy = false;
+$("send").disabled = false;
 $("prompt").focus();
+
 }
 }
 
 function openSettings(){
-$("apiKey").value=apiKey;
-$("model").value=model;
-$("language").value=language;
-$("style").value=style;
-$("systemPrompt").value=systemPrompt;
+
+$("apiKey").value = apiKey;
+$("model").value = model;
+$("language").value = language;
+$("style").value = style;
+$("systemPrompt").value = systemPrompt;
+
 $("settingsOverlay").classList.add("show");
 }
 
@@ -486,30 +771,42 @@ $("settingsOverlay").classList.remove("show");
 }
 
 function saveSettings(){
-apiKey=$("apiKey").value.trim();
-model=$("model").value;
-language=$("language").value;
-style=$("style").value;
-systemPrompt=$("systemPrompt").value.trim()||DEFAULT_PROMPT;
+
+apiKey = $("apiKey").value.trim();
+model = $("model").value;
+language = $("language").value;
+style = $("style").value;
+
+systemPrompt = $("systemPrompt").value.trim() || DEFAULT_PROMPT;
+
 closeSettings();
-toast("Settings applied in this tab");
+
+toast("Settings saved in this tab");
 }
 
 function newChat(){
-history=[];
-activeId=null;
+
+history = [];
+activeId = null;
+
 $("messages").replaceChildren();
-$("welcome").style.display="block";
-$("prompt").value="";
+$("welcome").style.display = "block";
+
+$("prompt").value = "";
 $("prompt").focus();
 }
 
 function load(){
+
 try{
-chats=JSON.parse(safeGet("esuka_direct_chats","[]"));
-if(!Array.isArray(chats))chats=[];
+chats = JSON.parse(safeGet("esuka_direct_chats","[]"));
+
+if(!Array.isArray(chats)){
+chats = [];
+}
+
 }catch{
-chats=[];
+chats = [];
 }
 
 renderHistory();
@@ -519,53 +816,57 @@ document.body.classList.add("light");
 }
 }
 
-$("send").onclick=sendMessage;
+$("send").onclick = sendMessage;
 
 $("prompt").addEventListener("keydown",e=>{
-if(e.key==="Enter"&&!e.shiftKey){
+if(e.key==="Enter" && !e.shiftKey){
 e.preventDefault();
 sendMessage();
 }
 });
 
 $("prompt").addEventListener("input",e=>{
-e.target.style.height="auto";
-e.target.style.height=Math.min(e.target.scrollHeight,150)+"px";
+e.target.style.height = "auto";
+e.target.style.height = Math.min(e.target.scrollHeight,150)+"px";
 });
 
-$("newChat").onclick=newChat;
-$("openSettings").onclick=openSettings;
-$("settingsTop").onclick=openSettings;
-$("closeSettings").onclick=closeSettings;
-$("saveSettings").onclick=saveSettings;
+$("newChat").onclick = newChat;
+$("openSettings").onclick = openSettings;
+$("settingsTop").onclick = openSettings;
+$("closeSettings").onclick = closeSettings;
+$("saveSettings").onclick = saveSettings;
 
-$("clearKey").onclick=()=>{
-$("apiKey").value="";
-apiKey="";
-toast("Key cleared from this tab");
+$("clearKey").onclick = ()=>{
+$("apiKey").value = "";
+apiKey = "";
+toast("API key cleared from this tab");
 };
 
 $("settingsOverlay").addEventListener("click",e=>{
-if(e.target===$("settingsOverlay"))closeSettings();
+if(e.target === $("settingsOverlay")){
+closeSettings();
+}
 });
 
-$("theme").onclick=()=>{
+$("theme").onclick = ()=>{
 document.body.classList.toggle("light");
+
 safeSet(
 "esuka_theme",
-document.body.classList.contains("light")?"light":"dark"
+document.body.classList.contains("light") ? "light" : "dark"
 );
 };
 
-document.querySelectorAll(".suggestion").forEach(b=>{
-b.onclick=()=>{
-$("prompt").value=b.dataset.prompt;
+document.querySelectorAll(".suggestion").forEach(button=>{
+button.onclick = ()=>{
+$("prompt").value = button.dataset.prompt;
 $("prompt").focus();
 $("prompt").dispatchEvent(new Event("input"));
 };
 });
 
 load();
+
 </script>
 </body>
 </html>
